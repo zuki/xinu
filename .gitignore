@@ -32,3 +32,6 @@ compile/version
 compile/vn
 include/conf.h
 system/conf.c
+
+docs/__pycache__/
+docs/_build/
