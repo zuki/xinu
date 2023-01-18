@@ -1,16 +1,15 @@
 BCM2835
 =======
 
-The **BCM2835** is a SoC (System-on-a-chip) designed by Broadcom. It
-is used on the :doc:`Raspberry-Pi`, where it is easily visible as the
-black chip in the center of the board. The chip contains many of the
-components of a traditional computer, such as a CPU, memory, and a
-GPU.
+**BCM2835**はブロードコム社が設計したSoC（システムオンチップ）です。
+:doc:`Raspberry-Pi` に採用されており、ボードの中央にある黒いチップとして簡単に
+確認することができます。このチップにはCPUやメモリ、GPUなどの伝統的な
+コンピュータの構成要素が多く格納されています。
 
-The BCM2835 is actually not specific to the :doc:`Raspberry-Pi` and is
-used in at least one other consumer device (the Roku 2) [#roku2]_.
+BCM2835は実際には :doc:`Raspberry-Pi` に特化したものではなく、少なくとも
+他のデバイス商品 (the Roku 2) [#roku2]_ にも使われています。
 
-See also
+参考資料
 --------
 
 - :doc:`Raspberry-Pi`
@@ -19,14 +18,13 @@ See also
 - :doc:`BCM2835-Memory-Barriers`
 - :doc:`Synopsys-USB-Controller`
 
-Notes
+注記
 -----
 
 .. [#roku2] http://www.electronicproducts.com/Roku_2_XS_3100R_Streaming_Media_Adapter-whatsinside_text-120.aspx
 
-External links
+外部リンク
 --------------
 
 - `BCM2835 ARM Peripherals (datasheet by Broadcom)
   <http://www.raspberrypi.org/wp-content/uploads/2012/02/BCM2835-ARM-Peripherals.pdf>`__
-
