@@ -3,6 +3,17 @@ extern char *doing;
 extern int   currname;
 extern int   currtname;
 extern int   currdname;
+int yylex();
+void yyerror(const char *s);
+
+int  lookup(const char *str);
+void newattr(int tok, int val);
+int  cktname(int symid);
+void mktype(int deviceid);
+void initattr(struct dev_ent *fstr, int tnum, int deviceid);
+void mkdev(int nameid, int typid, int deviceid);
+int  ckdname(int devid);
+
 %}
 
 /* Token semantic values */
