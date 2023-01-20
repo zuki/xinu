@@ -1,56 +1,57 @@
 UDP
 ===
 
-XINU supports the **User Datagram Protocol** (**UDP**).  The support
-can be found in the :source:`device/udp/` directory.  Note that this
-is *not* in the :source:`network/` directory; this is because the UDP
-module is designed to provide **UDP devices** that can be controlled
-using the generic XINU device functions such as ``open()``,
-``control()``, ``read()``, ``write()``, ``close()``.
+XINUは **UDP** (**User Datagram Protocol**)をサポートしています。
+このサポートは :source:`device/udp/` ディレクトリで見ることができます。
+:source:`network/` では *ない* ことに注意してください。これはUDP
+モジュールが ``open()``, ``control()``, ``read()``, ``write()``,
+``close()`` などのXINUの汎用デバイス関数を使用して制御可能な
+**UDPデバイス** を提供するために設計されているからです。
 
 .. contents::
    :local:
 
-Debugging
+デバッグ
 ---------
 
-The UDP module contains :doc:`Trace statements </development/Trace>`
-for debugging.  To enable, uncomment the following line in
-:source:`include/udp.h`, and optionally change the device (such as
-TTY1) to which messages will be logged::
+UDPモジュールにはデバッグのための :doc:`Trace statements </development/Trace>`
+が含まれています。これを有効にするには :source:`include/udp.h` の
+以下の行のコメントをはずしてください。また、必要であれば、メッセージを
+出力するデバイス（TTY1など）を変更してください::
 
     // #define TRACE_UDP  TTY1
 
-Example (TFTP client)
----------------------
+例 （TFTPクライアント）
+--------------------------
 
-See :source:`network/tftp/tftpGet.c`.  This supports a real protocol
-(TFTP GET), although there are some complications in the code.
+:source:`network/tftp/tftpGet.c` を見てください。コードには少し
+難しいところもありますが、実際のプロトコル (TFTP GET) をサポート
+しています。
 
-Example (client + server)
+例 (client + server)
 -------------------------
 
-About
+概要
 ~~~~~
 
-This is a simple example of how to use the UDP networking features in
-XINU (version 2.0 and later).
+XINU（バージョン2.0以降）のUDPネットワーク機能の利用法を示す
+簡単な例です。
 
-Usage
-~~~~~
+利用方法
+~~~~~~~~~~
 
--  Add the both of the files to the shell directory as ``xsh_udpclient.c``
-   and ``xsh_udpserver.c``.
--  Modify ``system/shell.c`` and ``include/shell.h`` to include the
-   udpclient and udpserver commands.
--  Modify ``shell/Makerules`` to include ``xsh_udpclient.c`` and
-   ``xsh_udpserver.c``, then make XINU from the compile directory
--  Boot two separate XINU consoles
--  Run **netup** from the shell on both consoles
--  Run **udpserver** from the shell on the first console
--  Run **udpclient** from the shell on the second console with the arguments
-   of the udpserver's ip and the message to be sent in quotes, for
-   example:
+-  以下の2つのファイルを ``xsh_udpclient.c`` と ``xsh_udpserver.c``
+   としてシェルディレクトリに追加する。
+-  ``system/shell.c`` と ``include/shell.h`` を変更して
+   udpclientコマンドとudpserverコマンドを含める。
+-  Modify ``shell/Makerules`` を変更して ``xsh_udpclient.c`` と
+   ``xsh_udpserver.c`` を追加して, compileディレクトリでXINUをmakeする。
+-  XIMUコンソールを2つ起動する。
+-  両コンソールのshellで **netup** を実行する。
+-  1つ目のコンソールのshellで **udpserver** を実行する。
+-  2つ目のコンソールのshellで **udpclient** をudpserverのIPアドレスと
+   引用符で囲んだ送信メッセージを引数として実行する。たとえば、
+   次のように:
 
         ``udpclient 192.168.6.102 "Hello XINU World!"``
 
@@ -71,13 +72,13 @@ Usage
 
 
     /**
-    * Shell command (udpclient) runs a client that sends an ASCII
-    * message over the network to a server using UDP.
-    * Expects arg0 to be echoclient, args1 to be the destination IP
-      address, args2 to be the message in quotes
-    * @param nargs number of arguments in args array
-    * @param args array of arguments
-    * @return non-zero value on error
+    * Shellコマンド (udpclient) はUDPを使ってネットワーク経由で
+    * ASCIIメッセージをサーバーに送信するクライアントである。
+    * arg0にはechoclient, args1には宛先のIPアドレス、
+    * args2には引用符で囲んだメッセージを想定する。
+    * @param nargs 引数配列の引数の数
+    * @param args 引数の配列
+    * @return エラーの場合は非0の値
     */
     shellcmd xsh_udpclient(int nargs, char *args[])
     {
@@ -91,14 +92,14 @@ Usage
         struct netif *interface;
 
 
-        /* Allocate a new UDP device */
+        /* 新しいUDPドエバイスを割り当てる */
         if ((ushort)SYSERR == (dev = udpAlloc()))
         {
             fprintf(stderr, "Client: Failed to allocate a UDP device.");
             return SYSERR;
         }
 
-        /* Look up local ip info */
+        /* ローカルIP情報を検索する */
         interface = netLookup((ethertab[0].dev)->num);
         if (NULL == interface)
         {
@@ -107,21 +108,21 @@ Usage
         }
         localhost = &(interface->ip);
 
-        /* Change the destination to ipv4 */
+        /* 宛先をipv4アドレスに変更する */
         if (SYSERR == dot2ipv4(dest, &dst))
         {
             fprintf(stderr, "Client: Failed to convert ip address.");
             return SYSERR;
         }
 
-        /* Open the UDP device with the destination and echo port*/
+        /* 宛先とechoポートを指定してUDPデバイスを開く */
         if (SYSERR == open(dev, localhost, &dst, NULL, ECHO_PORT))
         {
             fprintf(stderr, "Client: Could not open the UDP device\r\n");
             return SYSERR;
         }
 
-        /* Send the message to the destination*/
+        /* 宛先にメッセージを送信する */
         memcpy(buf, args[2], MSG_MAX_LEN);
 
         if(SYSERR == write(dev, buf, MSG_MAX_LEN))
@@ -130,7 +131,7 @@ Usage
             return SYSERR;
         }
 
-        /* Closee the device when done */
+        /* 終わったらデバイスを閉じる */
         close(dev);
 
         return 0;
@@ -152,12 +153,12 @@ Usage
     #define ECHO_PORT 9989
 
     /**
-    * Shell command (udpserver) runs a UDP server that waits for an
-    * incoming message, and then prints it out. Does not expect any
-    * arguments.
-    * @param nargs number of arguments in args array
-    * @param args array of arguments
-    * @return non-zero value on error
+    * Shellコマンド (udpserver) は着信メッセージを待ち、
+    * メッセージをプリントアウトするUDPサーバーを実行する。
+    * どんな引数も想定しない。
+    * @param nargs 引数配列の引数の数
+    * @param args 引数の配列
+    * @return エラーの場合は非0の値
     */
     shellcmd xsh_echoserver(int nargs, char *args[])
     {
@@ -173,14 +174,14 @@ Usage
         struct udpPkt *udp;
 
 
-        /* Allocate a new UDP device */
+        /* 新しいUDPドエバイスを割り当てる */
         if ((ushort)SYSERR == (dev = udpAlloc()))
         {
             fprintf(stderr, "Server: Failed to allocate a UDP device.\r\n");
             return SYSERR;
         }
 
-        /* Look up local ip info */
+        /* ローカルIP情報を検索する */
         interface = netLookup((ethertab[0].dev)->num);
 
         if (NULL == interface)
@@ -190,7 +191,7 @@ Usage
         }
 
 
-        /* Open the UDP device using localhost and the echo port to listen to*/
+        /* localhostとlistenするechoポートを指定してUDPデバイスを開く */
         localhost = &(interface->ip);
 
         if (SYSERR == open(dev, localhost, NULL, ECHO_PORT, NULL))
@@ -199,7 +200,7 @@ Usage
             return SYSERR;
         }
 
-        /* Set the UDP device to passive mode */
+        /* UDPデバイスをpassiveモードにセットする */
         if (SYSERR == control(dev, UDP_CTRL_SETFLAG, UDP_FLAG_PASSIVE, NULL))
         {
             kprintf("Server: Could not set UDP device to passive mode\r\n");
@@ -208,7 +209,7 @@ Usage
         }
 
 
-        /* Read lop, wait for a new request */
+        /* Readループして新しいリクエストを待つ */
         printf("Server: Waiting for message\r\n");
 
         while (SYSERR != (len = read(dev, buffer, UDP_MAX_DATALEN)))
@@ -223,7 +224,7 @@ Usage
         return 0;
     }
 
-Resources
+資料
 ---------
 
 * :wikipedia:`User Datagram Protocol - Wikipedia <User Datagram Protocol>`
