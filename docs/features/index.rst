@@ -1,10 +1,10 @@
-Components and Features (platform independent)
-==============================================
+コンポーネントと機能 (プラットフォームによらない)
+==================================================
 
-This is the documentation for major :doc:`Embedded Xinu
-</Introduction>` components and features relevant to multiple
-platforms.  Platform-specific documentation can be found in
-:doc:`/mips/index` and :doc:`/arm/index`.
+:doc:`Embedded Xinu</Introduction>` の複数のプラットフォームに
+共通する主なコンポーネントと機能に関するドキュメントです。
+プラットフォーム固有のドキュメントは :doc:`/mips/index` と
+:doc:`/arm/index` にあります。
 
 .. toctree::
    :glob:
