@@ -1,10 +1,10 @@
-Networking
-==========
+ネットワーク
+==============
 
-This is the documentation for |EX|'s networking subsystem, including
-the files under :source:`network/` as well as certain protocols
-implemented as device drivers (e.g.  :source:`device/tcp/` and
-:source:`device/udp/`).
+|EX|' のネットワークサブシステムに関するドキュメントです。
+:source:`network/` にあるファイルとデバイスドライバとして実装
+されている（たとえば :source:`device/tcp/` や :source:`device/udp/` ）
+プロトコルに関するドキュメントを含みます。
 
 .. toctree::
    :glob:
@@ -18,4 +18,4 @@ implemented as device drivers (e.g.  :source:`device/tcp/` and
    UDP
    DHCP
    TFTP
-   *
+

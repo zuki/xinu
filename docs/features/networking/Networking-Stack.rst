@@ -1,80 +1,76 @@
-Networking stack design
-=======================
+ネットワークスタックの設計
+============================
 
-The new network stack design does not have a NET device. The read and
-write device function paradigm does not map well to the network stack.
-TCP, UDP, and RAW sockets do not read from a network device, rather a
-network receive thread calls a chain of receive functions to process the
-packet at each layer in the network stack. A write function does not
-work well for sending a packet since the final destination of the packet
-is not known until the IP and/or ARP layers. The write device function
-assumes the thread calling write knows exactly which device to which the
-data should be written. A table of netif structures (separate from
-devtab, the table of devices) is still maintained to store configuration
-and accounting information for each underlying device (ETH, etc.) with
-which the network stack is receiving and sending packets.
+新しいネットワークスタックの設計にはNETデバイスがありません。デバイスの
+Read/Write関数のパラダイムはネットワークスタックにはうまく対応しません。
+TCP、UDP、RAWソケットはネットワークデバイスから読み取るのではなく、
+ネットワーク受信スレッドが一連の受信関数を呼び出して、ネットワーク
+スタックの各レイヤでパケットを処理するからです。Write関数もパケットの
+送信にはうまく機能しません。パケットの最終的な宛先がIPまたはARPレイアに
+ならないと分からないからです。デバイスのWrite関数は、write関数を呼び出す
+スレッドはデータを書き込むべきデバイスを正しく知っていると仮定します。
+netif構造体のテーブル（デバイスのテーブルであるdevtabとはとこなる）も
+依然として保持され、ネットワークスタックがパケットを送受信するデバイス
+（ETHなど）の構成とアカウンティング情報を格納します。
 
-A network interface is setup using the :source:`netUp()
-<network/net/netUp.c>` function. An underlying device, IP address,
-mask, and gateway must be provided when calling ``netUp()``.
+ネットワークインターフェースは :source:`netUp() <network/net/netUp.c>`
+関数を使用してセットアップされます。 ``netUp()`` を呼び出す際には
+基礎となるデバイス、IPアドレス、サブネットマスク、ゲートウェイを
+提供する必要があります。
 
 .. note::
-    ``netUp()`` does not have :doc:`DHCP <DHCP>` built into it.
-    Instead, for DHCP configuration :source:`dhcpClient()
-    <network/dhcpc/dhcpClient.c>` should be called before calling
-    ``netUp()``.  The DHCP client will interact directly with the
-    underlying device (ETH, etc.) without using the network stack in
-    order to acquire IPv4 information.
+    ``netUp()`` は :doc:`DHCP <DHCP>` を内蔵していません。代わりに、
+    DHCPを構成するために  ``netUp()`` を呼び出す前に :source:`dhcpClient()
+    <network/dhcpc/dhcpClient.c>` を呼び出す必要があります。DHCP
+    クライアントはIPv4情報を取得するためにネットワークスタックを使用
+    せずにデバイス（ETHなど）と直接対話します。
 
-Network receive threads continually read incoming packets from an
-underlying device. Each network interface has one or more network
-receive threads running. The ``netRecv()`` function includes an
-infinite loop which reads a packet from the underlying device and
-calls ``ipv4Recv()`` or ``arpRecv()`` depending on the type of the
-packet. The packet is read into a buffer declared as a local variable
-within the netRecv function. At the IP layer ``ipv4Recv()`` calls
-``tcpRecv()``, ``udpRecv()``, ``rawRecv()``, or passes the packet to a
-routing thread. No sending of packets should ever occur under a
-network receive thread. For protocols in which an incoming packet may
-generate the need to send a reply packet, the protocol must have a
-separate thread for sending. For example, if an incoming TCP packet
-contains data which needs to be acknowledge, and ``tcpRecv()`` should
-set a flag or send a message to a TCP monitor thread which will
-proceed to send the acknowledgement.
+ネットワーク受信スレッドはデバイスからの受信パケットを継続的に読み込み
+ます。各ネットワークインタフェースでは1つ以上のネットワーク受信スレッドが
+実行されています。 ``netRecv()`` 関数にはデバイスからパケットを読み込み、
+パケットの種類に応じて ``ipv4Recv()`` または ``arpRecv()`` を呼び出す
+無限ループがあります。パケットはnetRecv関数内でローカル変数として宣言
+されているバッファに読み込まれます。IP層では ``ipv4Recv()`` は
+``tcpRecv()``, ``udpRecv()``, ``rawRecv()`` を呼び出すか、ルーティング
+スレッドにパケットを渡します。ネットワーク受信スレッドの下ではパケットの
+送信は決して行ってはいけません。着信パケットにより応答パケットを送信する
+必要があるようなプロトコルでは、そのプロトコルは送信用の別スレッドを
+持つ必要があります。たとえば、着信したTCPパケットに確認応答が必要な
+データが含まれている場合、 ``tcpRecv()`` はフラグをセットするか確認
+応答を送信するTCPモニタースレッドにメッセージを送信しなければなりません。
 
-A global buffer pool is allocated for storing outgoing packets. One
-pool exists for use by all network interfaces. When sending a packet,
-the sending function (ex. ``tcpSend()``) obtains a buffer from the
-pool, calls the appropriate lower-level send function (ex.
-``ipv4Send()``), and, after the function returns, returns the buffer to
-the pool.
+発信パケットを格納するためのグローバルバッファプールが割り当てられて
+います。すべてのネットワークインタフェースが使用する1つのプールが
+存在します。パケットを送信する場合、送信関数（ ``tcpSend()`` など）は
+プールからバッファを取得し、適切な低レベル送信関数（ ``ipv4Send()`` など）
+を呼び出します。そして、低レベル関数から戻った後にバッファをプールに
 
-The network stack is designed to treat the Xinu backend as both a
-router and a multi-homed host. Packets received on any of a backend's
-network interfaces may be destined for the backend or may need to be
-routed to another network destination. The network layer (IP layer)
-determines how to handle incoming packets. In the function
-``ipv4Recv()``, the destination of an IP packet is compared against
-the IP address and broadcast address for every active network
-interface. If the destination address of the IP packet matches the IP
-address of the interface on which it was received or the IP address of
-any other network interface, the packet is passed to the appropriate
-transport layer receive function (``udpRecv()``, ``tcpRecv()``, etc.).
-IP packets whose destination does not match with one of the active
-network interfaces are passed to the routing module of the network
-stack, i.e. the function ``rtRecv()`` is called. In ``rtRecv()`` the
-packet is copied into a buffer from the global buffer pool and placed
-on a queue for a routing thread to process. Currently, the network
-stack does not use a selective drop algorithm when the router is
-overloaded; once the queue of packets to route is full, all subsequent
-packets which require routing are dropped. A routing thread processes
-each packet on the routing queue. If no route is known, the packet is
-dropped; otherwise the TTL is decrement, the checksum is recalculated
-and the ``netSend()`` function is called. Packets being sent from the
-transport layer (``udpSend()``, ``tcpSend()``, etc) are not passed to
-the routing thread. The transport layer calls ``ipv4Send()`` which
-performs a route table lookup, sets up the IP packet header and calls
-``netSend()``.
+ネットワークスタックはXinuバックエンドをルーターまたはマルチホームホスト
+のいずれでも扱えるように設計されています。あるバックエンドのネットワーク
+インタフェースで受信したパケットはそのバックエンドに向けたものである
+場合もあれば、他のネットワーク宛先にルーティングする必要がある場合も
+あります。ネットワーク層（IP層）は着信パケットをどのように処理
+するかを決定します。 ``ipv4Recv()`` 関数では、IPパケットの宛先をすべての
+アクティブなネットワークインターフェイスのIPアドレスとブロードキャスト
+アドレスと比較します。IPパケットの宛先アドレスがそのパケットを受信した
+インタフェースのIPアドレスまたは他のネットワークインタフェースのIP
+アドレスと一致した場合、そのパケットは適切なトランスポート層の
+受信関数（ ``udpRecv()`` や ``tcpRecv()`` など）に渡されます。宛先が
+アクティブなネットワークインタフェースのどれとも一致しなかったIP
+パケットは、ネットワークスタックのルーティングモジュールに渡されます。
+すなわち、 ``rtRecv()`` 関数が呼び出されます。 ``rtRecv()`` では
+パケットはグローバルバッファプールからのバッファにコピーされ、
+ルーティングスレッドが処理するためのキューに入れられます。現在のところ、
+ネットワークスタックはルータが過負荷になった場合に選択的破棄
+アルゴリズムは使用されません。ルーティングするためのパケットのキューが
+一杯になるとルーティングを必要とする後続のパケットはすべて破棄されます。
+ルーティングスレッドはルーティングキューにある各パケットを処理します。
+ルートがわからないパケットは破棄されます。そうでなければ、TTLが減じられ、
+チェックサムが再計算され、 ``netSend()`` 関数が呼ぼ出されます。
+トランスポート層から送信されるパケット（``udpSend()`` や ``tcpSend()``
+など）はルーティングスレッドには渡されません。トランスポート層は
+ルートテーブル検索を実行する ``ipv4Send()`` を呼び出し、IPパケット
+ヘッダーをセットし、``netSend()`` を呼び出します。
 
 .. image:: XINUNetStack-Screen.jpeg
    :width: 600px
