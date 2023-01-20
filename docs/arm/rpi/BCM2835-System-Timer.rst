@@ -1,26 +1,26 @@
-BCM2835 System Timer
-====================
+BCM283システムタイマー
+=========================
 
-The **BCM2835 System Timer** is a memory-mapped peripheral available
-on the :doc:`BCM2835` used in the :doc:`Raspberry-Pi`.  It features a
-64-bit free-running counter that runs at 1 MHz and four separate
-"output compare registers" that can be used to schedule interrupts.
-However, two output compare registers are already used by the
-VideoCore GPU, leaving only two available for the ARM CPU to use.
+**BCM2835システムタイマー** は:doc:`Raspberry-Pi` で採用されている
+:doc:`BCM2835` で利用可能なメモリマップドペリフェラルです。1MHzで
+動作する64ビットのフリーランニングカウンタと定期的な割り込みに使用
+できる4つの独立した「出力コンペアレジスタ」を備えています。ただし、
+2つの出力コンペアレジスタはすでにVideoCore GPUが使用しているため、
+ARM CPUが使用できるのは2つだけです。
 
-Hardware details
-----------------
+ハードウェア詳細
+------------------
 
-The interface to the BCM2835 System Timer is a set of 32-bit
-memory-mapped registers beginning at physical address ``0x20003000``.
+BCM2835システムタイマーのインタフェースは物理アドレス ``0x20003000``
+から始まる32ビットのメモリマップドレジスタのセットです。
 
-.. list-table:: BCM2835 System Timer registers
+.. list-table:: BCM2835システムタイマーレジスタ
     :widths: 10 10 40
     :header-rows: 1
 
-    * - Offset
-      - Name
-      - Description
+    * - オフセット
+      - 名前
+      - 説明
     * - ``+0x00``
       - ``CS``
       - System Timer Control and Status
@@ -32,48 +32,46 @@ memory-mapped registers beginning at physical address ``0x20003000``.
       - System Timer Counter Upper 32 bits
     * - ``+0x0C``
       - ``C0``
-      - System Timer Compare 0; corresponds to IRQ line 0.
+      - System Timer Compare 0; IRQ line 0に対応
     * - ``+0x10``
       - ``C1``
-      - System Timer Compare 1; corresponds to IRQ line 1.
+      - System Timer Compare 1; IRQ line 1に対応
     * - ``+0x14``
       - ``C2``
-      - System Timer Compare 2; corresponds to IRQ line 2.
+      - System Timer Compare 2; IRQ line 2に対応
     * - ``+0x18``
       - ``C3``
-      - System Timer Compare 3; corresponds to IRQ line 3.
+      - System Timer Compare 3; IRQ line 3に対応
 
-``CLO`` and ``CHI`` form a 64-bit free-running counter, which
-increases by itself at a rate of 1 MHz, that software can read to get
-the current number of timer ticks.  There are, however, two caveats:
+``CLO`` と ``CHI`` は、64ビットのフリーランニングカウンタを形成し、
+1MHzの速度で増分し、ソフトウェアはそれを読み取ることで現在のタイマー
+ティック数を取得できます。ただし注意点が2つあります。
 
-- Appropriate :doc:`memory barriers <BCM2835-Memory-Barriers>` should
-  be inserted to guarantee that read data is not re-ordered with that
-  from a different peripheral.
-- Reading ``CLO`` can be done in a single 32-bit access.  However, we
-  are not currently aware of a way to read ``CLO`` and ``CHI``
-  together atomically.  To work around this when the full 64-bit time
-  is desired, software can read ``CHI``, then ``CLO``, then read
-  ``CHI`` and retry if ``CHI`` changed.
+- 読み込んだデータが別のペリフェラルからのデータと順番が替わらない
+  ことを保証するために適切な :doc:`メモリバリア <BCM2835-Memory-Barriers>`
+  を挿入する必要があります。
+- ``CLO`` の読み出しは1回の32ビットアクセスで行うことができます。
+  しかし、 ``CLO`` と ``CHI`` を一緒にアトミックに読み出す方法は今の
+  ところありません。これを回避するために完全な64ビット時間が必要な場合は
+  ソフトウェアはまず ``CHI`` を読み、次に ``CLO`` を読み、さらに、
+  ``CHI`` を読み、``CHI`` が変化していたらリトライします。
 
-To schedule an interrupt using the System Timer, software can write
-the value of ``CLO`` at which an interrupt will be generated into one
-of the System Timer Compare registers.  However, the CPU actually only
-use ``C1`` and ``C3``, since ``C0`` and ``C2`` are used by the GPU.
-Also, to actually receive the scheduled interrupt, the software must
-have previously enabled the corresponding IRQ line using the
-:doc:`BCM2835-Interrupt-Controller`.  To clear the interrupt, software
-must write 1 to the bit in ``CS`` that has the index the same as that
-of the System Timer Compare register.  That is, to clear an interrupt
-set in ``C1``, software must write ``0x20`` to ``CS``, and to clear an
-interrupt set in ``C3``, software must write ``0x80`` to ``CS``.
+システムタイマーを使って割り込みをスケジュールするために、ソフトウェアで
+割り込みを発生させる ``CLO`` の値をシステムタイマーコンペアレジスタの
+1つに書き込むことができます。ただし、CPUは実際には ``C1`` と ``C3`` しか
+使用できません。 ``C0`` と ``C2`` はGPUで使用されているからです。
+また、実際に割り込みを受信するには :doc:`BCM2835-Interrupt-Controller`
+で対応するIRQラインをあらかじめ有効にしておく必要があります。割り込みを
+解除するには ``CS`` のシステムタイマーコンペアレジスタと同じインデックスを
+持つビットに1を書き込む必要があります。つまり、 ``C1`` に設定された
+割り込みをクリアするには ``CS`` に ``0x20`` を、 ``C3`` に設定された
+割り込みをクリアするには ``CS`` に ``0x80`` を書き込む必要があります。
 
-Use in Embedded Xinu
---------------------
+Embedded Xinuでの使用
+------------------------
 
-In the :doc:`Raspberry-Pi` port of Embedded Xinu, or :doc:`XinuPi`,
-the BCM2835 System Timer is used to implement :doc:`preemptive
-multitasking </features/Preemptive-Multitasking>` and keep the system time.
-The code can be found in :source:`system/platforms/arm-rpi/timer.c`
-and is fairly simple, as it only needs to implement ``clkcount()`` and
-``clkupdate()``.
+Embedded Xinu (:doc:`XinuPi`)の :doc:`Raspberry-Pi` 移植版では
+BCM2835システムタイマーを使って、:doc:`プリエンプティブマルチタスク </features/Preemptive-Multitasking>` の
+実装とシステムタイムの保持を行っています。コードは :source:`system/platforms/arm-rpi/timer.c` に
+あります。 ``clkcount()`` と ``clkupdate()`` を実装しているだけなので
+きわめてシンプルなコードです。
