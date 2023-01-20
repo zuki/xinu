@@ -1,71 +1,68 @@
 Synopsys DesignWare High Speed USB 2.0 On The Go Controller
 ===========================================================
 
-The **Synopsys DesignWare High-Speed USB 2.0 On-The-Go Controller** is
-the USB controller used on the :doc:`Raspberry-Pi`. This hardware is
-notorious for having no official documentation available to end users
-[#nodocs]_ and for having an extremely complicated, poorly written
-Linux driver.  According to Greg Kroah-Hartman, the maintainer of
-Linux's USB subsystem [#linux_maintainers]_:
+**Synopsys DesignWare High-Speed USB 2.0 On-The-Go Controller** は
+:doc:`Raspberry-Pi` で使用されているUSBコントローラです。このハード
+ウェアはエンドユーザが利用できる公式ドキュメントがないこと [#nodocs]_ 、
+非常に複雑で記述が不十分なLinuxドライバがあることで悪名高いです。
+LinuxのUSBサブシステムのメンテナであるGreg Kroah-Hartmanによると [#linux_maintainers]_:
 
+    「...それは本当にひどいUSBコントローラチップであり、それを
+    プロセッサに接続する悲しい方法と本当にひどいドライバとが相まって
+    このボードでUSBがとにかく機能するという事実はまったく奇跡です」
+    [#usb_sucks_quote]_
 
-    " ... it's just a really bad USB controller chip, combined with a
-    sad way to hook it up to the processor, combined with with a truly
-    horrible driver make for the fact that USB works at all on this
-    board a total
-    miracle." [#usb_sucks_quote]_
+このページではEmbedded XinuをRaspberry Piに移植するプロジェクトの
+一環として私たちが書いたUSBホストコントローラドライバの文脈でこの
+ハードウェアの説明を試みています。残念ながらこのハードウェアを
+*完全に* にドキュメント化することは意図していません。なぜなら、
+Embedded XinuのドライバはLinuxのドライバが持つ多くの機能をサポート
+しない比較的単純で簡素化されたドライバだからです。
 
-This page attempts to explain this hardware in the context of the USB
-Host Controller Driver we wrote for it as part of the project to port
-Embedded Xinu to the Raspberry Pi. Unfortunately, it is not intended to
-*fully* document the hardware, since Embedded Xinu's driver is a
-relatively simple, stripped-down driver that does not support many
-features of the Linux driver.
-
-Overview of Embedded Xinu's driver
+Embedded Xinuドライバの概要
 ----------------------------------
 
-As mentioned, there is no documentation available for this USB Controller;
-therefore, it obviously was difficult to implement a driver for it. Since there
-was no other option, we had to gleam the relevant hardware details from other
-drivers, mainly the Linux driver [#linux_driver]_, but also other drivers
-written for the controller, such as the CSUD driver [#csud]_ and the Plan 9
-driver [#plan9_driver]_. Our code, however, is a new implementation that is
-intended to be simple and well-documented, and appropriate (to the extent
-possible for USB and for this hardware) to include in a simple educational
-operating system.
+すでに述べたようにこのUSBコントローラに関するドキュメントは存在しません。
+そのため、ドライバの実装が困難であることは明らかです。しかし、他に選択肢は
+ないのでこのコントローラ用に書かれた他のドライバ、主にLinuxドライバ
+[#linux_driver]_ ですが、CSUDドライバ [#csud]_ やPlanドライバ
+[#plan9_driver]_ などその他のコントローラ用に書かれたドライバから
+関連するハードウェアの詳細を引き出す必要がありました。ただし、私たちの
+コードはシンプルで文書化されていること、また、シンプルな教育用
+オペレーティングシステムに含めるのに（USBとこのハードウェア用に
+可能な範囲で）適切であることを意図した新しい実装です。
 
-Embedded Xinu's driver supports control, interrupt, and bulk transfers.  As a
-Host Controller Driver, it implements the interface declared in
-:source:`include/usb_hcdi.h`.  For simplicity, Embedded Xinu's driver **does
-not** support some features of the Linux driver, including but not limited to
-the following:
+Embedded Xinuのドライバはコントロール、インターラプト、バルクの3つの
+転送をサポートしています。ホストコントローラドライバとして
+:source:`include/usb_hcdi.h` で宣言されているインターフェイスを実装
+しています。簡略化のためにEmbedded XinuのドライバはLinuxドライバの
+（以下に示す、ただし、これに限定されない）一部の機能をサポート
+**していません** 。
 
--  Device mode. The "On-The-Go" portion of the hardware's name means it
-   supports the `On-The-Go
-   protocol <https://en.wikipedia.org/wiki/USB_On-The-Go|USB>`__, which
-   is an extension to the main USB specification that allows the USB
-   hardware to operate in either "host" or "device" mode. However, in
-   our driver we are only concerned with host mode.
--  Isochronous transfers
--  Support for instantiations of the silicon other than the one used on
-   the Raspberry Pi
--  Advanced transaction scheduling that takes into account special
-   properties of periodic transfers
--  Various module parameters to configure the driver
--  Power management, including suspend and hibernation
--  Slave or Descriptor DMA modes
 
-More details
+-  デバイスモード。ハードウェアの名前にある"On-The-Go"は `On-The-Go
+   プロトコル <https://en.wikipedia.org/wiki/USB_On-The-Go|USB>`__ を
+   サポートしていることを意味します。これは主たるUSB仕様の拡張であり、
+   USBハードウェアが「ホスト」モードと「デバイス」モードのいずれでも
+   動作できるようにするものです。しかし、このドライバでは、ホストモード
+   だけを対象としています。
+-  アイソクロナス転送
+-  Raspberry Piで使用されている以外のシリコンのインスタンス化のサポート
+-  周期的転送の特別な特性を考慮した高度なトランザクションスケジューリング
+-  ドライバを構成するための様々なモジュールパラメータ
+-  サスペンドとハイバネーションを含む電源管理
+-  スレーブまたはディスクリプタDMAモード
+
+さらなる詳細
 ------------
 
-More details about the device and the registers may eventually be added here.
-For now, see the source code (:source:`system/platforms/arm-rpi/usb_dwc_hcd.c`
-and :source:`system/platforms/arm-rpi/usb_dwc_regs.h`), which is intended to be
-easy to read and well documented. There is obviously a limit to how "easy to
-read" it can be, though, since USB itself is very complicated.
+デバイスとレジスタについてのさらなる詳細はいずれここに追加されるかも
+しれません。今のところはソースコード(:source:`system/platforms/arm-rpi/usb_dwc_hcd.c` と
+:source:`system/platforms/arm-rpi/usb_dwc_regs.h`) を見てください。
+コードはやさしく読めて、きちんと解説することを心がけています。USB自体が
+非常に複雑なので「読みやすく」するにも限界があるのは明らかですが。
 
-Notes
+注記
 -----
 
 .. [#nodocs] http://www.raspberrypi.org/phpBB3/viewtopic.php?f=72&t=27695
