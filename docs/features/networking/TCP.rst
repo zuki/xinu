@@ -1,50 +1,49 @@
 TCP
 ===
 
-XINU supports the **Transmission Control Protocol** (**TCP**).  The
-support can be found in the :source:`device/tcp/` directory.  Note
-that this is *not* in the :source:`network/` directory; this is
-because the TCP module is designed to provide **TCP devices** that can
-be controlled using the generic XINU device functions such as
-``open()``, ``control()``, ``read()``, ``write()``, ``close()``.
+XINUは **TCP** (**Transmission Control Protocol**)をサポートしています。
+このサポートは :source:`device/tcp/` ディレクトリで見ることができます。
+:source:`network/` では *ない* ことに注意してください。これはTCP
+モジュールが ``open()``, ``control()``, ``read()``, ``write()``,
+``close()`` などのXINUの汎用デバイス関数を使用して制御可能な
+**TCPデバイス** を提供するために設計されているからです。
 
 .. contents::
    :local:
 
-Debugging
+デバッグ
 ---------
 
-The TCP module contains :doc:`Trace statements </development/Trace>`
-for debugging.  To enable, uncomment the following line in
-:source:`include/tcp.h`, and optionally change the device (such as
-TTY1) to which messages will be logged::
+TCPモジュールにはデバッグのための :doc:`Trace statements </development/Trace>`
+が含まれています。これを有効にするには :source:`include/tcp.h` の
+以下の行のコメントをはずしてください。また、必要であれば、メッセージを
+出力するデバイス（TTY1など）を変更してください::
 
     // #define TRACE_TCP  TTY1
 
-Example - TCP Echo Test
+例 - TCPエコーテスト
 -----------------------
 
-About
+概要
 ~~~~~
 
-This is a simple TCP usage example. It is an echo test client that
-sends a message to the echo server and then prints out the reply. The
-echo protocol is defined in :rfc:`RFC 862 <862>`. In short, we send a
-message to the server, and the server echos the exact same message
-back.
+これは簡単なTCPの使用例であり、エコーサーバにメッセージを送信して、その
+応答をプリントアウトするエコーテストクライアントです。エコープロトコルは
+:rfc:`RFC 862 <862>` で定義されています。手短に言うと、サーバにメッセージを
+送ると、サーバはまったく同じメッセージをエコーバックします。
 
-Usage
-~~~~~
+利用方法
+~~~~~~~~~~っｍ
 
--  Add the source file as ``shell/xsh_echotest.c``.
--  Modify ``shell/shell.c`` and ``include/shell.h`` to include the
-   **echotest** command.
--  Modify ``shell/Makerules`` to include ``xsh_echotest.c`` and then
-   make XINU from the compile directory
--  Boot XINU
--  Run **netup** command from the shell
--  Run **echoclient** from the shell with the arguments of the echoserver's
-   IP address and the message to be sent in quotes, for example:
+-  以下のソースファイルを ``shell/xsh_echotest.c`` として追加する。
+-  ``shell/shell.c`` と ``include/shell.h`` を変更して **echotest** に
+   含める。
+-  ``shell/Makerules`` を変更して ``xsh_echotest.c`` を追加して、
+   compileディレクトリでXINUをmakeする。
+-  XINUを起動する。
+-  shellから **netup** コマンドを実行する。
+-  shellから **echoclient** コマンドをエコーサーバのIPアドレスと引用符で
+   囲んだ送信メッセージを引数として実行する。たとえば、次のように:
 
        ``echoclient 192.168.6.102 "Hello XINU World!"``
 
@@ -64,12 +63,13 @@ Usage
     #define ECHO_PORT 7
 
     /**
-     * Shell command (echotest) sends a message to an echo server per RFC 862.
-     * It waits for a response, then prints out the reply from the echo server.
-     * Expects args: echotest, echo server ip, Message to echo in quotes
-     * @param nargs number of arguments in args array
-     * @param args  array of arguments
-     * @return non-zero value on error
+     * Shellコマンド (echotest) はRFC 862に基づいてメッセージをエコー
+     * サーバに送信する。そして応答を待ち、エコーサーバからの返答を
+     * プリントアウトする。
+     * 想定する引数: echotest, エコーサーバのip, 引用符で囲んだメッセージ
+     * @param nargs 引数配列の引数の数
+     * @param args  引数の配列
+     * @return エラーの場合は非0の値
      */
     shellcmd xsh_echotest(int nargs, char *args[])
     {
@@ -84,14 +84,14 @@ Usage
 
         int len;
 
-        /* Allocate a new TCP device */
+        /* 新しいTCPドエバイスを割り当てる */
         if ((ushort)SYSERR == (dev = tcpAlloc()))
         {
             fprintf(stderr, "Client: Failed to allocate a TCP device.");
             return SYSERR;
         }
 
-        /* Look up local ip info */
+        /* ローカルIP情報を検索する */
         interface = netLookup((ethertab[0].dev)->num);
         if (NULL == interface)
         {
@@ -100,21 +100,21 @@ Usage
         }
         localhost = &(interface->ip);
 
-        /* Change the destination to ipv4 */
+        /* 宛先をipv4アドレスに変更する */
         if (SYSERR == dot2ipv4(dest, &dst))
         {
             fprintf(stderr, "Client: Failed to convert ip address.");
             return SYSERR;
         }
 
-        /* Open the TCP device with the destination and echo port*/
+        /* 宛先とechoポートを指定してTCPデバイスを開く */
         if (SYSERR == open(dev, localhost, &dst, NULL, ECHO_PORT, TCP_ACTIVE))
         {
             fprintf(stderr, "Client: Could not open the TCP device\r\n");
             return SYSERR;
         }
 
-        /* Send the message to the destination*/
+        /* 宛先にメッセージを送信する */
         memcpy(buf, args[2], MSG_MAX_LEN);
 
         if(SYSERR == write(dev, buf, MSG_MAX_LEN))
@@ -124,21 +124,21 @@ Usage
             return SYSERR;
         }
 
-        /* Read a response from the server */
+        /* サーバーからの応答を読み込む */
         if(SYSERR != (len = read(dev, buf, MSG_MAX_LEN)))
         {
-            /* Manual null termination needed in case of bad/malicious response  */
+            /* 不正な応答の場合にはマニュアルでヌル終端する必要がある */
             buf[len] = '\0';
             printf("Client: Got response - %s\r\n", buf);
         }
 
-        /* Close the device when done */
+        /* 終わったらデバイスを閉じる */
         close(dev);
 
         return 0;
     }
 
-Resources
+資料
 ---------
 
 * :wikipedia:`Transmission Control Protocol - Wikipedia <Transmission Control Protocol>`
