@@ -1,35 +1,32 @@
-BCM2835 memory barriers
+BCM2835メモリバリア
 =======================
 
-As documented on page 7 of the *BCM2835 ARM Peripherals* document
-[#bcm]_, ARM code executing on the :doc:`BCM2835` in the
-:doc:`Raspberry-Pi` should:
+*BCM2835 ARM Peripherals* ドキュメント [#bcm]_ の7ページに記載されて
+いるように :doc:`Raspberry-Pi` の :doc:`BCM2835` で実行するARMコードは
+次のようにする必要があります。
 
-- execute a memory write barrier before the first write to a peripheral
-- execute a memory read barrier after the last read to a peripheral
+- 周辺機器への最初の書き込みの前にメモリ書き込みバリアを実行する。
+- ペリフェラルへの最後の読み出しの後にメモリ読み出しバリアを実行する。
 
-As of this writing, in Embedded Xinu both types of memory barrier are
-implemented by the same :source:`memory_barrier()
-<system/arch/arm/memory_barrier.S>` function, which executes a **data
-memory barrier**, which is an operation that ensures that all explicit
-memory accesses occurring previously in program order are globally
-observed before any explicit memory accesses occurring subsequently in
-program order.  This should be sufficient to prevent problems with
-memory access reordering on the BCM2835.
+このドキュメントを書いている時点において、Embedded Xinuではこれら両
+タイプのメモリバリアは :source:`memory_barrier() <system/arch/arm/memory_barrier.S>` 関数で
+実装されています。この関数は **データメモリバリア** を実行し、
+プログラム順序において先に発生するすべての明示的メモリアクセスが
+プログラム順序において後に発生するすべての明示的メモリアクセスより前に
+グローバルに観察されることを保証する操作です。これはBCM2835における
+メモリアクセスの順序変更による問題を防ぐのに十分であると思われます。
 
-``memory_barrier()`` is already called before and after interrupt
-dispatch, but any other code that attempts to access peripherals
-outside of the interrupt handler, or access multiple peripherals
-within the some interrupt handler, must make its own call to
-``memory_barrier()``.  This does not need to occur before and after
-every access to the peripheral, only after a series of accesses to a
-*single peripheral*.
+``memory_barrier()`` は割り込みディスパッチの前後ですでに呼び出されて
+いますが、割り込みハンドラの外で周辺機器にアクセスしようとするコードや
+割り込みハンドラ内で複数の周辺機器にアクセスしようとするコードはそれ
+自身で ``memory_barrier()`` を呼び出す必要があります。これは周辺機器への
+すべてのアクセスの前後に行う必要はなく *1つの周辺機器* への一連の
+アクセスの後にのみ行います。
 
-Despite the above, we have not encountered any observable difference
-when no memory barriers are used, so their true necessity on the
-BCM2835 is unclear.
+とはいえ、メモリバリアを使用しない場合でも観察できるほどの差異に遭遇
+したことはないため、メモリバリアがBCM2835において本当に必要かは不明です。
 
-Notes
+注記
 -----
 
 .. [#bcm] http://www.raspberrypi.org/wp-content/uploads/2012/02/BCM2835-ARM-Peripherals.pdf
