@@ -9,7 +9,7 @@ from docutils import nodes,utils
 from sphinx.util.nodes import split_explicit_title
 
 # Route links to github web interface for master branch
-SOURCE_URI = "https://github.com/xinu-os/xinu/tree/master/%s"
+SOURCE_URI = "https://github.com/zuki/xinu/tree/master/%s"
 
 WIKIPEDIA_URI = "https://en.wikipedia.org/wiki/%s"
 
