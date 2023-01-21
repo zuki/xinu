@@ -1,5 +1,5 @@
-Raspberry Pi port
-=================
+Raspberry Piポート
+====================
 
 .. toctree::
    :glob:
