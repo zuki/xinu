@@ -1,33 +1,33 @@
-Getting started with Embedded Xinu
+Embedded Xinuをはじめよう
 ==================================
 
-This section describes how to download and compile :doc:`Embedded Xinu
-</Introduction>`, assuming you are using a UNIX operating system such
-as Linux or Mac OS X, or at least a UNIX-compatible environment such
-as `Cygwin <http://www.cygwin.com>`__.
+ここでは :doc:`Embedded Xinu </Introduction>` のダウンロードと
+コンパイルの方法について説明します。なお、LinuxやMac OS Xなどの
+UNIX系OS、あるいは少なくとも `Cygwin <http://www.cygwin.com>`__
+などのUNIX互換環境を使用していいることを前提にしてます。
 
 .. contents::
    :local:
 
 .. _downloading:
 
-Downloading the source code
+ソースコードのダウンロード
 ---------------------------
 
-Stable versions of Embedded Xinu may be downloaded from
-http://xinu-os.org/Downloads.
+Embedded Xinuの安定版は、http://xinu-os.org/Downloads から
+ダウンロードできます。
 
-The development version (recommended, as of this writing) is stored in
-a repository using the `git source code management system
-<http://git-scm.com/>`__.  To download it, `install git
-<http://git-scm.com/book/en/Getting-Started-Installing-Git>`__ and run
-the following command:
+開発版（この記事を書いている時点では推奨）は
+`git ソースコード管理システム <http://git-scm.com/>`__ を
+を使ってリポジトリに保管されています。ダウンロードするには
+`gitをインストール <http://git-scm.com/book/en/Getting-Started-Installing-Git>`__
+して、以下のコマンドを実行してください。
 
 .. code-block:: none
 
     $ git clone https://github.com/xinu-os/xinu
 
-You then should have a copy of the source:
+するとソースのコピーが得られたはずです。
 
 .. code-block:: none
 
@@ -36,28 +36,30 @@ You then should have a copy of the source:
     apps/    compile/  docs/     lib/     loader/   mem/ README.md  system/
     AUTHORS  device/   include/  LICENSE  mailbox/  network/  shell/ test/
 
-Note that Embedded Xinu is licensed under a BSD-style license; see the
-copyright information in the source distribution for more details.
+Embedded XinuはBSDスタイルのライセンスでライセンスされて
+いることに注意してください。詳細はソースディストリビューションに
+ある著作権情報を参照してください。
 
-Choosing a platform
--------------------
+プラットフォームの選択
+-------------------------
 
-See the :ref:`list of platforms supported by Embedded Xinu
-<supported_platforms>`.
+:ref:`Embedded Xinuのサポートプラットフォーム一覧 <supported_platforms>`
+を参照してください。
 
 .. note::
-   Each supported platform corresponds to a subdirectory of
-   ``compile/platforms/``.
+   各サポートプラットフォームは ``compile/platforms/`` の
+   サブディレクトリに該当します。
 
-If you do not have "real embedded hardware" available and simply would
-like to try out Embedded Xinu from your laptop or desktop, you can use
-either the :doc:`mipsel-qemu <mips/Mipsel-qemu>` or the :doc:`arm-qemu
-<arm/ARM-qemu>` ports, each of which runs in the
-`QEMU system emulator <http://qemu.org>`__.
+「本物の組み込みハードウェア」を持っておらず、単にノートPCや
+デスクトップPCからEmbedded Xinuを試したいだけであれば
+:doc:`mipsel-qemu <mips/Mipsel-qemu>` か
+QEMU system emulator <http://qemu.org>`__ のいずれかのポートを
+使うことができます。これらは `QEMUシステムエミュレータ <http://qemu.org>`__
+で実行されます。
 
 .. _cross_compiler:
 
-Setting up a cross-compiler
+クロスコンパイラの設定
 ---------------------------
 
 Since most of Embedded Xinu's supported platforms do not share the
@@ -72,20 +74,20 @@ and gcc.
 Currently, only the `gcc compiler <http://gcc.gnu.org>`__ is
 supported.  (clang does not yet work!)
 
-Option 1: Install cross-compiler from repository
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+選択肢 1: クロスコンパイラをリポジトリからインストール
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Some Linux distributions already have popular cross compilers
 available in their software repositories.  When available, this can be
 used as a quick alternative to building from source.
 
-Option 2: Build cross-compiler from source
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+選択肢 2: クロスコンパイラをソースからビルド
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This section documents how to build and install binutils and gcc from
 source in a cross-compiler configuration.
 
-Native development environment
+ネイティブ開発環境
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Before you can build anything from source, you first need appropriate
@@ -234,7 +236,7 @@ gcc
 
       $ sudo make install-gcc install-target-libgcc
 
-Testing the cross compiler
+クロスコンパイラのテスト
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 First, for convenience you may wish to make the cross-utilities
@@ -264,110 +266,111 @@ messages.
 
 .. _compiling:
 
-Compiling Embedded Xinu
------------------------
+Embedded Xinuのコンパイル
+----------------------------
 
-Having built a cross-compiler if needed, compiling Embedded Xinu now
-requires running **make** to process the ``Makefile`` in the
-``compile/`` directory and specifying an appropriate ``PLATFORM``, for
-example:
+必要に応じてクロスコンパイラをビルドしたら、次にEmbedded Xinuを
+コンパイルするには ``compile/`` にある ``Makefile`` を処理する
+ために適当な ``PLATFORM`` を指定して **make** を実行する必要が
+あります。たとえば、次のようにします。
 
 .. code-block:: none
 
    $ make -C compile PLATFORM=wrt54gl
 
-Additional details follow.
+詳細については以下で説明します。
 
 .. _makefile_variables:
 
-Makefile variables
+Makefile変数
 ~~~~~~~~~~~~~~~~~~
 
-Several variables can be defined on the **make** command line to
-customize the build.
+ビルドをカスタマイズするために **make** コマンドラインでいくつかの
+変数を定義することができます。
 
-* ``PLATFORM`` specifies the name of a directory in
-  ``compile/platforms/`` that is the Embedded Xinu platform for which
-  to build the kernel.
+* ``PLATFORM`` にはカーネルをビルドするEmbedded Xinuプラット
+  フォームである ``compile/platforms/`` 配下のディレクトリ名を
+  指定します。
 
-* ``COMPILER_ROOT`` specifies the location of the executables for the compiler and
-  binutils necessary to compile, assemble, and link code for the target
-  platform.  ``COMPILER_ROOT`` must include any target prefix that the executables
-  may be prefixed with.  Example for ARM-based platforms:
-  ``/opt/arm-dev/bin/arm-none-eabi-``.  Or, if the executables are on
-  your ``$PATH``, you could simply specify, for example,
-  ``arm-none-eabi-``; however, that (or the corresponding prefix for a
-  non-ARM-based ``PLATFORM``) is already the default.
+* ``COMPILER_ROOT`` にはターゲットプラットフォーム用のコードを
+  コンパイル、アセンブル、リンクするために必要なコンパイラと
+  binutilsの実行可能ファイルの場所を指定します。 ``COMPILER_ROOT``
+  には実行可能ファイルの先頭にあるターゲットプレフィックスを含め
+  なければなりません。ARMベースのプラットフォームを例にするとこれは
+  ``/opt/arm-dev/bin/arm-none-eabi-`` です。実行可能ファイルが
+  ``$PATH`` にある場合は単に ``arm-none-eabi-`` などのように指定
+  することもできます。しかし、これ（または、ARM以外の
+  ``PLATFORM`` 用の対応する接頭辞）はすでにデフォルトになっています。
 
-* ``DETAIL`` can be defined as ``-DDETAIL`` to enable certain
-  debugging messages in Embedded Xinu.
+* ``DETAIL`` は、Embedded Xinuでデバッグメッセージを有効にするために
+  ``-DDETAIL`` として定義することができます。
 
-* ``VERBOSE`` can be defined to any value to cause the build system to
-  print the actual command lines executed when compiling, linking,
-  assembling, etc.
+* ``VERBOSE`` は、コンパイル、リンク、アセンブルなどの際に実行された
+  実際のコマンドラインをビルドシステムに表示させるために任意の値に
+  定義することができます。
 
-To override any of the above variables, you must pass it as an argument to
-**make**, like in the following example::
+以上の変数をオーバーライドするには、次の例のように **make** の引数と
+して渡す必要があります。
 
     $ make PLATFORM=arm-rpi
 
 .. _makefile_targets:
 
-Makefile targets
-~~~~~~~~~~~~~~~~
+Makefileターゲット
+~~~~~~~~~~~~~~~~~~~~~
 
-The following Makefile targets are available:
+次のMakefileターゲットを指定できます:
 
 * **xinu.boot**
-    Compile Embedded Xinu normally.  This is the default target.
+    Embedded Xinuをコンパイルします。デフォルトターゲットです。
 
 * **debug**
-    Same as xinu.boot, but include debugging information.
+    xinu.bootと同じですが、デバッグ情報を含めます。
 
 * **docs**
-    Generate the Doxygen documentation for Embedded Xinu.  This requires that
-    Doxygen is installed.  Note: to eliminate irrelevant details in the
-    documentation, the documentation is parameterized by platform; therefore,
-    the exact documentation that's generated will depend on the current setting
-    of ``PLATFORM`` (see :ref:`makefile_variables`).
+    Embedded XinuのDoxygenドキュメントを生成します。Doxygenの
+    インストールが必要です。注: ドキュメントから無関係な詳細を
+    除去するためにドキュメントはプラットフォームでパラメタ化
+    されています。そのため、生成されるドキュメントは ``PLATFORM``
+    の現在の設定に依存します（ :ref:`makefile_variables` を参照）。
 
 * **clean**
-    Remove all object files.
+    すべてのオブジェクトファイルを削除します。
 
 * **docsclean**
-    Remove documentation generated by ``make docs``.
+    ``make docs`` により生成されたドキュメントを削除します。
 
 * **realclean**
-    Remove all generated files of any kind.
+    生成されたあらゆる種類のファイルをすべて削除します。
 
-The above covers the important targets, but see the
-``compile/Makefile`` for a few additional targets that are available.
+以上で重要なターゲットはカバーしていますが、その他に利用可能な
+ターゲットについては ``compile/Makefile`` を参照してください。
 
 .. note::
-    Older versions of Embedded Xinu had a ``make depend`` target to
-    generate header dependency information.  This has been removed because
-    this information is now generated automatically.  That is, if you
-    modify a header, the appropriate source files will now be recompiled
-    automatically.
+    古いバージョンのEmbedded Xinuにはヘッダーの依存情報を生成する
+    ための ``make depend`` ターゲットがありました。現在ではこの
+    情報は自動的に生成されるため、このターゲットは削除されました。
+    つまり、ヘッダーを変更した場合、適切なソースファイルが自動的に
+    再コンパイルされるようになりました。
 
-Next steps
-----------
+次のステップ
+--------------
 
-Typically, after :ref:`compiling Embedded Xinu <compiling>`, a file
-``xinu.boot`` containing the kernel binary is produced.  Actually
-running this file is largely platform-dependent.  Just a few examples
-are:
+通常、 :ref:`Embedded Xinuをコンパイル <compiling>` すると
+カーネルバイナリを含むファイル ``xinu.boot`` が生成されます。
+実際にこのファイルの実行する方法はほとんどがプラットフォームに
+依存します。ほんの数例ですが、以下のようなものがあります。
 
-- Raspberry Pi:  See :ref:`raspberry_pi_booting` and
-  :ref:`xinupi_getting_started`.
-- Mipsel-QEMU:  See :doc:`/mips/Mipsel-qemu`.
-- ARM-QEMU  See :doc:`/arm/ARM-qemu`.
+- Raspberry Pi: :ref:`raspberry_pi_booting` と
+  :ref:`xinupi_getting_started` を参照してください。
+- Mipsel-QEMU: :doc:`/mips/Mipsel-qemu` を参照してください。
+- ARM-QEMU: :doc:`/arm/ARM-qemu` を参照してください。
 
-Places to go next:
+次に読むべきドキュメント:
 
 - :doc:`features/index`
 - :doc:`teaching/index`
 
-Other resources
+その他の情報源
 ---------------
 - `GCC Cross-Compiler (OSDev Wiki) <http://wiki.osdev.org/GCC_Cross-Compiler>`__
