@@ -1,69 +1,64 @@
 XinuPi
 ======
 
-**XinuPi** is the port of Embedded Xinu to the :doc:`Raspberry-Pi`.
-XinuPi provides a simple, lightweight operating system for the
-Raspberry Pi that contains several orders of magnitude fewer lines of
-code than the Linux-based software stacks that normally run on the
-device. Its purpose is to provide an inexpensive, convenient platform
-for various areas of computer science education at a University level,
-including operating systems, embedded systems, networking, and
-programming languages. Another goal of XinuPi is to document some of
-the Raspberry Pi's hardware that has, until this point, been poorly
-documented or even undocumented. This includes the documentation here
-as well as XinuPi source code and the documentation generated from
-comments in it.
+**XinuPi** はEmbedded Xinuを :doc:`Raspberry-Pi` に移植したものです。
+XinuPiはRaspberry Piのためのシンプルで軽量なオペレーティングシステムを
+提供し、そのコード量は通常デバイス上で動作するLinuxベースのソフト
+ウェアスタックよりも数桁少ないものになっています。その目的は大学レベルの
+コンピュータサイエンス教育の様々な分野、たとえば、OS、組み込みシステム、
+ネットワーク、プログラミング言語などに安価で便利なプラットフォームを
+提供することです。XinuPiのもう一つの目的は、Raspberry Piのこれまで
+ドキュメントが乏しかったり、ドキュメントがなかったハードウェアの
+ドキュメント化を行うことです。これにはこのドキュメントやXinuPiのソース
+コード、コード内のコメントから生成されたドキュメントが含まれます。
 
-Acquiring the Raspberry Pi hardware
+Raspberry Piハードウェアの入手
 -----------------------------------
 
-See :doc:`Raspberry-Pi` for information about the hardware itself.
+ハードウェア自体に関する情報は :doc:`Raspberry-Pi` を参照してください。
 
 .. _xinupi_getting_started:
 
-Downloading, compiling, and running XinuPi
+XinuPiのダウンロード、コンパイル、実行
 ------------------------------------------
 
-Information about downloading and compiling Embedded Xinu can be found
-in :doc:`/Getting-Started`.  To compile for the Raspberry Pi platform
-(that is, to build "XinuPi"), you will need to set
-``PLATFORM=arm-rpi`` when you run **make**.  You will also need an ARM
-cross compiler (i.e.  binutils and gcc built with
-``--target=arm-none-eabi``); more information can be found in
-:ref:`cross_compiler`.
+Embedded Xinuのダウンロードとコンパイルについては :doc:`/Getting-Started`
+に記載されています。Raspberry Pi用にコンパイルする（"XinuPi"をビルドする）
+ためには **make** の際に ``PLATFORM=arm-rpi`` を指定する必要があります。
+また、ARMクロスコンパイラ（たとえば、 ``--target=arm-none-eabi`` でビルド
+したbinutilsとgcc）が必要です。詳細は :ref:`cross_compiler` を参照して
+ください。
 
-Note: currently, the Raspberry Pi support is only present in the
-development version (from git) and not any released tarballs.
+注: 現在のところ、Raspberry Piのサポートは開発版（git）のみで、リリース
+版のtarballにはありません。
 
-The compilation process will produce a file ``compile/xinu.boot``,
-which can be copied to ``kernel.img`` on the SD card of a Raspberry Pi
-to run it (see :ref:`raspberry_pi_booting`).
+コンパイルの結果、 ``compile/xinu.boot`` というファイルが生成されるので
+これを ``kernel.img`` という名前でRaspberry PiのSDカードにコピーすれば
+実行できます（ :ref:`raspberry_pi_booting` を参照）。
 
 .. _xinupi_features:
 
-XinuPi features and implementation
+XinuPiの機能と実装
 ----------------------------------
 
--  The core of XinuPi provides a preemptive multitasking operating
-   system for the Raspberry Pi. See
-   :doc:`/arm/ARM-Preemptive-Multitasking` for more details about how
-   Embedded Xinu implements preemptive multitasking on ARM-based
-   platforms such as the Raspberry Pi; this includes information about
-   thread creation and context switching.  Also see
-   :doc:`BCM2835-System-Timer` for the timer on the Raspberry Pi that
-   XinuPi uses to implement preemptive multitasking.
+-  XinuPiのコアはRaspberry Piのためのプリエンプティブマルチタスクな
+   オペレーティングシステムを提供します。Embedded XinuがRaspberry Piの
+   ようなARMベースのプラットフォームでプリエンプティブマルチタスクを
+   実装する方法の詳細については :doc:`/arm/ARM-Preemptive-Multitasking`
+   を参照してください。これにはスレッドの生成とコンテキストスイッチに
+   ついての情報が含まれています。また、XinuPiがプリエンプティブマルチ
+   タスクの実装に使用しているRaspberry Piのタイマーについては
+   :doc:`BCM2835-System-Timer` を参照してください。
 
--  Interrupt handling on the Raspberry Pi, required for the timer
-   interrupt as well as many other devices, is described in
-   :doc:`Raspberry-Pi-Interrupt-Handling`.
+-  タイマー割り込みやその他多くのデバイスに必要なRaspberry Piにおける
+   割り込み処理については :doc:`Raspberry-Pi-Interrupt-Handling` で
+   説明されています。
 
--  USB support was added to Embedded Xinu partly because of its
-   important role in the Raspberry Pi, including to attach the Ethernet
-   Controller on the Raspberry Pi Model B. See USB for general
-   information about USB, or :doc:`Synopsys-USB-Controller` for
-   information specifically about the USB controller the Raspberry Pi
-   provides.
+-  Embedded XinuにはUSBのサポートが一部追加されています。Raspberry Pi
+   Model BにはEthernet Controllerが内蔵されているなど、Raspberry Piで
+   重要な役割を担っているからです。USBに関する一般的な情報はUSBを、特に
+   Raspberry Piが提供するUSBコントローラに関する情報については
+   :doc:`Synopsys-USB-Controller` を参照してください。
 
--  See :doc:`SMSC-LAN9512` for information about the built-in USB
-   Ethernet Adapter on the Raspberry Pi Model B, and XinuPi's driver
-   for it.
+-  Raspberry Pi Model Bに内蔵されているUSBイーサネットアダプタとその
+   XinuPiのドライバについては :doc:`SMSC-LAN9512` を参照してください。
