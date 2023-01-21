@@ -1,36 +1,33 @@
 arm-qemu
 ========
 
-|EX| has been ported to an ARM virtual
-environment provided by `QEMU <http://qemu.org>`__.  Specifically,
-the supported emulation environment consists of an ARM1176 CPU
-combined with the peripherals of the ARM Versatile Platform Baseboard.
-These peripherals consist of two ARM Dual Timer Module (SP804), a
-PrimeCell Vectored Interrupt Controller (VIC) (PL011), four PrimeCell
-UARTs (PL011), and other devices.  Similar to the
-:doc:`/mips/Mipsel-qemu` port, the *arm-qemu* port of Embedded Xinu
-provides an easy way to run a basic Embedded Xinu environment on a
-RISC architecture without devoting "real" hardware.
+|EX| は `QEMU <http://qemu.org>`__ が提供しているARM仮想環境に
+移植されています。具体的には、ARM1176 CPUとARM Versatile Platform Baseboardのペリフェラルを組み合わせたエミュレーション環境が
+サポートされています。このペリフェラルは2つのARM Dual Timer Module
+（SP804）、PrimeCell Vectored Interrupt Controller（VIC）（PL011）、
+4つの PrimeCell UART（PL011）とその他のデバイスで構成されています。
+:doc:`/mips/Mipsel-qemu` ポートと同様に、Embedded Xinuの *arm-qemu*
+ポートは「本物の」ハードウェアを用意することなくRISCアーキテクチャ
+上で基本的なEmbedded Xinu環境を簡単に実行する方法を提供します。
 
-Building
+ビルド
 --------
 
-:ref:`Compile Embedded Xinu <compiling>` with ``PLATFORM=arm-qemu``.
-Note that this requires a :ref:`cross compiler <cross_compiler>`
-targeting ARM.  This will produce the file ``xinu.boot`` in the
-``compile/`` directory.
+``PLATFORM=arm-qemu`` で :ref:`Embedded Xinuのコンパイル <compiling>`
+をします。この場合、ARMをターゲットとした :ref:`クロスコンパイラ <cross_compiler>` が必要であることに注意してください。 ``compile/``
+ディレクトリに``xinu.boot`` というファイルが生成されます。
 
-Running
+実行
 -------
 
 ::
 
     $ qemu-system-arm -M versatilepb -cpu arm1176 -m 128M -nographic -kernel xinu.boot
 
-Note the ``-cpu arm1176`` option.  This requires QEMU v1.0 (released
-December 2011) or later.
+``-cpu arm1176`` オプションに関する注記。実行にはQEMU v1.0 (released
+December 2011) 以降が必要です。
 
-Notes
+注記
 -----
 
-The ``arm-qemu`` platform does not yet support networking.
+``arm-qemu`` プラットフォームはまだネットワークをサポートしていません。
