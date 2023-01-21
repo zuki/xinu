@@ -1,99 +1,92 @@
-Interrupt Handling (ARM)
+割り込み処理 (ARM)
 ========================
 
-This page provides an overview of how Embedded Xinu performs interrupt
-handling on `ARM architectures
-<http://en.wikipedia.org/wiki/ARM_architecture>`__.  This page only
-concerns ARM-specific details; in particular it must be understood
-that the actual meaning prescribed to interrupts is determined using a
-board-specific mechanism, such as the
-:doc:`rpi/BCM2835-Interrupt-Controller` on the
-:doc:`rpi/Raspberry-Pi`.  Furthermore, note that the ARM architecture
-and its exception/interrupt handling mechanisms are well documented by
-ARM Ltd., especially in various versions of the `ARM Architecture
-Reference Manual <http://infocenter.arm.com/help/index.jsp>`__. This
-page is only intended to give an overview of relevant details in the
-context of Embedded Xinu.
+このページではEmbedded Xinuが `ARMアーキテクチャ <http://en.wikipedia.org/wiki/ARM_architecture>`__ 上でどのように割り込み処理を行うかを説明します。
+このページではARM固有の詳細についてだけ説明しています。特に、割り込みが
+規定する実際の意味は :doc:`rpi/Raspberry-Pi` の :doc:`rpi/BCM2835-Interrupt-Controller` の
+ようにボード固有のメカニズムにより決定されることを理解する必要があります。
+なお、ARMアーキテクチャとその例外/割込み処理機構については、各種
+バージョンの  `ARMアーキテクチャリファレンスマニュアル <http://infocenter.arm.com/help/index.jsp>`__
+など、ARM社から十分なドキュメントが提供されています。このページは
+Embedded Xinuのコンテキストのける関連する詳細の概要を提供することだけを
+目的としています。
 
 .. contents::
    :local:
 
-IRQs and FIQs
+IRQとFIQ
 -------------
 
-Overview
+概要
 ~~~~~~~~
 
-ARM processors define two types of "interrupts":
+ARMプロセッサは2種類の「割り込み」を定義しています:
 
--  **IRQs** (Interrupt Requests). These are the "normal" type of
-   interrupt.
--  **FIQs** (Fast Interrupt Requests). These are an feature that
-   software can optionally use to increase the speed and/or priority of
-   interrupts from a specific source. For simplicity, Embedded Xinu does
-   **not** use FIQs. However, FIQs could be useful for those looking to
-   design real-time and embedded software on top of or instead of the
-   base Embedded Xinu kernel.
+-  **IRQ** (Interrupt Request: 割り込みリクエスト)。*ノーマルな* 割り込み
+   です。
+-  **FIQ** (Fast Interrupt Request: 高速割り込みリクエスト)。これはソフト
+   ウェアが特定のソースからの割り込みの速度や優先順位を上げるために使用
+   できるオプションの機能です。Embedded Xinuでは簡単のためにFIQを使用
+   **しません** 。しかし、Embedded Xinuカーネルの上に、または代わりに、
+   リアルタイムソフトウェアや組み込みソフトウェアを設計しようとしている
+   人にとってはFIQは便利かもしれません。
 
-Both IRQs and FIQs are examples of **exceptions** supported by the ARM.
-Beware that the term "IRQ" is often used generically, whereas here it
-specifically refers to the ARM-architecture IRQ exception.
+IRQもFIQもARMがサポートする **例外** の一例です。"IRQ"という用語は
+一般的によく使われますが、ここでは特にARMアーキテクチャのIRQ例外を指す
+ことに注意してください。
 
-Receiving an IRQ or FIQ
+IRQ/FIQの受信
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-When the ARM receives an IRQ, it will enter a special **IRQ mode**
-and, by default, begin execution at physical memory address ``0x18``.
-Similarly, when the ARM receives a FIQ, it will enter a special **FIQ
-mode** and, by default, begin execution at physical memory address
-``0x1C``. Before enabling IRQs or FIQs, software is expected to copy
-ARM instructions to the appropriate address. In the case of IRQs,
-there is only room for one ARM instruction, so it needs to be a branch
-instruction to a place where the full handler is stored. In Embedded
-Xinu, these special "glue" instructions, or **exception vectors**, are
-set in :source:`loader/platforms/arm-rpi/start.S`.  The "full" IRQ
-handler is located in :source:`system/arch/arm/irq_handler.S`.
+ARMがIRQを受信すると特別な **IRQモード** になり、デフォルトでは物理
+メモリアドレス ``0x18`` で実行を開始します。同様に、ARMがFIQを受信すると
+特別な **FIQモード** になり、デフォルトでは物理メモリアドレス ``0x1C``
+から実行を開始します。IRQまたはFIQを有効にする前に、ソフトウェアには
+ARM命令を適切なアドレスにコピーすることが期待されます。IRQの場合、
+ARM命令を1つ入れる余地しかないので、ハンドラ全体が格納されている場所への
+分岐命令である必要があります。Embedded Xinuでは、この特別な「グルー」
+命令、すなわち、 **例外ベクタ** は :source:`loader/platforms/arm-rpi/start.S`
+で設定されています。IRQハンドラの「全体」は :source:`system/arch/arm/irq_handler.S`
+にあります。
 
-Banked registers
-~~~~~~~~~~~~~~~~
+バンク化レジスタ
+~~~~~~~~~~~~~~~~~~~
 
-In IRQ mode and FIQ modes, some registers are **banked**, meaning that
-their contents are dependent on the current processor mode. The
-advantage of such registers is that their original values do not need
-to be explicitly saved by the interrupt handling code. FIQ mode banks
-more registers than IRQ mode, but both IRQ mode and FIQ mode bank the
-stack pointer (sp), which essentially means that each mode can use its
-own stack. However, for simplicity and consistency with other CPU
-architectures, Embedded Xinu does **not** use this capability.
-Instead, the interrupt handling code immediately switches the
-processor from IRQ mode to "System" mode, which is the mode in which
-Embedded Xinu normally operates the ARM CPU. This means that the
-interrupt handling code uses the stack of the currently executing
-thread, so perhaps the main disadvantage of this approach is that it
-increases the stack size required by each thread.
+IRQモードとFIQモードではいくつかのレジスタは **バンク化** されています。
+つまり、その内容は現在のプロセッサモードに依存します。このようなレジスタの
+利点は、割り込み処理コードが元の値を明示的に保存する必要がないことです。
+FIQモードはIRQモードよりも多くのレジスタがバンク化されていますが、IRQ
+モードでもFIQモードでもスタックポインタ (sp) はバンク化されています。
+これは基本的には各モードが各自のスタックを使用できることを意味します。
+ただし、簡単化のためと他のCPUアーキテクチャとの整合性を保つために、
+Embedded Xinuではこの機能を使用して **いません** 。代わりに割り込み処理
+コードはプロセッサを直ちにIRQモードから「システム」モードに切り替えます。
+システムモードはEmbedded XinuがARM CPUを動作させる通常のモードです。
+これは割り込み処理コードは現在実行中のスレッドのスタックを使用することを
+意味します。おそらくこの方法の第一の欠点は各スレッドが必要とするスタック
+サイズが増加することです。
 
-Managing interrupts
+割り込みの管理
 -------------------
 
-The ARM responds to IRQs and FIQs if and only if bits 7 and 6,
-respectively, of the Current Program Status Register (``cpsr``) are 0.
-By default (after reset) these bits are both 1, so software must
-initially set them to 0 to enable IRQs and FIQs. Similarly, software
-can set them to 1 if it needs to disable IRQs and FIQs. However,
-software does not necessarily need to explicitly manipulate these bits
-because an alternate instruction named ``cps`` (Change Program State)
-is available that can handle changing these bits, as well as changing
-processor modes.
+ARMは ``cpsr`` (Current Program Status Register)のビット7とビット6が
+それぞれ0の場合にのみIRQとFIQに応答します。 （リセット後の）デフォルトでは
+これらのビットはともに1なので、IRQとFIQを有効にするにはソフトウェアで
+これらを0に初期設定する必要があります。同様に、IRQとFIQを無効にする必要が
+ある場合は、これらを1に設定することができます。ただし、ソフトウェアは
+必ずしもこれらのビットを明示的に操作する必要はありません。なぜなら、
+これらのビットを変更し、プロセッサのモードを変更することができる
+``cps`` (Change Program State) という代替命令が用意されているからです。
 
-Below we explain the ``enable()``, ``disable()``, and ``restore()``
-functions used by Embedded Xinu to manage interrupts. These are all
-implemented in the ARM assembly language file
-:source:`system/arch/arm/intutils.S`.
+以下では、Embedded Xinuが割り込みを管理するために使用する
+``enable()``, ``disable()``, ``restore()`` の各関数を説明します。
+これらはすべてARMアセンブリ言語のファイル :source:`system/arch/arm/intutils.S`
+で実装されています。
 
 ``enable()``
 ~~~~~~~~~~~~
 
-``enable()`` allows the processor to receive IRQ exceptions:
+``enable()`` はプロセッサがIRQ例外を受信できるようにします。
 
 .. code-block:: none
 
@@ -101,23 +94,22 @@ implemented in the ARM assembly language file
             cpsie i
             mov pc, lr
 
-``enable()`` executes the ``cpsie`` ("Change Program State Interrupt
-Enable") instruction to enable IRQs. (Recall that FIQs are not used by
-Embedded Xinu.) It then overwrites the program counter (``pc``) with
-the link register (``lr``) to return from the function. Note that
-since the second instruction is merely overhead of a function call,
-``enable()`` could instead be efficiently implemented as an inline
-function containing inline assembly.
+``enable()`` は ``cpsie`` ("Change Program State Interrupt Enable")
+命令を実行してIRQを有効にします（Embedded XinuではFIQは使用しない
+ことを思い出してください）。 そして、プログラムカウンタ (``pc``) を
+リンクレジスタ (``lr``) の値で上書きして関数から復帰しています。
+2番目の命令は関数呼び出しのオーバーヘッドに過ぎないので ``enable()``
+の代わりにインラインアセンブリを含むインライン関数として効率的に実装
+することができることに注意してください。
 
 ``disable()``
 ~~~~~~~~~~~~~
 
-``disable()`` blocks IRQ exceptions and returns a value that can be
-passed to ``restore()`` to restore the previous state. The previous
-state may be either IRQs disabled or IRQs enabled. Note that an IRQ
-exception received during a region of code where interrupts are
-``disable()``-d is not lost; instead, it remains pending until IRQs
-are re-enabled.
+``disable()`` はIRQ例外をブロックし、 ``restore()`` に渡して以前の
+状態に戻すことができる値を返します。以前の状態はIRQ無効かIRQ有効の
+いずれかです。ただし、割り込みが ``disable()`` されているコード領域で
+受け取ったIRQ例外は失われず、IRQが再び有効になるまで保留され続ける
+ことに注意してください。
 
 .. code-block:: none
 
@@ -126,19 +118,18 @@ are re-enabled.
             cpsid i
             mov pc, lr
 
-``disable()`` copies the ``cpsr`` (Current Program Status Register)
-into ``r0``, which as per the ARM calling convention [#calling]_ is
-the return value of the function. Therefore, the ``cpsr`` is treated
-as the value that can be passed to ``restore()`` to restore the
-previous interrupt state. The code then executes the ``cpsid`` (Change
-Program State Interrupt Disable) instruction to actually disable the
-IRQ exception.
+``disable()`` は ``cpsr`` (Current Program Status Register) を ``r0``
+にコピーしますが、これはARMの呼び出し規約  [#calling]_ により、関数の
+返り値です。したがって、 ``cpsr`` は ``restore()`` に渡して以前の
+割り込み状態に戻すことができる値として扱われます。その後、``cpsid``
+(Change Program State Interrupt Disable) 命令を実行し、実際にIRQ例外を
+無効にします。
 
 ``restore()``
 ~~~~~~~~~~~~~
 
-``restore()`` restores the IRQ exceptions disabled/enabled state to the
-state before a previous call to ``disable()``.
+``restore()`` はIRQ例外の無効/有効状態を前回 ``disable()`` をを呼び出した
+前の状態に復元します。
 
 .. code-block:: none
 
@@ -146,30 +137,27 @@ state before a previous call to ``disable()``.
             msr cpsr_c, r0
             mov pc, lr
 
-As per the ARM calling convention [#calling]_, the argument to
-``restore()`` (the previous state value--- in the code this is often
-stored in a variable named ``im``, for "interrupt mask") is passed in
-``r0``. ``r0`` is then copied to the ``cpsr`` (Current Program Status
-Register), which is the opposite of what ``disable()`` does.
-``restore()`` then overwrites the program counter with the link
-register to return from the function. Note that since the second
-instruction is merely overhead of a function call, ``restore()`` could
-instead be efficiently implemented as an inline function containing
-inline assembly.
+ARMの呼び出し規約 [#calling]_ により ``restore()`` への引数（以前の状態
+の値。通常、コードでは ``im`` (interrupt mask) という変数に格納されます）
+は ``r0`` で渡されます。そして、 ``r0`` は ``cpsr`` (Current Program Status
+Register)
+にコピーされます。これは ``disable()`` とは逆の処理になります。次に
+``restore()`` はリンクレジスタの値でプログラムカウンタを上書きして
+関数から復帰します。2番目の命令は関数呼び出しのオーバーヘッドに過ぎない
+ので ``restore()`` の代わりにインラインアセンブリを含むインライン関数と
+して効率的に実装することができることに注意してください。
 
-Further reading
+参考文献
 ---------------
 
-As mentioned in the introduction, this page deals with ARM-architecture
-details only and therefore does not provide a full explanation of
-interrupt handling on any specific platform, which typically requires
-the use of some interrupt controller to actually assign meaning to IRQ
-exceptions.
+冒頭で述べたようにこのページではARMアーキテクチャの詳細しか扱って
+しません。そのため、一般的に、IRQの例外に実際に意味を割り当てる
+ために何らかの割り込みコントローラの使用を必要とする任意のプラット
+フォームにおける割り込み処理についての完全な説明は行っていません。
 
-- The interrupt controller on the :doc:`rpi/Raspberry-Pi` is the
-  :doc:`rpi/BCM2835-Interrupt-Controller`.
+- :doc:`rpi/Raspberry-Pi` の割り込みコントローラは :doc:`rpi/BCM2835-Interrupt-Controller` です。
 
-Notes
+注記
 -----
 
 .. [#calling] http://infocenter.arm.com/help/topic/com.arm.doc.ihi0042e/IHI0042E_aapcs.pdf
