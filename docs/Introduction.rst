@@ -1,159 +1,139 @@
-Introduction
+はじめに
 ============
 
 .. note::
 
-    This documentation, generated from files distributed with the
-    Embedded Xinu source code, is currently under development as a
-    replacement for the Embedded Xinu Wiki (http://xinu.mscs.mu.edu).
+    このドキュメントはEmbedded Xinuのソースコードとともに配布されて
+    いるファイルから生成されたもので、現在 Embedded Xinu Wiki
+    (http://xinu.mscs.mu.edu) を置き換えるものとして開発中です。
 
-**Embedded Xinu** is an ongoing research and implementation project in
-the area of Operating Systems and Embedded Systems. Its original goal
-was to re-implement and port the
-:ref:`Xinu Operating System <Xinu>`
-to several embedded MIPS platforms, such as the Linksys WRT54GL
-router.  Since then, Embedded Xinu has been ported to other platforms,
-such as the
-:doc:`QEMU MIPSel virtual environment <mips/Mipsel-qemu>`
-and the
-:doc:`Raspberry Pi </arm/rpi/Raspberry-Pi>`;
-see
-:ref:`the list of supported platforms <supported_platforms>`.
-Although Embedded Xinu is still being developed and ported to new
-platforms, a laboratory environment and curriculum materials are
-already in use for courses in Operating Systems, Hardware Systems,
-Embedded Systems, Networking, and Compilers at Marquette University
-and other colleges/universities.
+**Embedded Xinu** はオペレーティングシステムと組込みシステムの分野で
+進行中の研究・実装プロジェクトです。当初の目的は :ref:`Xinuオペレーティングシステム <Xinu>` を再実装し、inksys WRT54GLルータなどの組み込み
+MIPSプラットフォームに移植することでした。それ以後、Embedded Xinuは
+:doc:`QEMU MIPSel仮想環境 <mips/Mipsel-qemu>` や
+:doc:`Raspberry Pi </arm/rpi/Raspberry-Pi>` など、その他のプラット
+フォームにも移植されています。:ref:`サポートプラットフォーム一覧 <supported_platforms>`
+をご覧ください。Embedded Xinuは現在も開発中であり、新しいプラット
+フォームへの移植も行われていますが、実験環境とカリキュラム教材は
+すでにマーケット大学やその他の大学のオペレーティングシステムや
+ハードウェアシステム、組込みシステム、ネットワーク、コンパイラの
+授業で使用されています。
 
-The Embedded Xinu project was conceived and is supervised by
-`Dr.  Dennis Brylow <http://www.mscs.mu.edu/~brylow/>`__
-and is being conducted by both graduate and undergraduate students in the
-:doc:`Systems Laboratory <development/Systems-Laboratory>`
-in the
-`Math, Statistics, & Computer Science <http://www.mscs.mu.edu/>`__
-department of
-`Marquette University <http://www.mu.edu/>`__
-in Milwaukee, Wisconsin. The first major phase of work on Embedded
-Xinu began in the Summer of 2006.
+Embedded Xinuプロジェクトは `Dennis Brylow博士 <http://www.mscs.mu.edu/~brylow/>`__
+が発案・指導し、ウィスコンシン州ミルウォーキーにある `マーケット大学 <http://www.mu.edu/>`__ の `数学・統計・コンピュータサイエンス  <http://www.mscs.mu.edu/>`__
+学部の :doc:`システムラボラトリ <development/Systems-Laboratory>` で
+大学院生と学部生が取り組んでいます。Embedded Xinuの最初の主要な作業は
+2006年の夏に始まりました。
 
-Our project partners include
-`Dr. Bina Ramamurthy <http://www.cse.buffalo.edu/~bina/>`__
-at University of Buffalo (with whom we shared an
-`NSF CCLI <http://www.nsf.gov/pubs/2009/nsf09529/nsf09529.html>`__
-grant),
-`Dr.  Paul Ruth <http://cs.olemiss.edu/~ruth/wiki/doku.php>`__
-at University of Mississippi, and
-`Dr. Doug Comer <http://www.cs.purdue.edu/people/comer>`__
-(father of Xinu) at Purdue University.
+プロジェクトのパートナーにはバッファロー大学の
+`Bina Ramamurthy博士 <http://www.cse.buffalo.edu/~bina/>`__
+（ `NSF CCLI <http://www.nsf.gov/pubs/2009/nsf09529/nsf09529.html>`__
+助成金を共有）、ミシシッピ大学の
+`Paul Ruth博士 <http://cs.olemiss.edu/~ruth/wiki/doku.php>`__
+、パデュー大学の `Doug Comer博士 <http://www.cs.purdue.edu/people/comer>`__
+（Xinuの生みの親）がいます。
 
-Getting started
+はじめよう
 ---------------
 
-To get started by downloading, compiling, and running Embedded Xinu,
-see :doc:`Getting-Started`.
+Embedded Xinuのダウンロード、コンパイル、実行を始めるには
+:doc:`Getting-Started` を参照してください。
 
-For information about the features of Embedded Xinu, see
-:doc:`features/index`.
+Embedded Xinuの機能については :doc:`features/index` を参照して
+ください。
 
-Information about specific platforms is also available:
+特定のプラットフォームに関する情報も提供しています。
 
 - :doc:`/arm/index`
 - :doc:`/mips/index`
 
-Teaching with Embedded Xinu
----------------------------
+Embedded Xinuを使用した教育
+------------------------------
 
-For curriculum guidance on adopting or adapting Embedded Xinu for
-undergraduate coursework, see :doc:`teaching/index`.
+学部の授業にEmbedded Xinuを採用または適応させるためのカリキュラム
+ガイダンスについては :doc:`teaching/index` を参照してください。
 
-For information about building an Embedded Xinu laboratory
-environment, see :doc:`teaching/Laboratory`.
+Embedded Xinuの実験環境の構築については :doc:`teaching/Laboratory`
+を参照してください。
 
 .. _supported_platforms:
 
-Supported platforms
--------------------
+サポートプラットフォーム
+-------------------------
 
-These are all the platforms on which Embedded Xinu currently runs.
+現在Embedded Xinuが動作しているすべてのプラットフォームの一覧です。
 
 .. list-table::
     :widths: 10 10 17 8 8
     :header-rows: 1
 
-    * - Platform
-      - Status
-      - Comments
+    * - プラットフォーム
+      - ステータス
+      - コメント
       - :ref:`PLATFORM value <makefile_variables>`
       - :ref:`Cross-target <cross_compiler>`
     * - :doc:`Linksys WRT54GL <mips/WRT54GL>`
-      - Supported
-      - This is our primary development platform, on which Xinu has
-        been tested thoroughly.
+      - サポート済
+      - 主たる開発プラットフォームであり、Xinuが徹底的にテストされています。
       - ``wrt54gl``
       - ``mipsel``
     * - Linksys WRT54G v8
-      - Supported
-      - Tested and running at the Embedded Xinu Lab.  Supported via
-        same code as WRT54GL.
+      - サポート済
+      - Embedded Xinuラボでテストと実行が行われています。WRT54GLと同じコードでサポートされています。
       - ``wrt54gl``
       - ``mipsel``
     * - Linksys WRT54G v4
-      - Probably Supported
-      - The v4 is apparently the version on which WRT54GL is based,
-        and so although the Embedded Xinu Lab has not explicitly
-        tested it, it probably works.
+      - おそらくサポート済
+      - v4はWRT54GLのベースとなったバージョンらしいのでEmbedded Xinuラボで明示的にテストしていませんが、おそらく動作すると思われます。
       - ``wrt54gl``
       - ``mipsel``
     * - Linksys WRT160NL
-      - Supported
-      - Newer model of WRT54GL. Full O/S teaching core functioning,
-        including wired network interface.
+      - サポート済
+      - WRT54GLの新モデル。有線ネットワークインターフェイスを含む教育用O/Sコアが完全に機能します。
       - ``wrt160nl``
       - ``mips``
     * - Linksys E2100L
-      - Supported
-      - Full O/S teaching core functioning, including wired network
-        interface.
+      - サポート済
+      - 有線ネットワークインターフェイスを含む教育用O/Sコアが完全に機能します。
       - ``e2100l``
       - ``mips``
     * - ASUS WL-330gE
-      - Not actively maintained
-      - This platform was working in the past but is no longer being
-        actively maintained or tested.
+      - 活発には保守されていない
+      - このプラットフォームはかつて動作していましたが、今では活発に保守、テストされていません。
       - ``wl330ge``
       - ``mipsel``
     * - :doc:`mipsel-qemu </mips/Mipsel-qemu>`
-      - Supported
-      - Full O/S teaching core functioning, network support in progress.
+      - サポート済
+      - 教育用O/Sコアが完全に機能しますが、ネットワークサポートは開発中です。
       - ``mipsel-qemu``
       - ``mipsel``
     * - :doc:`Raspberry Pi </arm/rpi/Raspberry-Pi>`
-      - Supported
-      - Core operating system including wired networking is functional.
+      - サポート済
+      - 有線ネットワークを含むオペレーティングシステムのコアが機能します。
       - ``arm-rpi``
       - ``arm-none-eabi``
     * - :doc:`arm-qemu </arm/ARM-qemu>`
-      - Supported
-      - Core operating system, excluding wired networking, is functional.
+      - サポート済
+      - 有線ネットワークを除くオペレーティングシステムのコアが機能します。
       - ``arm-qemu``
       - ``arm-none-eabi``
 
 .. _Xinu:
 
-The original Xinu
+オリジナルXinu
 -----------------
 
-The original **Xinu** (**"Xinu is not unix"**) is a small, academic
-operating system to teach the concepts of operating systems to
-students.  Developed at Purdue University by Dr. Douglas E. Comer in
-the early 1980s for the LSI-11 platform, it has now been ported to a
-variety of platforms.
+オリジナルの **Xinu** (**"Xinu is not unix"**) は学生に
+オペレーティングシステムの概念を教えるための小規模で学術的な
+オペレーティングシステムです。1980年代初頭にパデュー大学で
+Douglas E. Comer博士によりLSI-11 プラットフォーム向けに開発された
+ものであり、現在では様々なプラットフォームに移植されています。
 
-**Embedded Xinu** is an update of this project which attempts to
-modernize the code base and port the system to modern RISC
-architectures such as MIPS, while keeping the original goals of
-teaching operating system concepts to students.
+**Embedded Xinu** は学生にオペレーティングシステムの概念を教えると
+いう当初の目的を維持しつつ、コードベースを現代化し、システムを
+MIPSなどの最新のRISCアーキテクチャに移植することを試みている
+このプロジェクトのアップデート版です。
 
 .. note::
-    Most places in this documentation that simply say "Xinu" or "XINU"
-    are actually talking about Embedded Xinu.
+    この文書で単に"Xinu"または"XINU"と書かれていても、実際は
+    ほとんどの場合、Embedded Xinuについて述べています。
