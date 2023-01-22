@@ -1,59 +1,62 @@
-Preemptive multitasking
-=======================
+プリエンプティブマルチタスク
+=============================
 
-Like virtually all modern operating systems, XINU supports
-**preemptive multitasking**, which makes it appear that multiple
-threads are executing at the same time on the same processor. Support
-for preemptive multitasking consists of support for multiple threads
-combined with a preemption mechanism.
+すべての現代的なOSと同様、XINUは **プリエンプティブマルチタスク** を
+サポートしており、同じプロセッサ上で複数のスレッドが同時に実行されて
+いるように見せかけることができます。プリエンプティブマルチタスクの
+サポートは、マルチスレッドのサポートとプリエンプション機構の組み
+合わせで構成されています。
 
 .. _multiple_threads:
 .. _thread_context:
 
-Multiple threads
+マルチスレッド
 ----------------
 
-XINU supports multiple threads, but only one can execute at a time. A
-**thread context** refers to the saved state of a thread, primarily
-CPU registers. XINU platforms must implement two functions to allow
-creating new threads and switching between threads using their thread
-contexts:
+XINUはマルチスレッドをサポートしていますが、一度に実行できるのは
+1つのスレッドのみです。 **スレッドコンテキスト* とはスレッドの
+保存された状態のことであり、主にCPUレジスタを指します。XINUプラット
+フォームは新しいスレッドの作成とスレッドコンテキストを使用した
+スレッドを切り替えを可能にする次の2つの関数を実装する必要があります。
 
--  ``setupStack()``, which is responsible for setting up the stack
-   of a new thread to include an initial thread context and procedure
-   arguments. This routine is typically implemented in C. It is called
-   internally by ``create()``, located in :source:`system/create.c`.
-   For an example, see :source:`system/arch/arm/setupStack.c`.
--  ``ctxsw()``, which is responsible for switching between threads. More
-   specifically, this routine must save the thread context of the
-   current thread and restore the thread context of the new thread. This
-   routine is always implemented in assembly language. For an example,
-   see :source:`system/arch/arm/ctxsw.S`.
+-  ``setupStack()`` は、新しいスレッドのスタックを設定して、初期
+   スレッドコンテキストとプロシージャの引数を含めるようにする役割を
+   担っています。通常、このルーチンはCで実装されます。この関数は
+   :source:`system/create.c` にある ``create()`` により内部的に
+   呼び出されます。:source:`system/arch/arm/setupStack.c` を参照
+   してください。
+-  ``ctxsw()`` は、スレッドの切り替えを担当します。より具体的には、
+   このルーチンは現在のスレッドのスレッドコンテキストを保存し、
+   新しいスレッドのスレッドコンテキストを復元する必要があります。
+   このルーチンは常にアセンブリ言語で実装されます。例として、
+   :source:`system/arch/arm/ctxsw.S` を参照してください。
 
-Since different CPU architectures use different registers and calling
-conventions, the size and format of a thread context varies depending on
-the CPU architecture. Note that since thread contexts are created in
-both ``setupStack()`` and ``ctxsw()``, these two routines must
-create contexts that are compatible, at least to the extent that
-``ctxsw()`` can either start a new thread or resume an existing thread.
+CPUアーキテクチャが異なると使用するレジスタと呼び出し規約が異なるので、
+スレッドコンテキストのサイズとフォーマットはCPUアーキテクチャにより
+異なります。スレッドコンテキストは ``setupStack()`` と ``ctxsw()`` で
+作成されるので、少なくとも ``ctxsw()`` が新しいスレッドの開始、または
+既存のスレッドの再開ができる範囲において、これら2つのルーチンは
+互換性のあるコンテキストを作成しなければならないことに注意してください。
 
-Other articles describe this in more detail for specific architectures:
+これについては、他の記事で特定のアーキテクチャについてより詳細に
+説明されています。
 
 - :doc:`/arm/ARM-Preemptive-Multitasking`
 
 .. _preemption:
 
-Preemption
-----------
+プリエンプション
+--------------------
 
-Preemption occurs when the timer interrupt occurs and XINU attempts to
-reschedule the currently executing thread, which results in a call to
-``ctxsw()``, described above, that may switch to a different thread
-context. (We say *may* because the code is written such that
-``ctxsw()`` is called when the same thread is rescheduled to itself,
-in which case ``ctxsw()`` restores the saved context immediately and
-is a no-op.) The means of generating a timer interrupt is
-platform-dependent and may even differ among platforms that share the
-same CPU architecture. For an example, see
-:doc:`/arm/rpi/BCM2835-System-Timer`, which is used in the
-:doc:`/arm/rpi/Raspberry-Pi`, an ARM-based platform.
+プリエンプションは、タイマー割り込みが発生し、XINUが現在実行中の
+スレッドを再スケジュールしようとすると発生します。その結果、上で
+説明した ``ctxsw()`` が呼び出され、異なるスレッドコンテキストに
+切り替わる可能性があります（ *可能性がある* と言ったのは、同じ
+スレッドが自分自身に再スケジュールされるときに ``ctxsw()`` が
+呼ばれるようにコードが書かれているからです。その場合、 ``ctxsw()``
+は保存したコンテキストを直ちに復元するので、これは一種のno-opです）。
+タイマー割り込みの生成方法はプラットフォーム依存であり、同じCPU
+アーキテクチャを共有するプラットフォームであっても異なる場合が
+あります。例として、ARMベースのプラットフォームである
+:doc:`/arm/rpi/Raspberry-Pi` に採用されている
+:doc:`/arm/rpi/BCM2835-System-Timer` を参照してください。
