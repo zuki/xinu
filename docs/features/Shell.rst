@@ -1,36 +1,36 @@
-Shell
-=====
+シェル
+========
 
-The **XINU shell**, or **xsh**,  is a subsystem that acts as a simple
-command-line interface for human interaction with the operating
-system.  It is implemented in :source:`shell/`.
+**XINUシェル** (**xsh**)は人がオペレーティングシステムと対話する
+ための簡単なコマンドラインインターフェイスとして機能するサブ
+システムです。 :source:`shell/` に実装されています。
 
-How it works
-------------
+動作の仕組み
+----------------
 
-Starting a shell
+シェルの起動
 ~~~~~~~~~~~~~~~~
 
-.. note:: This section explains how to programatically start a shell.
-          By default, this is already done by :source:`system/main.c`.
+.. note:: このセクションではプログラムでシェルを起動する方法について
+          説明します。デフォルトではこれはすでに :source:`system/main.c`
+          により実行されています。
 
-An instance of the XINU shell can be started by :source:`creating a
-thread <system/create.c>` to execute the :source:`shell()
-<shell/shell.c>` procedure.  This procedure is declared as follows:
+XINUシェルのインスタンスは :source:`shell() <shell/shell.c>`
+プロシージャを実行する :source:`スレッドを作成する <system/create.c>`
+ことで開始できます。このプロシージャは次のように宣言されています。
 
 .. code:: c
 
   thread shell(int indescrp, int outdescrp, int errdescrp);
 
-The shell will read and execute commands from the character device
-specified by ``indescrp``.  It shell will send any output written to
-:source:`stdout <include/stdio.h>` by the executed shell commands to
-the device specified by ``outdescrp``, and any output written to
-:source:`stderr <include/stdio.h>` to to the device specified by
-``errdescrp``.
+シェルは ``indescrp`` で指定されたキャラクタデバイスからコマンドを
+読み込んで実行します。実行されたシェルコマンドによって
+:source:`stdout <include/stdio.h>` に書き込まれた出力は ``outdescrp``
+で指定されたデバイスに、 :source:`stderr <include/stdio.h>` に
+書き込まれた出力は ``errdescrp`` で指定されたデバイスに送られます。
 
-A typical instance of spawning a shell, as seen in
-:source:`system/main.c`, is:
+:source:`system/main.c` で見られるように、シェルを起動する典型的な
+例は次のとおりです。
 
 .. code:: c
 
@@ -38,74 +38,76 @@ A typical instance of spawning a shell, as seen in
               ((void *)shell, INITSTK, INITPRIO, "SHELL0", 3,
                          CONSOLE, CONSOLE, CONSOLE), RESCHED_NO);
 
-The above uses the ``CONSOLE`` device for all input and output, which
-typically is set up as :doc:`TTY device <TTY-Driver>` that wraps
-around the first serial port, or UART:
+ここではすべての入出力に ``CONSOLE`` デバイスを使用していますが、
+通常、これは最初のシリアルポート、すなわちUARTをラップする
+:doc:`TTYデバイス <TTY-Driver>` としてセットアップされます。
 
 .. code:: c
 
     open(CONSOLE, SERIAL0);
 
-If additional input or output devices, such as keyboards,
-framebuffers, or additional serial ports are available, additional
-shell threads may be started on them.
+キーボードやフレームバッファ、または、追加のシリアルポートなどの
+入出力デバイスが利用可能な場合は、さらにシェルスレッドを起動する
+ことができます。
 
-Reading and executing commands
+コマンドの読み込みと実行
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When a user enters a command at the shell, the :source:`lexan()
-<shell/lexan.c>` function divides the string of input into tokens.
-Command name, arguments, quoted strings, backgrounding, and
-redirection tokens are all recognized and divided by :source:`lexan()
-<shell/lexan.c>`.
+ユーザがシェルでコマンドを入力すると :source:`lexan() <shell/lexan.c>`
+関数が入力文字列をトークンに分割します。コマンド名、引数、引用符で
+囲まれた文字列、バックグラウンドトークン、 リダイレクトトークンの
+すべてが :source:`lexan() <shell/lexan.c>` により認識され、分割
+されます。
 
-After the command is parsed, the shell uses the tokens to properly
-execute the given command. The shell first checks for the backgrounding
-ampersand ('&'), which should only appear as the last token. The shell
-is designed to handle redirection, but does not currently do so since
-XINU's file system is in development.
+コマンドがパースされると、シェルはトークンを使用して与えられた
+コマンドを適切に実行します。シェルはまずバックグラウンド実行を
+指定するアンパサンド ('&') をチェックします。これは最後のトークンと
+してしか現れないはずです。シェルはリダイレクトを処理するように
+設計されていますが、XINUのファイルシステムは開発中であるため、
+現在は処理されません。
 
-Next, the command is looked up in the command table defined at the top
-of :source:`shell/shell.c`.  Each entry in the command table follows
-the format of command name, is the command built-in (ie can the
-command run in the background), and the function that executes the
-command: ``{"command_name", TRUE / FALSE, xsh_function},``.
+次に、コマンドが :source:`shell/shell.c` の冒頭で定義されている
+コマンドテーブルから検索されます。コマンドテーブルの各エントリは
+``{"command_name", TRUE / FALSE, xsh_function}`` :
+すなわち、コマンド名、ビルトイン関数の是非（すなわち、バック
+グラウンドで実行可能か）、コマンドを実行する関数からなる
+フォーマットで記述されています。
 
-Built-in commands are executed by calling the function that implements
-the command. All other commands are executed by creating a new
-process.  If the user did not include the backgrounding flag in the
-input, the shell waits until the command process has completed before
-asking for more input.
+ビルトインコマンドはそのコマンドを実装している関数を呼び出すことで
+実行されます。他のすべてのコマンドは新しいプロセスを作成することに
+より実行されます。ユーザが入力にバックグラウンド化フラグを含めなかった
+場合、シェルはコマンドのプロセスが完了するまで待ってから、さらに
+入力を求めます。
 
-List of commands
+コマンド一覧
 ----------------
 
-Although the actual shell commands available in a given build of XINU
-depend on the platform and enabled features, some of the important
-ones are listed below:
+XINUのビルドで実際に利用できるシェルコマンドは、プラットフォームや
+有効化された機能によって異なりますが、重要なコマンドを以下に
+リストアップします。
 
 =============   ===========
-Command         Description
+コマンド        説明
 =============   ===========
-**clear**       clears the shell's output
-**exit**        quits the shell
-**help**        displays the list of supported commands, or displays help about a specific command
-**kill**        kills the specified thread
-**memstat**     displays the current memory usage and prints the free list
-**memdump**     dumps a region of memory
-**ps**          displays a table of running processes
-**reset**       soft resets the system
-**sleep**       puts the executing thread to sleep for the specified time
-**test**        does nothing by default, but developers can temporarily add code here
-**testsuite**   run a series of tests to see if the system is functioning properly
-**uartstat**    display information about a UART
+**clear**       シェルの出力をクリアします
+**exit**        シェルを終了します
+**help**        サポートコマンド、または特定のコマンドヘルプを表示します
+**kill**        指定のスレッドをkillします
+**memstat**     現在のメモリ使用状況を表示し、フリーリストを出力します
+**memdump**     メモリ領域をダンプします
+**ps**          実行中のプロセス一覧を表示します
+**reset**       システムをソフトリセットします
+**sleep**       指定した時間だけ実行中のスレッドをsleepさせます
+**test**        デフォルトでは何もしませんが、開発者はここに一時的にコードを追加できます
+**testsuite**   システムが正しく機能しているかを調べる一連のテストを実行します
+**uartstat**    UARTに関する情報を表示します
 =============   ===========
 
-A full list of commands can be obtained from the shell by running the
-``help`` command.  Help on a specific command can be obtained using
-``COMMAND --help`` or ``help COMMAND``.
+コマンドの完全なリストはシェル上で ``help``  コマンドを実行する
+ことにより得られます。特定のコマンドのヘルプは `COMMAND --help``
+または ``help COMMAND`` で得られます。
 
-Adding commands
+コマンドの追加
 ---------------
 
 The shell is designed to be expandable, allowing users to add their
