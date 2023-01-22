@@ -37,3 +37,5 @@ docs/__pycache__/
 docs/_build/
 
 include/version.h
+
+doxy_docs/
