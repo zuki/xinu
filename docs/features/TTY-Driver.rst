@@ -1,108 +1,98 @@
-TTY driver
-==========
+TTYドライバ
+=============
 
 .. image:: TtyDriver.png
    :width: 450px
    :align: right
 
-XINU's TTY driver, located in :source:`device/tty/`,  serves as an
-intermediary device between hardware device drivers and user
-applications to provide line buffering of input and cooking of input
-and output. The driver is purely software oriented and makes no direct
-communication with physical hardware.  Instead, the TTY driver relies
-on an underlying device driver to communicate directly with the
-hardware.  The :doc:`XINU Shell <Shell>` utilizes a TTY device to line
-buffer and cook user input read from another device, such as a UART.
+XINUのTTYドライバは  :source:`device/tty/` にあり、ハードウェアデバイス
+ドライバとユーザーアプリケーションの間の仲介デバイスとして、入力のライン
+バッファリングと入出力の行編集機能を提供します。このドライバは純粋に
+ソフトウェア指向であり、物理的なハードウェアと直接通信を行うことはありません。
+TTYドライバはハードウェアと直接通信するためには基盤となるデバイスドライバに
+依存します。 :doc:`XINUシェル <Shell>` はTTY デバイスを利用してUARTなどの
+別のデバイスから読み取ったユーザー入力をラインバッファリングし、行編集します。
 
-Open & Close
-------------
+オープンとクローズ
+---------------------
 
-:source:`ttyOpen() <device/tty/ttyOpen.c>`, which should be called via
-:source:`open() <system/open.c>`, associates a TTY with an underlying
-char-oriented hardware device.  The underlying device driver must
-provide both ``getc()`` and ``putc()`` functions for the TTY to obtain
-input and send output character by character. The device should
-already be opened and initialized before the TTY is opened.  When a
-TTY is opened, its device control block, input buffer, and flags are
-initialized. No input flags are set when a TTY device is opened. The
-``TTY_ONLCR`` output flag is set when a TTY device is opened.
+:source:`ttyOpen() <device/tty/ttyOpen.c>` は :source:`open() <system/open.c>`
+から呼び出され、TTYとその基盤となる文字指向のハードウェアデバイスを関連付けます。
+TTYが1文字ずつ入力文字を取得し、文字を出力を送信するために下位のデバイスドライバは
+``getc()`` 関数と ``putc()`` 関数を提供する必要があります。このデバイスはTTYを
+開く前にすでにオープンされ、初期化されている必要があります。TTYがオープンされると
+そのデバイス制御ブロックと入力バッファ、フラグが初期化されます。TTYデバイスが
+オープンされた際、入力フラグは設定されませんが、出力フラグの ``TTY_ONLCR`` は設定
+されます。
 
-:source:`ttyClose() <device/tty/ttyClose.c>`, which should be called
-via :source:`close() <system/close.c>`, disassociates a TTY from its
-underlying device and resets the TTY's device control block.
+:source:`ttyClose() <device/tty/ttyClose.c>` は :source:`close() <system/close.c>`
+を介して呼び出され、TTYをその基盤となるデバイスから切り離し、TTYのデバイス
+制御ブロックをリセットします。
 
-Read
-----
+読み取り
+--------
 
-The TTY driver reads characters from an underlying device driver using
-the devices ``getc()`` function. Input is first buffered in the TTY
-driver's circular buffer before being copied to the user buffer
-supplied as a parameter in the ``ttyRead()`` function call.
+TTYドライバは基盤となるデバイスドライバからデバイスの ``getc()`` 関数を使用して
+文字を読み取ります。入力はまずTTYドライバの循環バッファにバッファリングされてから
+``ttyRead()`` 関数呼び出しのパラメータとして供給されたユーザバッファにコピーされます。
 
-The :source:`ttyRead() <device/tty/ttyRead.c>` function begins by
-checking the ``ieof`` flag to determine if the EOF character
-(Control+D) was read during the last call to ``ttyRead()`` If the
-``ieof`` flag is set, the function returns the ``EOF`` constant,
-defined in ``stddef.h``. ``EOF`` is only returned once for each EOF
-character read by the TTY driver. A call made to ``ttyRead()`` after
-``EOF`` was returned, will result in an attempt to read more
-characters from the underlying device driver.
+:source:`ttyRead() <device/tty/ttyRead.c>` 関数はまず ``ieof`` フラグをチェックして
+最後に ``ttyRead()`` を呼び出したときにEOF文字 (Control+D) が読まれたかどうかを
+判定します。 ``ieof`` フラグがセットされていた場合は ``stddef.h``で定義されている
+定数 ``EOF`` を返します。 ``EOF`` はTTYドライバが読み撮った各EOF文字に対して1回だけ
+返されます。 ``EOF`` が返された後に ``ttyRead()`` を呼び出すと基盤となるデバイス
+ドライバからさらに文字を読み取ることになります。
 
-If the ``TTY_IRAW`` flag is set, the TTY driver performs no line
-buffering or line editing (input cooking). The user buffer is first
-filled from any data remaining in the TTY driver's input buffer from the
-last ``ttyRead()`` call. The remaining portion of the user supplied buffer
-is filled by reading characters from the underlying device driver.
+``TTY_IRAW`` フラグがセットされている場合、TTYドライバは行バッファリングと
+行編集 (input cooking) を行いません。ユーザバッファはまず、最後の ``ttyRead()``
+呼び出しでTTYドライバの入力バッファに残っているデータから満たされます。ユーザが
+提供するバッファの残りの部分は基盤となるデバイスドライバから文字を読み取ることで
+満たされます。
 
-The TTY driver performs line buffering and line editing (input cooking)
-when the ``TTY_IRAW`` flag is not set. Characters are read from the
-underlying device driver until a line delimiter is read or the TTY
-driver's input buffer is full. Lines may be terminated with the newline
-(LF or ``'\n'``) or end of file (EOF or ASCII character 0x04)
-characters. If the ``TTY_ECHO`` flag is set, each character is output as
-it is read.
+TTYドライバは ``TTY_IRAW`` フラグがセットされていないと行バッファリングと
+行編集 (input cooking) を行います。文字は行区切り文字が読み取られるか、TTY
+ドライバの入力バッファが一杯になるまで、基盤となるデバイスドライバから読み取られます。
+行は改行文字 (LF すなわち '\n') またはファイル終端文字 (EOF すなわち ASCII文字 0x04)
+で終了させることができます。 ``TTY_ECHO`` フラグがセットされている場合は
+各文字が読み取られた通りに出力されます。
 
-Special handling is required for some characters to perform line editing
-(input cooking). If the TTY driver's input buffer contains characters,
-backspace (BS or ``'\b'``) and delete (DEL or ASCII character 0x7F)
-remove the last character from the TTY's input buffer. The newline and
-carriage return (CR or ``'\r'``) characters are cooked if certain input
-flags are set. The end of file character causes the ``ieof`` flag to be
-set. Any other unprintable characters are ignored.
+行編集 (input cooking)を行うには一部の文字に対して特別な処理が必要です。
+TTYドライバの入力バッファに文字が含まれている場合、バックスペース (BS すなわち
+'\b') とデリート (DEL すねわち ASCII文字 0x7F) はTTYの入力バッファから最後の
+文字を削除します。特定の入力フラグがセットされていると改行とキャリッジリターン
+(CR すなわち '\r') 文字は編集されます。ファイル終端文字は ``ieof`` フラグを
+セットします。その他の印字不可能文字は無視されます。
 
-After a line of input is buffered in the TTY's device driver, the user
-supplied buffer is filled from the TTY's input buffer. If the end of
-file character was the only character read, the ``EOF`` constant is
-returned. Otherwise, the number of characters read into the user buffer
-is returned.
+TTYのデバイスドライバに入力行がバッファリングされると、ユーザが提供したバッファが
+TTYの入力バッファから満たされます。読み撮った文字がファイル終端文字だけだった
+場合は ``EOF`` 定数が返されます。それ以外の場合は、ユーザバッファに読み込まれた
+文字数が返されます。
 
-The TTY driver has the following input flags:
+TTYドライバは次の入力フラグを持ちます:
 
--  ``TTY_IRAW`` - reads input unbuffered and uncooked
--  ``TTY_INLCR`` - converts ``'\n'`` to ``'\r'``
--  ``TTY_IGNCR`` - ignores ``'\r'``
--  ``TTY_ICRNL`` - converts ``'\r'`` to ``'\n'``
--  ``TTY_ECHO`` - echoes input
+-  ``TTY_IRAW`` - バファリンと行編集無しで入力を読み取る
+-  ``TTY_INLCR`` - ``'\n'`` を ``'\r'`` に変換する
+-  ``TTY_IGNCR`` - ``'\r'`` を無視する
+-  ``TTY_ICRNL`` - ``'\r'`` と ``'\n'`` に変換する
+-  ``TTY_ECHO`` - 入力をエコーする
 
-Write
------
+書き込み
+----------
 
-The TTY driver does not buffer output; in :source:`ttyWrite()
-<device/tty/ttyWrite.c>`, it writes characters directly to an
-underlying device driver. The TTY driver cooks newlines (LF or
-``'\n'``) and carriage returns (CR or ``'\r'``) if certain output
-flags are set.
+TTYドライバは出力をバッファリングしません。
+:source:`ttyWrite() <device/tty/ttyWrite.c>` は基盤となるデバイスドライバに
+文字を直接書き込みます。TTYドライバは特定の出力フラグがセットされていると
+改行 (LF すなわち ``'\n'``) と復帰 (CR すなわち ``'\r'``) を処理します。
 
-The TTY driver has the following output flags:
+TTYドライバは次の出力フラグを持ちます:
 
--  ``TTY_ONLCR`` - converts ``'\n'`` to ``'\r\n'``
--  ``TTY_OCRNL`` - converts ``'\r'`` to ``'\n'``
+-  ``TTY_ONLCR`` - ``'\n'`` を ``'\r\n'`` に変換する
+-  ``TTY_OCRNL`` - ``'\r'`` を ``'\n'`` に変換する
 
-Control
+制御
 -------
 
-The TTY driver has four control functions: two to set and clear input
-flags and two to set and clear output flags.  Each of control functions
-returns the previous state of the flags being changed.  These are
-implemented in :source:`ttyControl() <device/tty/ttyControl.c>` and
-should be called via :source:`control() <system/control.c>`.
+TTYドライバには4つの制御関数があります。2つは入力フラグのセットとクリアを行い、
+2つは出力フラグのセットとクリアを行います。各制御関数は変更されたフラグの以前の
+状態を返します。これらは :source:`ttyControl() <device/tty/ttyControl.c>` に実装
+されており、 :source:`control() <system/control.c>` を介して呼び出す必要があります。
