@@ -110,84 +110,81 @@ XINUのビルドで実際に利用できるシェルコマンドは、プラッ�
 コマンドの追加
 ---------------
 
-The shell is designed to be expandable, allowing users to add their
-own commands. The code that runs the shell (:source:`shell/shell.c`)
-and the command parser (:source:`shell/lexan.c`) do not need to change
-when a new command is added. The majority of the work goes into
-writing the actual command. After the command is written, three items
-must be added to the system:
+シェルはユーザが独自にコマンドを追加できるように拡張性を持たせています。
+シェルを実行するコード (:source:`shell/shell.c`) とコマンドパーサ
+(:source:`shell/lexan.c`) は新しいコマンドを追加する際、変更する
+必要はありません。作業の大部分は実際のコマンドを書くことです。
+コマンドを書いたら次の3項目をシステムに追加する必要があります。
 
--  the function prototype needs to be added to the header file
-   (:source:`include/shell.h`),
--  the command table (:source:`shell/shell.c`) must be updated, and
--  the make file (:source:`shell/Makerules`) must build the file
-   containing the function.
+-  関数プロトタイプのヘッダーファイル (:source:`include/shell.h`)
+   への追加
+-  コマンドテーブル (:source:`shell/shell.c`) への追加
+-  この関数を含むファイルをビルドするためにmakeファイル
+   (:source:`shell/Makerules`) への追加
 
-Writing the function
+関数を書く
 ~~~~~~~~~~~~~~~~~~~~
 
-The command should be given its own C source file in the :source:`shell/`
-directory, following the naming convention ``xsh_command.c``. All
-command files should include ``kernel.h`` and ``shell.h``, along with
-any other headers necessary for the command. Function names for commands
-follow the same naming convention as the source file: ``xsh_command``.
-The method signature for a command is:
+コマンドは独自のCソースファイルを :source:`shell/` ディレクトリに
+作成します。その名前は ``xsh_command.c`` という命名規則に従います。
+すべてのコマンドファイルにはコマンドに必要なのヘッダーの他に
+``kernel.h`` と ``shell.h`` をインクルードする必要があります。
+コマンドの関数名はソースファイルと同じ ``xsh_command`` という
+命名規則に従います。コマンドのメソッドシグネチャは次のとおりです。
 
 .. code:: c
 
   shellcmd xsh_command(int nargs, char *args[])
 
-Within the command, arguments are accessed via the ``args`` array. The
-command name is located in ``arg[0]``. Subsequent arguments, up to
-``nargs`` are accessed via ``arg[n]``. Error checking of arguments is
-the responsibility of the command function. It is good practice to check
-for the correct number of arguments; remember the command name is
-counted in ``nargs``, so a command without any arguments should have
-``nargs == 1``. Although not required, command functions should also
-allow for an argument of ``--help`` as ``arg[1]``. This argument should
-cause the command to print out usage information. When a user types
-``help COMMAND`` in the shell, the ``COMMAND`` is called with the
-``--help`` argument.
+コマンド内では引数は ``args`` 配列経由でアクセスします。コマンド名が
+``arg[0]`` に格納され、それ以降の引数は ``nargs`` まで ``arg[n]``
+を介してアクセスできます。引数のエラーチェックはコマンド関数が
+行います。引数の数が正しいかをチェックするのは良い慣習です。
+コマンド名が ``nargs`` に含まれるので引数のないコマンドは
+``nargs == 1`` となることを忘れないでください。必須ではありませんが
+コマンド関数は ``arg[1]`` として ``--help`` という引数を指定できる
+ようにするべきです。この引数はコマンドの使用法を表示するようにします。
+ユーザがシェルで ``help COMMAND`` とタイプすると ``--help`` を
+引数として ``COMMAND`` が呼び出されます。
 
-Additional code within the command function depends on what the command
-does. After the command is completed it should return ``OK``.
+コマンド関数内のその他のコードはコマンドが何を行うかによります。
+コマンドが完了したら ``OK`` を返す必要があります。
 
-Add to command table
-~~~~~~~~~~~~~~~~~~~~
+コマンドテーブルへの追加
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-After the command function is written, the command needs to be added to
-the command table so the shell is aware of the command. The command
-table is an array of ``centry`` (command entry) structures defined in
-``shell/shell.c``. Each entry in the command table follows the format of
-command name, is the command built-in (ie can the command run in the
-background), and the function that executes the command:
-``{"command_name", TRUE / FALSE, xsh_function},``.
+コマンド関数を書いたら、そのコマンドをコマンドテーブルに追加して
+シェルがそのコマンドを認識できるようにする必要があります。
+コマンドテーブルは ``shell/shell.c`` で定義されている  ``centry``
+（コマンドエントリ）構造体の配列です。コマンドテーブルの各エントリは
+コマンド名、ビルトインコマンドか（コマンドがバックグラウンドで実行
+できるか）、コマンドを実行する関数からなる次のフォーマットに従います:
+``{"command_name", TRUE / FALSE, xsh_function},``
 
-Add to header and makefile
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+ヘッダーとmakfileへの追加
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To complete the process, add the function prototype to the shell header
-file ``include/shell.h``:
+プロセスを完了するために、関数プロトタイプをシェルのヘッダーファイル
+``include/shell.h`` に追加します。
 
 .. code:: c
 
     shellcmd xsh_command(int, char *[]);
 
-Lastly, add the command function source file to the makefile
-(``shell/Makerules``) under the ``C_FILES`` group to ensure the command
-is compiled into the XINU boot image.
+最後に、コマンド関数のソースファイルを makefile (``shell/Makerules``)
+の ``C_FILES`` グループに追加し、コマンドがXINUのブートイメージに
+コンパイルされるようにします。
 
-Example
+例
 ~~~~~~~
 
-We will run through a brief implementation of adding an echo command to
-the system.
+echoコマンドをシステムに追加する簡単な実装を行います。
 
-Write the function
+関数を書く
 ^^^^^^^^^^^^^^^^^^
 
-Begin by creating the source file in ``shell/xsh_echo.c``. Since all
-commands take the same arguments (as passed by the shell), we get:
+まず、ソースファイル ``shell/xsh_echo.c`` を作成します。すべての
+コマンドは同じ引数（シェルから渡さる）を取るので次のようになります。
 
 .. code:: c
 
@@ -196,12 +193,12 @@ commands take the same arguments (as passed by the shell), we get:
     #include <string.h>
 
     /**
-     * Shell command echos input text to standard out.
-     * @param stdin descriptor of input device
-     * @param stdout descriptor of output device
-     * @param stderr descriptor of error device
-     * @param args array of arguments
-     * @return OK for success, SYSERR for syntax error
+     * このシェルコマンドは入力されたテキストを標準出力にエコーします。
+     * @param stdin 入力デバイスのディスクリプタ
+     * @param stdout 出力デバイスのディスクリプタ
+     * @param stderr エラー出力デバイスのディスクリプタ
+     * @param args 引数の配列
+     * @return 成功の場合はOK、文法エラーの場合はSYSERR
      */
     shellcmd xsh_echo(int nargs, char *args[])
     {
@@ -229,37 +226,38 @@ commands take the same arguments (as passed by the shell), we get:
         return OK;
     }
 
-Add the function to the command table
+関数をコマンドテーブルに追加する
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-While we are in the :source:`shell/` directory, we'll modify the command table
-found at the top of :source:`shell/shell.c`.  Since we are adding the echo
-command, we'll most likely want the user input at the shell to be
-"``echo``," this is not a builtin function (FALSE), and the function
-that supports this is xsh\_echo. Giving us the entry:
+:source:`shell/` ディレクトリに移動し :source:`shell/shell.c`
+の先頭にあるコマンドテーブルを変更します。echoコマンドを追加する
+のでシェルでのユーザーの入力は "``echo``" にするのがもっとも
+ふさわしいと思われます。この関数はビルトイン関数ではなく
+(FALSE)、実装している関数は xsh\_echo です。エントリは次のように
+なりあす。
 
 .. code:: c
 
     { "echo", FALSE, xsh_echo }
 
-Add the function prototype to the include file
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+関数プロトタイプをインクルードファイルに追加する
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Next we must add the prototype of the function to the shell include
-file in :source:`include/shell.h`. This is simply done by adding the
-line:
+次に、関数のプロトタイプをシェルのインクルードファイル
+:source:`include/shell.h` に追加する必要があります。これには
+次の一行を追加するだけです。
 
 .. code:: c
 
     shellcmd xsh_echo(int, char *[]);
 
-Add the file to the Makefile
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Makefileにファイルを追加する
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Finally (and most importantly) we add the function to the Makefile to
-make sure that it is built by the compiler. We do this by finding the
-line beginning with "``C_FILES =``\ " in ``shell/Makerules`` and adding
-xsh\_echo.c to the end of it.
+最後に（そしてもっとも重要ですが）関数をMakefileに追加してコンパイルが
+ビルドするようにします。これには ``shell/Makerules`` で
+"``C_FILES =``\ " で始まる行を探して、その最後に xsh\_echo.c を
+追加します。
 
-Compile and run, and you should now have a working implementation of the
-``echo`` command on your XINU system!
+コンパイルして実行すると、XINUシステムで使用可能な ``echo``
+コマンドの実装があるはずです。
