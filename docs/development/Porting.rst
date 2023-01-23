@@ -1,133 +1,139 @@
-Porting Embedded Xinu
-=====================
+Embedded Xinuの移植
+======================
 
-Build system
-------------
+ビルドシステム
+----------------
 
-This section documents how to set up the build system for a new
-Embedded Xinu port.
+このセクションではEmbedded Xinuの新たな移植版のビルドシステムを
+設定する方法について説明します。
 
-The majority of the build logic is in the Makefile in ``compile/``.
-This file is intended to be platform-independent and you should not
-need to modify it.  Instead, you should create a new directory in
-``compile/platforms/`` containing the files ``platformVars``,
-``xinu.conf``, and ``ld.script`` for your platform.
+ビルドロジックの大部分は  ``compile/`` にあるMakefileにあります。
+このファイルはプラットフォームに依存しないように作成されており、
+変更する必要はないはずです。その代わり ``compile/platforms/`` に
+新しいディレクトリを作り、そこに新たなプラットフォーム用の  ``platformVars``, ``xinu.conf``, ``ld.script`` の3つのファイルを
+置きます。
 
 platformVars
 ~~~~~~~~~~~~
 
-``platformVars`` is in Makefile syntax and must contain the following
-definitions:
+``platformVars`` はMakefile構文で、以下の定義を含める必要があります。
 
-- A Makefile rule to generate the file ``$(BOOTIMAGE)``, which is by default
-  ``xinu.boot``, from ``xinu.elf``.  ``xinu.elf`` will be the kernel in ELF format,
-  while ``xinu.boot`` is normally expected to be the actual bootable kernel that
-  is the final result of the build.  This rule may simply copy the file, or it
-  may use **objcopy** to change the binary format.  (Use ``$(OBJCOPY)`` to get the
-  correct **objcopy** for the target platform.)  If your platform does things very
-  differently you can override ``$(BOOTIMAGE)`` to something else.
+- ``xinu.elf`` から ``$(BOOTIMAGE)`` ファイル（デフォルトは
+  ``xinu.boot`` ）を生成するMakefileルール。 ``xinu.elf`` はELF形式の
+  カーネルです。一方、``xinu.boot`` は通常、ビルドの最終結果である
+  実際に起動可能なカーネルであることが期待されるものもです。この
+  ルールは単にファイルをコピーするか、 **objcopy** を使ってバイナリ
+  形式に変更するものです（ターゲットプラットフォーム用の正しい
+  **objcopy** を取得するために ``$(OBJCOPY)`` を使用してください）。
+  対象のプラットフォームのやり方が大きくお異なる場合は
+  ``$(BOOTIMAGE)`` を他のものにオーバーライドすることができます。
 
-- ``APPCOMPS`` must be set to the list of Xinu application components
-  to build in.  Each item in the list corresponds to a toplevel
-  directory, such as ``network``.  Note that certain toplevel
-  directories, such as ``lib/`` and ``system/``, are not considered
-  "application" components and should not be listed here.
+- ``APPCOMPS`` にはビルトインするXinuアプリケーションコンポーネントの
+  リストを設定する必要があります。このリストの項目は ``network`` の
+  ようなトップレベルディレクトリに対応します。 ``lib/`` や ``system/``
+  など、特定のトップレベルディレクトリは「アプリケーション」
+  コンポーネントとはみなされないため、ここにリストアップしないように
+  注意してください。
 
-- ``DEVICES`` must be set to the list of Xinu device drivers to build
-  in.  Each item in the list corresponds to the name of a directory in
-  ``device/``.  Device drivers added here in many cases also require
-  configuration in ``xinu.conf``; see the section below.
+- ``DEVICES`` にはビルトインするXinuデバイスドライバのリストを設定
+  する必要があります。このリストの項目は ``device/`` 配下の
+  ディレクトリ名に対応します。多くの場合、ここに追加されたデバイス
+  ドライバは ``xinu.conf`` で設定する必要もあります。
 
-- ``BUGFLAG`` must be set to an appropriate compiler flag to enable
-  debugging information.
+- ``BUGFLAG`` にはデバッグ情報を有効にするための適切なコンパイラ
+  フラグを設定する必要があります。
 
-- ``ARCH_ROOT`` must be set to the default directory containing the
-  compiler binary (ending with a slash).  The exact value is not
-  important because it can be overridden on build.
+- ``ARCH_ROOT`` にはコンパイラバイナリのあるデフォルトのディレクトリ
+  （スラッシュで終わる）を設定する必要があります。ビルド時に上書き
+  できるので正確な値は重要ではありません。
 
-- ``ARCH_PREFIX`` must be set to the default compiler target prefix.
+- ``ARCH_PREFIX`` にはデフォルトのコンパイラターゲットプレフィックスを
+  設定する必要があります。
 
-- ``OCFLAGS`` must be set to the appropriate flags to pass to
-  **objcopy** to turn a raw binary file into an object file that can
-  be linked into the kernel.
+- ``OCFLAGS`` には生のバイナリファイルをカーネルにリンクできる
+  オブジェクトファイルに変換する **objcopy** に渡す適切なフラグを
+  設定する必要があります。
 
-``platformVars`` may modify the following definitions:
+``platformVars`` では次の定義を変更できます。
 
-- ``FLAGS`` can be modified to add additional compiler flags.
+- ``FLAGS`` を変更してコンパイラフラグを追加することができます。
 
-- ``ASFLAGS`` can be modified to add additional assembler flags.
-  These will be passed directly to the assembler, so do *not* prefix
-  these with ``-Wa,``.  For the GNU assembler see ``man as`` or ``info
-  as`` for available flags.
+- ``ASFLAGS`` を変更してアセンブラフラグを追加することができます。
+  これらのフラグは直接アセンブラに渡されるのでこれらの先頭に
+  ``-Wa,`` を *つけない* でください。GNUアセンブラで利用可能な
+  フラグについては ``man as`` または ``info as`` を参照してください。
 
-- ``LDFLAGS`` can be modified to add additional linker flags.  These
-  will be passed directly to the linker, so do not prefix these with
-  ``-Wl,``.  For the GNU linker see ``man ld'` or ``info ld`` for
-  available flags.
+- ``LDFLAGS`` を変更してリンカフラグを追加することができます。
+  これらはリンカに直接渡されるので、これらの先頭に ``-Wl,`` を
+  つけないでください。GNUリンカで利用可能なフラグについては
+  ``man ld'` または ``info ld`` を参照してください。
 
-- ``LDLIBS`` can be modified to add needed external libraries.
-  Besides possibly adding libgcc (``-lgcc``) if your architecture has
-  certain quirks like the need for division to be emulated in
-  software, you probably don't need to add anything here.
+- ``LDLIBS`` を変更して必要な外部ライブラリを追加することができます。
+  対象のアーキテクチャが除算のソフトウェアエミュレートを必要とする
+  など、特定の互換性のためにlibgcc (``-lgcc``) を追加する可能性の
+  他にはおそらくここには何も追加する必要はないでしょう。
 
-- ``INCLUDE`` can be modified to add additional include directories.  Prefix each
-  with ``-I``.  The toplevel Makefile handles adding these to
-  ``CFLAGS`` and ``ASFLAGS`` as appropriate.  You probably don't need
-  to add anything here, especially because
-  ``system/platforms/$(PLATFORM)`` is already added by default.
+- ``INCLUDE`` を変更してインクルードディレクトリを追加することが
+  できます。それぞれの前に ``-I`` を付けてください。トップレベルの
+  Makefileはこれらを ``CFLAGS`` と ``ASFLAGS``  に適切に追加して
+  処理します。特に ``system/platforms/$(PLATFORM)`` がすでに
+  デフォルトで追加されているので、ここには何も追加する必要はないで
+  しょう。
 
-- ``DEFS`` can be modified to add additional defines.  Prefix each
-  with ``-D``.  The toplevel Makefile handles adding these to
-  ``CFLAGS`` and ``ASFLAGS`` as appropriate.  If you need to add
-  conditional C code specifically for your platform in existing source
-  code (please avoid it whenever possible...) you should define a
-  constant like ``_XINU_PLATFORM_???_``, where ``???`` is your
-  platform.
+- ``DEFS`` を変更して定義を追加することができます。それぞれの前に
+  ``-D`` を付けてください。トップレベルのMakefileはこれらを
+  ``CFLAGS`` と ``ASFLAGS``  に適切に追加して  処理します。既存の
+  ソースコードにプラットフォーム固有の条件付きCコードを追加する
+  必要がある場合（可能な限り避けてください）は ``_XINU_PLATFORM_???_``
+  のような定数を定義する必要があります。ここで ``???`` は対象となる
+  プラットフォームです。
 
-Still furthermore, you can optionally set the following variables:
+さらにさらに、オプションで次の変数を設定することができます。
 
-- ``PLATCLEAN`` to be the name of a platform-specific target that will
-  be executed when ``make realclean`` is run.
+- ``PLATCLEAN`` には ``make realclean`` が実行されたときに実行
+  されるプラットフォーム固有のターゲットの名前を指定します。
 
-- ``LIBXC_OVERRIDE_CFILES``
-  (see :ref:`libxc_overrides` for explanation).
+- ``LIBXC_OVERRIDE_CFILES`` （説明については :ref:`libxc_overrides`
+  を参照してください）。
 
-- ``PLATFORM_NAME`` to change the release provided at the top of the
-  generated documentation.
+- ``PLATFORM_NAME`` は生成されるドキュメントの冒頭に置かれる
+  リリースを変更するために使用します。
 
 xinu.conf
 ~~~~~~~~~
 
-``xinu.conf`` is the file used for configuring Xinu's static device
-table.  See the existing examples in the ``compile/platforms/``
-directory for the format.  This file is used to generate
-``system/conf.c`` and ``system/conf.h``.  You should keep the devices
-defined in ``xinu.conf`` in sync with the components actually compiled
-into the kernel via the ``DEVICES`` variable in ``platformVars``.
+``xinu.conf`` はXinuの静的デバイステーブルの設定に使用される
+ファイルです。フォーマットについては ``compile/platforms/``
+ディレクトリにある既存のサンプルを参照してください。このファイルは
+``system/conf.c`` と ``system/conf.h`` の生成に使用されます。
+``xinu.conf`` で定義されたデバイスは ``platformVars`` の ``DEVICES``
+変数を介して実際にカーネルにコンパイルされるコンポーネントと同期
+していなければなりません。
 
 ld.script
 ~~~~~~~~~
 
-``ld.script`` is the linker script used to link the kernel.  This is
-used to customize the layout of the resulting kernel image, including
-the address at which it is compiled to run at.  See the existing
-examples in ``compile/platforms/``.
+``ld.script`` はカーネルのリンクに使用されるリンカスクリプトです。
+これは結果として得られるカーネルイメージのレイアウトのカスタマイズに
+使用され、コンパイル後の実行アドレスなどを含みます。
+``compile/platforms/`` にある既存の例を参照してください。
 
-Architectures
-~~~~~~~~~~~~~
+アーキテクチャ
+~~~~~~~~~~~~~~~~~
 
-Multiple Xinu platforms may have the same underlying "architecture",
-such as ARM or MIPS.  If the architecture of your platform is already
-listed in ``compile/arch/``, then there are two shortcuts you may be
-able to take:
+複数のXinuプラットフォームがARMやMIPSなどの同じ「アーキテクチャ」を
+基盤としている場合があります。対象となるプラットフォームの
+アーキテクチャが既に ``compile/arch/`` にある場合は、2つのショート
+カットを利用することができます。
 
-- ``platformVars`` can be shortened by including the corresponding ``platformVars``
-  in ``compile/arch/``, which will handle many of the definitions for you.
-- If you do not include a linker script (``ld.script``) in
-  ``compile/platforms/``, then the linker script in ``compile/arch/``
-  will be used, if present.  (This requires including the
-  corresponding architecture ``platformVars``.)  This script may be
-  sufficient for your platform.
+- ``platformVars`` は ``compile/arch/`` にある対応する ``platformVars``
+  をインクルードすることにより短くすることができます。これは多くの
+  定義をあなたに代わって処理します。
+- ``compile/platforms/`` にリンカースクリプト (``ld.script``) を
+  置かなかった場合は ``compile/arch/`` にリンカースクリプトがあれば
+  それが使用されます（これには対応するアーキテクチャの
+  ``platformVars`` のインクルードが必要です）。対象のプラットフォーム
+  にはこのスクリプトで十分かもしれません。
 
-The exact contents of the ``platformVars`` in ``compile/arch/`` is
-dependent on the architecture; see the existing examples.
+``compile/arch/`` にある ``platformVars`` の正確な内容は
+アーキテクチャによります。既存の例を参照してください。
