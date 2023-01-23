@@ -1,6 +1,6 @@
 .. _contents:
 
-Embedded Xinu documentation contents
+Embedded Xinuドキュメント: 目次
 ====================================
 
 .. toctree::
