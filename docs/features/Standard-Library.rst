@@ -1,115 +1,106 @@
-Standard C Library
+標準ライブラリ
 ==================
 
 .. contents::
    :local:
 
-Overview
+概要
 --------
 
-The XINU C library, or **libxc**, is a "minimal" standard C library
-distributed with XINU.  It is intended to be easy to understand rather
-than high-performance or fully standards compliant.  However, the
-functions that are implemented are mostly the same as the standard
-versions except as documented below.
+XINUのCライブラリである **libxc** はXINUとともに配布されれている
+"最小限の" 標準Cライブラリです。高性能や標準の完全準拠ではなく、
+理解しやすいことを意図しています。ただし、実装されている機能は
+以下に示すものを除き、標準版とほとんど同じです。
 
 API
 ---
 
-For the sake of reducing redundancy, the full API (functions and
-macros) provided by libxc is not documented on this page.  Instead,
-every function implemented in the :source:`lib/libxc` directory has a
-detailed comment describing its behavior.  Note that every C source
-file in this directory implements a separate externally visible
-function.
+冗長性を減らすため、libxcが提供する完全なAPI（関数とマクロ）は
+このページには記載されていません。代わりに :source:`lib/libxc`
+ディレクトリに実装されているすべての関数にはその動作を説明する
+詳細なコメントが付けられています。このディレクトリにあるすべての
+Cソースファイルは外部から個別に見える関数を実装していることに
+注意してください。
 
-The library headers are:
+ライブラリヘッダーは次のとおりです。
 
 =======================================   ==========================
-Header                                    Description
+ヘッダー                                  説明
 =======================================   ==========================
-:source:`ctype.h <include/ctype.h>`       Character types
-:source:`limits.h <include/limits.h>`     Limits of integer types
-:source:`stdarg.h <include/stdarg.h>`     Variable argument lists
-:source:`stdint.h <include/stdint.h>`     Fixed-width integer types
-:source:`stdio.h <include/stdio.h>`       Standard input and output
-:source:`stdlib.h <include/stdlib.h>`     Standard library definitions
-:source:`string.h <include/string.h>`     String operators
+:source:`ctype.h <include/ctype.h>`       文字型
+:source:`limits.h <include/limits.h>`     数値型の制限
+:source:`stdarg.h <include/stdarg.h>`     可変引数リスト
+:source:`stdint.h <include/stdint.h>`     固定幅整数型
+:source:`stdio.h <include/stdio.h>`       標準入出力
+:source:`stdlib.h <include/stdlib.h>`     標準ライブラリ定義
+:source:`string.h <include/string.h>`     文字列操作
 =======================================   ==========================
 
-:source:`stddef.h <include/stddef.h>` is also present and defines some
-XINU-specific types in addition to the standard ``offsetof``,
-``size_t``, and ``NULL``.
+:source:`stddef.h <include/stddef.h>` も存在し、標準の``offsetof``,
+``size_t``, ``NULL`` に加え、XINU固有の型もいくつか定義しています。
 
-Deviations from standard behavior
+標準的な動作との違い
 ---------------------------------
 
-For various reasons (usually simplicity), libxc deviates from other C
-libraries in the following ways:
+様々な理由（通常は単純化のため）のためlibxcは以下の点で他のCライブラリ
+とは異なります。
 
-- Many standard functions (and some headers) are simply not
-  implemented.  Examples:  Floating-point mathematics functions;
-  ``setjmp()`` and ``longjmp()``; wide character support; locale
-  support; time functions; complex arithmetic.
+- 多くの標準関数（といくつかのヘッダー）が単に実装されていません。
+  たとえば、浮動小数点数数学関数、``setjmp()`` と ``longjmp()``、
+  ワイドキャラクタのサポート、ロケールのサポート、時間関数、
+  複素数演算です。
 
-- Formatted printing and scanning support only a limited range of
-  format specifiers.  See :source:`_doscan() <lib/libxc/doscan.c>`
-  and :source:`_doprnt() <lib/libxc/doprnt.c>` for more information.
+- 書式付きのプリントとスキャンは限られた範囲の書式指定子しか
+  サポートしていません。詳細は :source:`_doscan() <lib/libxc/doscan.c>`  と  :source:`_doprnt() <lib/libxc/doprnt.c>` を参照してください。
 
-- The ctype functions declared in :source:`include/ctype.h` do not
-  handle ``EOF`` (end-of-file) as specified by C99.
+- :source:`include/ctype.h` で宣言されているctype関数はC99で規定
+  されている  ``EOF`` (end-of-file) を扱いません。
 
-- ``putc()`` is not implemented in libxc.  In Xinu it's actually a
-  "system call", and its arguments are reversed compared to the
-  standard ``putc()``.  Use ``fputc()`` or ``putchar()`` to get
-  standard behavior.
+- ``putc()`` は libxcでは実装されていません。Xinuではこれは「システム
+  コール」であり、その引数は標準の ``putc()`` とは逆になっています。
+  標準的な動作を得るには ``fputc()`` か ``putchar()`` を使用してください。
 
-- The stdio functions do not buffer the output like a standard
-  implementation would; instead they write directly to a device
-  descriptor (rather than a ``FILE`` stream).
+- stdio関数は標準的な実装のような出力のバッファリングをしません。
+  代わりに（ ``FILE`` ストリームではなく）デバイスディスクリプタに
+  直接書き込みます。
 
-- :source:`strlcpy() <lib/libxc/strlcpy.c>` is implemented, even
-  though this is technically a nonstandard BSD extension.  We do this
-  because several places in XINU were incorrectly calling
-  :source:`strncpy() <lib/libxc/strncpy.c>`
-  when they expected behavior equivalent to
-  :source:`strlcpy() <lib/libxc/strlcpy.c>`.
+- :source:`strlcpy() <lib/libxc/strlcpy.c>` は、技術的には非標準の
+  BSD拡張ですが、実装されています。これはXINUのいくつかの場所で
+  :source:`strlcpy() <lib/libxc/strlcpy.c>` に相当する動作を期待して
+  いたのに、誤って :source:`strncpy() <lib/libxc/strncpy.c>` を呼び
+  出していたためです。
 
 .. _libxc_overrides:
 
-Platform-specific overrides
----------------------------
+プラットフォーム固有のオーバーライド
+----------------------------------------
 
-Sometimes, one would like to build the C library with optimized
-implementations of certain functions, usually string functions like
-:source:`memcpy() <lib/libxc/memcpy.c>`
-or
-:source:`strlen() <lib/libxc/strlen.c>`
-written in assembly language for a particular architecture.  In line
-with the goals of XINU, this is discouraged because this makes it more
-difficult for people to understand the code and find where a given
-function is actually defined for a given platform.
+ある種の関数（通常は、:source:`memcpy() <lib/libxc/memcpy.c>` や
+:source:`strlen() <lib/libxc/strlen.c>` などの文字列関数）を特定の
+アーキテクチャ向けにアセンブリ言語で書いた最適化した実装でCライブラリを
+構築したい場合があります。これはXINUの趣旨に沿うものですが、コードの
+理解や、ある関数があるプラットフォームで実際にどこで定義されているかを
+見つけることが難しくなるため、推奨していません。
 
-If you nevertheless still wish to do this, please do not modify the
-code in libxc itself unless absolutely necessary.  Instead, define a
-variable ``LIBXC_OVERRIDE_CFILES`` in the platform-specific
-platformVars file (e.g.
-``compile/platforms/$(PLATFORM)/platformVars``) that is a list of C
-source files in libxc that should not be compiled.  For example, if
-you override ``memcpy()``, then you would specify::
+それでもなおこれを行いたい場合は、絶対に必要でない限り、libxc自体の
+コードは変更しないでください。代わりにプラットフォーム固有の
+platformVarsファイル（たとえば ``compile/platforms/$(PLATFORM)/platformVars`` ）
+で変数 ``LIBXC_OVERRIDE_CFILES`` を定義してください。これはコンパイル
+してはいけないlibxc内のCソースファイルのリストです。たとえば、
+``memcpy()`` をオーバーライドする場合はplatformVarsで次のように
+指定します。
 
     LIBXC_OVERRIDE_CFILES := memcpy.c
 
-in platformVars.  You then need to provide your own implementation of
-the corresponding function(s), but please do it in a platform-specific
-directory (e.g.  ``system/platforms/$(PLATFORM)``) instead of in here.
+この場合、対応する関数の実装を提供する必要がありますが、ここではなく
+プラットフォーム固有のディレクトリ（たとえば ``system/platforms/$(PLATFORM)`` ）で行ってください。
 
-This method still has the limitation that the replacement function(s)
-will not be included in ``libxc.a`` itself, only in the kernel as a
-whole.  However, this is inconsequential for XINU where everything
-gets linked into a single kernel image.
+この方法には置き換えた関数が  ``libxc.a`` に含まれず、カーネルに
+全体としてしか含まれないという制限があります。ただし、XINUでは
+すべてが一つのカーネルイメージにリンクされのでこれは重要なことでは
+ありません。
 
-References
+参考資料
 ----------
 
 - :wikipedia:`C standard library - Wikipedia <C standard library>`
