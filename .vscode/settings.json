@@ -1,0 +1,17 @@
+{
+	"C_Cpp.default.includePath": [
+        "${workspaceFolder}/**",
+        "include/**"
+    ],
+    "C_Cpp.errorSquiggles": "Disabled",
+    "files.associations": {
+        "*.h": "c",
+        "*.ld": "editorconfig",
+        "array": "cpp",
+        "iterator": "cpp",
+        "string": "cpp",
+        "string_view": "cpp",
+        "vector": "cpp",
+        "locale": "c"
+    }
+}
