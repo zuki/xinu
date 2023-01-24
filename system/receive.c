@@ -9,8 +9,8 @@
 /**
  * @ingroup threads
  *
- * receive - wait for a message and return it
- * @return message
+ * 受信する - メッセージを待ってそれを返す
+ * @return メッセージ
  */
 message receive(void)
 {
@@ -21,12 +21,12 @@ message receive(void)
     im = disable();
     thrptr = &thrtab[thrcurrent];
     if (FALSE == thrptr->hasmsg)
-    {                           /* if no message, wait for one */
+    {                           /* メッセージがなければ来るのを待つ */
         thrptr->state = THRRECV;
         resched();
     }
-    msg = thrptr->msg;          /* retrieve message                */
-    thrptr->hasmsg = FALSE;     /* reset message flag              */
+    msg = thrptr->msg;          /* メッセージを受信する            */
+    thrptr->hasmsg = FALSE;     /* メッセフラグをリセットする      */
     restore(im);
     return msg;
 }

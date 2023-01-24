@@ -10,16 +10,16 @@
 /**
  * @ingroup memory_mgmt
  *
- * Allocate heap memory.
+ * ヒープメモリを割り当てる
  *
  * @param nbytes
- *      Number of bytes requested.
+ *      要求するバイト数
  *
  * @return
- *      ::SYSERR if @p nbytes was 0 or there is no memory to satisfy the
- *      request; otherwise returns a pointer to the allocated memory region.
- *      The returned pointer is guaranteed to be 8-byte aligned.  Free the block
- *      with memfree() when done with it.
+ *      @p nbytes が 0、または要求に答え荒れるメモリが場合は ::SYSERR;
+ *      そうでなければ割り当てたメモリ領域へのポインタを返す。
+ *      返されるポインタは8バイト境界にあることが保証される。
+ *      使用が終わったら memfree() でブロックを開放すること。
  */
 void *memget(uint nbytes)
 {
@@ -31,9 +31,10 @@ void *memget(uint nbytes)
         return (void *)SYSERR;
     }
 
-    /* round to multiple of memblock size   */
+    /* memblockサイズの倍数に丸める   */
     nbytes = (ulong)roundmb(nbytes);
 
+    /* 割り込みを禁止する */
     im = disable();
 
     prev = &memlist;
@@ -50,7 +51,7 @@ void *memget(uint nbytes)
         }
         else if (curr->length > nbytes)
         {
-            /* split block into two */
+            /* ブロックを2つに分割する */
             leftover = (struct memblock *)((ulong)curr + nbytes);
             prev->next = leftover;
             leftover->next = curr->next;

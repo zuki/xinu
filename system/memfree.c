@@ -11,17 +11,18 @@
 /**
  * @ingroup memory_mgmt
  *
- * Frees a block of heap-allocated memory.
+ * ヒープに割り当てたメモリブロックを開放する
  *
  * @param memptr
- *      Pointer to memory block allocated with memget().
+ *      memget()で割り当てたメモリブロックへのポインタ
  *
  * @param nbytes
- *      Length of memory block, in bytes.  (Same value passed to memget().)
+ *      バイト単位のメモリブロック長（memget()に渡した値と同じ）
  *
  * @return
- *      ::OK on success; ::SYSERR on failure.  This function can only fail
- *      because of memory corruption or specifying an invalid memory block.
+ *      成功したら ::OK ; 失敗したら ::SYSERR 。この関数は
+ *      メモリの破損や間違ったメモリブロックが指定された場合にのみ
+ *      失敗する可能性がある。
  */
 syscall memfree(void *memptr, uint nbytes)
 {
@@ -29,7 +30,7 @@ syscall memfree(void *memptr, uint nbytes)
     irqmask im;
     ulong top;
 
-    /* make sure block is in heap */
+    /* ブロックがヒープにあること */
     if ((0 == nbytes)
         || ((ulong)memptr < (ulong)memheap)
         || ((ulong)memptr > (ulong)platform.maxaddr))
@@ -50,7 +51,7 @@ syscall memfree(void *memptr, uint nbytes)
         next = next->next;
     }
 
-    /* find top of previous memblock */
+    /* 前方のmemblockの先頭を探す */
     if (prev == &memlist)
     {
         top = NULL;
@@ -60,7 +61,7 @@ syscall memfree(void *memptr, uint nbytes)
         top = (ulong)prev + prev->length;
     }
 
-    /* make sure block is not overlapping on prev or next blocks */
+    /* ブロックが前方または後方のブロックと重ならないこと */
     if ((top > (ulong)block)
         || ((next != NULL) && ((ulong)block + nbytes) > (ulong)next))
     {
@@ -70,7 +71,7 @@ syscall memfree(void *memptr, uint nbytes)
 
     memlist.length += nbytes;
 
-    /* coalesce with previous block if adjacent */
+    /* 前方のブロックと隣接している場合は合体する */
     if (top == (ulong)block)
     {
         prev->length += nbytes;
@@ -83,7 +84,7 @@ syscall memfree(void *memptr, uint nbytes)
         prev->next = block;
     }
 
-    /* coalesce with next block if adjacent */
+    /* 後方のブロックと隣接している場合は合体する */
     if (((ulong)block + block->length) == (ulong)next)
     {
         block->length += next->length;

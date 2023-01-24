@@ -1,6 +1,6 @@
 /**
  * @file free.c
- * Free memory from a user thread.
+ * メモリをユーザスレッドから開放する
  *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
@@ -12,9 +12,9 @@
 #include <thread.h>
 
 /**
- * Attempt to free block of memory based on malloc() accounting
- * information stored in preceding two words.
- * @param *pmem pointer to memory block
+ * 2ワード前に格納されているmalloc()の会計情報に基づいて
+ * メモリブロックの開放を試みる。
+ * @param *base メモリブロックへのポインタ
  */
 void free(void *base)
 {
@@ -25,24 +25,24 @@ void free(void *base)
     uint top;
 
 
-    /* memptr points at the memblock to free */
+    /* baseは開放するmemblockを指している */
     block = (struct memblock *)base;
 
-    /* back up to accounting information */
+    /* 会計情報までポインタを戻す */
     block--;
 
-    /* make basic block checks */
+    /* ブロックの基本的なチェックを行う */
     if (block->next != block)
     {
         return;
     }
 
-    /* unmap pages from system page table */
+    /* システムのページテーブルからページをアンマップする */
     safeUnmapRange(block, block->length);
 
     im = disable();
 
-    /* get pointer to current thread */
+    /* 現在のスレッドへのポイントを取得する */
     thread = &thrtab[thrcurrent];
 
     prev = &(thread->memlist);
@@ -53,7 +53,7 @@ void free(void *base)
         next = next->next;
     }
 
-    /* find top of previous memblock */
+    /* 前方のmemblockの先頭を探す */
     if (prev == &(thread->memlist))
     {
         top = NULL;
@@ -63,7 +63,7 @@ void free(void *base)
         top = (ulong)prev + prev->length;
     }
 
-    /* make sure block is not overlapping on prev or next blocks */
+    /* 前方または後方のブロックと重ならないこと */
     if ((top > (ulong)block)
         || ((next != NULL)
             && ((ulong)block + block->length) > (ulong)next))
@@ -74,7 +74,7 @@ void free(void *base)
 
     thread->memlist.length += block->length;
 
-    /* coalesce with previous block if adjacent */
+    /* 前方ブロックが隣接する場合は合体する */
     if (top == (ulong)block)
     {
         prev->length += block->length;
@@ -86,7 +86,7 @@ void free(void *base)
         prev->next = block;
     }
 
-    /* coalesce with next block if adjacent */
+    /* 後方ブロックが隣接する場合は合体する */
     if (((ulong)block + block->length) == (ulong)next)
     {
         block->length += next->length;

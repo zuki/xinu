@@ -1,6 +1,6 @@
 /**
  * @file malloc.c
- * Allocate memory to a user thread.
+ * ユーザスレッドにメモリを割り当てる
  *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
@@ -13,10 +13,10 @@
 #include <stdlib.h>
 
 /**
- * Request heap storage, record accounting information, returning pointer
- * to assigned memory region.
- * @param nbytes number of bytes requested
- * @return pointer to region on success, SYSERR on failure
+ * ヒープストレージを要求し、会計情報を記録し、割り当てられた
+ * メモリ領域へのポインタを返す。
+ * @param nbytes 要求するバイト数
+ * @return 成功の場合は領域へのポインタ、失敗の場合は SYSERR
  */
 void *malloc(uint nbytes)
 {
@@ -26,19 +26,19 @@ void *malloc(uint nbytes)
     struct memregion *region;
     struct memblock *prev, *curr, *leftover;
 
-    /* we don't allocate 0 bytes. */
+    /* 0 バイトは割り当てない */
     if (0 == nbytes)
     {
         return NULL;
     }
 
-    /* round request to size of memblock */
+    /* memblockサイズの倍数に丸める */
     nbytes = (uint)roundmb(nbytes);
 
-    /* make room for accounting information */
+    /* 会計情報用のスペースを作る */
     nbytes += sizeof(struct memblock);
 
-    /* setup thread pointer */
+    /* スレッドポインタをセットする */
     thread = &thrtab[thrcurrent];
 
     im = disable();
@@ -56,7 +56,7 @@ void *malloc(uint nbytes)
         }
         else if (curr->length > nbytes)
         {
-            /* split block into two */
+            /* ブロックを2つに分割する */
             leftover = (struct memblock *)((ulong)curr + nbytes);
             prev->next = leftover;
             leftover->next = curr->next;
@@ -69,18 +69,18 @@ void *malloc(uint nbytes)
         curr = curr->next;
     }
 
-    /* did we allocate thread memory? */
+    /* スレッドメモリに割り当てができたか? */
     if (curr != NULL)
     {
-        /* set up accouting info */
+        /* 会計情報をセット */
         curr->next = curr;
         curr->length = nbytes;
 
         restore(im);
-        return (void *)(curr + 1);
+        return (void *)(curr + 1);  // 会計情報は見せない
     }
 
-    /* attempt acquire memory from kernel */
+    /* カーネルからメモリを取得する */
     region = memRegionAlloc(nbytes);
     if (SYSERR == (int)region)
     {
@@ -88,25 +88,25 @@ void *malloc(uint nbytes)
         return NULL;
     }
 
-    /* setup curr pointer */
+    /* カレントポインタをセットする */
     curr = region->start;
 
-    /* if we got more memory than needed, break off remaining memory */
+    /* 必要以上のメモリを取得した場合は残りのメモリを切り取る */
     if (region->length > nbytes)
     {
         leftover = (struct memblock *)((uint)region->start + nbytes);
         leftover->next = leftover;
         leftover->length = region->length - nbytes;
 
-        /* place extra memory in freelist */
+        /* 余分なメモリをfreelistに置く */
         free(++leftover);
     }
 
-    /* set accounting info */
+    /* 会計情報をセットする */
     curr->next = curr;
     curr->length = nbytes;
 
-    /* map memory to system page table */
+    /* メモリをシステムページテーブルにマップする */
     safeMapRange(curr, nbytes, ENT_USER);
 
     restore(im);

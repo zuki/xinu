@@ -9,8 +9,8 @@
 /**
  * @ingroup threads
  *
- * Clear messages, return waiting message (if any)
- * @return msg if available, NOMSG if no message
+ * メッセージをクリアする。（あれば）待機中のメッセージを返す
+ * @return メッセージがあればそのメッセージ、なければ NOBSG
  */
 message recvclr(void)
 {
@@ -23,12 +23,12 @@ message recvclr(void)
     if (thrptr->hasmsg)
     {
         msg = thrptr->msg;
-    }                           /* retrieve message       */
+    }                           /* メッセージを受信する  */
     else
     {
         msg = NOMSG;
     }
-    thrptr->hasmsg = FALSE;     /* reset message flag   */
+    thrptr->hasmsg = FALSE;     /* メッセージフラグをリセット */
     restore(im);
     return msg;
 }
