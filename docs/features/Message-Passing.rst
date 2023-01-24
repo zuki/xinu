@@ -1,41 +1,39 @@
-Message passing
-===============
+メッセージパッシング
+====================
 
-Message passing is one method used by XINU threads for interprocess
-communication. It allows threads to send individual messages to other
-threads by using the system calls ``send``, ``receive``, and
-``recvclr``. Each thread has memory allocated for a single message in
-its thread control block specifically for messages sent and received
-using this method. This form of message passing should not be confused
-with the mailbox messaging queue system also used for interprocess
-communication.
+メッセージパッシングはXINUのスレッドがプロセス間通信に使用する方法の
+一つです。スレッドはシステムコールの ``send``, ``receive``, ``recvclr``
+を使用して他のスレッドにメッセージを送信することができます。
+各スレッドにはこの方式で送受信されるメッセージ用にスレッド制御ブロック
+内にメッセージ1つ分のメモリが割り当てられています。このメッセージ
+パッシングの形をこれもプロセス間通信に使用されるメールボックス
+メッセージングキューシステムと混同しないでください。
 
-Upon creation, each thread is allocated memory in its thread control
-block for two fields which apply to this message passing system: a 4
-byte (``int`` type) message box to contain a single message sent to this
-thread, and a one byte flag (``bool`` type) to signal if there is an
-unreceived message waiting in that thread's message box.
+各スレッドには作成時にこのメッセージパッシングシステムに適用される
+2つのフィールド用のメモリがスレッド制御ブロックに割り当てられます。
+2つのフィールドは、このスレッドに送信されるメッセージを1つ格納する
+4バイト（ ``int`` 型）のメッセージボックスとそのスレッドのメッセージ
+ボックスにまだ受信していないメッセージが待機しているか否かを知らせる
+1バイトのフラグ（ ``bool`` 型）です。
 
-Threads use the functions ``send(tid_typ tid, int msg)``, ``receive()``,
-and ``recvclr()`` to utilize this system of message passing.
+スレッドは、関数 ``send(tid_typ tid, int msg)``, ``receive()``,
+``recvclr()`` を使って、このメッセージパッシングシステムを利用します。
 
-``send(tid_typ tid, int msg)`` delivers the message passed in as the
-parameter ``msg`` to the message box in the thread control block of the
-thread with a thread id of ``tid``, also passed in as a parameter.
-``send`` will always yield the processor by calling reschedule if the
-receiving thread was in a state of waiting to receive a message
-(``THRRECV``).
+``send(tid_typ tid, int msg)`` は引数 ``msg`` で渡されたメッセージを
+同じく引数として渡された ``tid`` をスレッドIDに持つスレッドの
+スレッド制御ブロックのメッセージボックスに配信します。 ``send`` は
+受信スレッドがメッセージ受信待ちの状態 (``THRRECV``) の場合は
+常に reschedule を呼んでプロセッサを明け渡します。
 
-``receive()`` returns the message waiting in the message box of the
-thread control block of the thread which called ``receive``. If there is
-no message waiting for the thread then the thread will go into a state
-of waiting to receive a message (``THRRECV``) until a message is passed
-to the thread.
+``receive()`` は ``receive`` を呼び出したスレッドのスレッド制御
+ブロックのメッセージボックスに待機しているメッセージを返します。
+スレッドに待機中のメッセージがない場合、スレッドはメッセージが
+渡されるまでメッセージ受信待ちの状態 (``THRRECV``) になります。
 
-``recvclr()`` is a non-blocking version of ``receive()``. If there is a
-message waiting in the message box of the thread control block of the
-thread which called ``receive`` it returns the message. If there is no
-message waiting for the thread, then it will simply return ``OK``,
-signifying that there was no message waiting for the thread. Notice that
-this does not block the thread that called ``receive`` and will always
-immediately return either the message or ``OK``.
+``recvclr()``は ``receive()`` のノンブロッキング版です。
+``receive`` を呼び出したスレッドのスレッド制御ブロックのメッセージ
+ボックスに待機中のメッセージがある場合はそのメッセージを返します。
+スレッドに待機中のメッセージがない場合は単に ``OK`` を返し、スレッドに
+待機中のメッセージはないことを知らせます。これは ``receive`` を
+呼び出したスレッドをブロックせず、常に直ちにメッセージか ``OK`` を
+返すに注意してください。
