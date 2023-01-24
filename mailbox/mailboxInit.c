@@ -11,16 +11,17 @@ semaphore mboxtabsem;
 /**
  * @ingroup mailbox
  *
- * Initialize mailbox structures.
+ * メールボックス構造体を初期化する
  *
  * @return
- *      ::OK if all mailboxes were initialized successfully, otherwise ::SYSERR.
+ *      すべてのメールボックスの初期化に成功した場合は ::OK　、
+ *      それ以外は ::SYSERR.
  */
 syscall mailboxInit(void)
 {
     uint i;
 
-    /* set all mailbox states to MAILBOX_FREE */
+    /* すべてのメールボックスの状態に MAILBOX_FREE をセットする */
     for (i = 0; i < NMAILBOX; i++)
     {
         mboxtab[i].state = MAILBOX_FREE;

@@ -9,14 +9,15 @@
 /**
  * @ingroup mailbox
  *
- * Free the specified mailbox.
+ * 指定されたメールボックスを開放する
  *
  * @param box
- *      The index of the mailbox to free.
+ *      開放するメールボックスのインデックス
  *
  * @return
- *      ::OK if the mailbox was successfully freed, or ::SYSERR if @p box did
- *      not specify a valid allocated mailbox.
+ *      メールボックスの開放に成功した場合、::OK 、
+ *      @p box に正しいメールボックスのインデックスが指定
+ *      されなかった場合、::SYSERR
  */
 syscall mailboxFree(mailbox box)
 {
@@ -30,30 +31,30 @@ syscall mailboxFree(mailbox box)
 
     mbxptr = &mboxtab[box];
 
-    /* wait until other threads are done editing the mailbox table */
+    /* 他のスレッドがメールボックステーブルの編集を終えるまで待機 */
     wait(mboxtabsem);
 
     if (MAILBOX_ALLOC == mbxptr->state)
     {
-        /* mark mailbox as no longer allocated  */
+        /* メールボックスがもはや割り当てられていないとマークする  */
         mbxptr->state = MAILBOX_FREE;
 
-        /* free semaphores related to this mailbox */
+        /* このメールボックスに関係するセマフォを開放する */
         semfree(mbxptr->sender);
         semfree(mbxptr->receiver);
 
-        /* free memory that was used for the message queue */
+        /* メッセージキューに使用したメモリを開放する */
         memfree(mbxptr->msgs, sizeof(int) * (mbxptr->max));
 
         retval = OK;
     }
     else
     {
-        /* mailbox was not allocated  */
+        /* メールボックスは割り当てられていない  */
         retval = SYSERR;
     }
 
-    /* signal that this thread is done editing the mailbox table */
+    /* このスレッドがメールボックステーブルの編集を終えたことを通知する */
     signal(mboxtabsem);
 
     return retval;

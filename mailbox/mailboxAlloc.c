@@ -9,15 +9,16 @@
 /**
  * @ingroup mailbox
  *
- * Allocate a mailbox that allows up to the specified number of outstanding
- * messages.
+ * 指定された数までの未処理メッセージを許容するメールボックスを
+ * 割り当てる。
  *
  * @param count
- *      Maximum number of messages allowed for the mailbox.
+ *      メールボックスが許容する最大のメッセージ数
  *
  * @return
- *      The index of the newly allocated mailbox, or ::SYSERR if all mailboxes
- *      are already in use or other resources could not be allocated.
+ *      新しく割り当てられたメールボックスのインデックス、
+ *      すべてのメールボックスがすでに使用されている、または、
+ *      その他のリソースが割り当てられなかった場合は ::SYSERR
  */
 syscall mailboxAlloc(uint count)
 {
@@ -26,28 +27,28 @@ syscall mailboxAlloc(uint count)
     struct mbox *mbxptr;
     int retval = SYSERR;
 
-    /* wait until other threads are done editing the mailbox table */
+    /* 他のスレッドがメールボックステーブルの編集を終えるまで待機する */
     wait(mboxtabsem);
 
-    /* run through all mailboxes until we find a free one */
+    /* 空メールボックスが見つけかるまですべてのメールボックスを調べる */
     for (i = 0; i < NMAILBOX; i++)
     {
         nextmbx = (nextmbx + 1) % NMAILBOX;
         mbxptr = &mboxtab[nextmbx];
 
-        /* when we find a free mailbox set that one up and return it */
+        /* 空メールボックスが見つかったら設定して返す */
         if (MAILBOX_FREE == mbxptr->state)
         {
-            /* get memory space for the message queue */
+            /* メッセージキューのためのメモリを取得する */
             mbxptr->msgs = memget(sizeof(int) * count);
 
-            /* check if memory was allocated correctly */
+            /* メモリが割り当てられたかチェックする */
             if (SYSERR == (int)mbxptr->msgs)
             {
                 break;
             }
 
-            /* initialize mailbox details and semaphores */
+            /* メールボックスの内容とセマフォを初期化する */
             mbxptr->count = 0;
             mbxptr->start = 0;
             mbxptr->max = count;
@@ -62,18 +63,18 @@ syscall mailboxAlloc(uint count)
                 break;
             }
 
-            /* mark this mailbox as being used */
+            /* このメッセージボックスを使用済みとマークする */
             mbxptr->state = MAILBOX_ALLOC;
 
-            /* return value is index of the allocated mailbox */
+            /* 返り値は割り当てたメールボックのインデックス */
             retval = nextmbx;
             break;
         }
     }
 
-    /* signal this thread is done editing the mbox tab */
+    /* このスレッドがメールボックテーブルの編集を終えたことを通知する */
     signal(mboxtabsem);
 
-    /* return either SYSERR or the index of the allocated mailbox */
+    /* SYSERRか割り当てたメールボックスのインデックスを返す */
     return retval;
 }

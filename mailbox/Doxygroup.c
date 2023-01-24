@@ -1,6 +1,6 @@
 /**
  * @defgroup mailbox Mailboxes
  *
- * @brief Xinu's mailbox subsystem allows threads to send and receive messages
- * to each other.
+ * @brief Xinuのメールボックスサブシステムはスレッド間での
+ * メッセージの送受信を可能にする。
  */

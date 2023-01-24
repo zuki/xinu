@@ -10,18 +10,18 @@
 /**
  * @ingroup mailbox
  *
- * Send a message to the specified mailbox.
+ * 指定されたメールボックスにメッセージを送信する
  *
  * @param box
- *      The index of the mailbox to send the message to.
+ *      メッセージを送信するメールボックスのインデックス
  *
  * @param mailmsg
- *      The message to send.
+ *      送信するメッセージ
  *
- * @return ::OK if the message was successfully enqueued, otherwise ::SYSERR.
- *         ::SYSERR is returned only if @p box did not specify a valid allocated
- *         mailbox or if the mailbox was freed while waiting for room in the
- *         queue.
+ * @return メッセージのエンキューに成功した場合は ::OK 、
+ *         @p box に正しいメールボックスが指定されていなかった、
+ *         あるいは、キューに空きが出るまで待機中にメールボックスが
+ *         開放された場合は ::SYSERR
  */
 syscall mailboxSend(mailbox box, int mailmsg)
 {
@@ -39,18 +39,18 @@ syscall mailboxSend(mailbox box, int mailmsg)
     retval = SYSERR;
     if (MAILBOX_ALLOC == mbxptr->state)
     {
-        /* wait until there is room in the mailmsg queue */
+        /* メールボックキューに空きができるまで待機 */
         wait(mbxptr->sender);
 
-        /* only continue if the mailbox hasn't been freed  */
+        /* メールボックスが開放されていない場合に限り処理を継続する  */
         if (MAILBOX_ALLOC == mbxptr->state)
         {
-            /* write mailmsg to this mailbox's mailmsg queue */
+            /* このメールボックスのmailmsgキューにメッセージを書き込む */
             mbxptr->msgs[((mbxptr->start + mbxptr->count) % mbxptr->max)] =
                 mailmsg;
             mbxptr->count++;
 
-            /* signal that there is another mailmsg in the mailmsg queue */
+            /* mailmsgキューに新メッセージがあることを通知する */
             signal(mbxptr->receiver);
 
             retval = OK;

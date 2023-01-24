@@ -9,15 +9,14 @@
 /**
  * @ingroup mailbox
  *
- * Retrieve the number of outstanding messages in the specified mailbox.
+ * 指定されたメールボックスの未使用のメッセージの数を調べる
  *
  * @param box
- *      The index of the mailbox for which to retrieve the number of outstanding
- *      messages.
+ *      未使用のメッセージ数を調べるメールボックスのインデックス
  *
  * @return
- *      The number of messages in the mailbox, or ::SYSERR if @p box did not
- *      specify a valid allocated mailbox.
+ *      メールボックスのメッセージ数、@p box に割り当て済みの
+ *      正しいメールボックスが指定されなかった場合は ::SYSERR
  */
 syscall mailboxCount(mailbox box)
 {
