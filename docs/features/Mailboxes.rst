@@ -1,25 +1,26 @@
-Mailboxes
-=========
+メールボックス
+==============
 
-In XINU, a **mailbox** is a messaging queue used for interprocess
-communication.  Mailboxes should not to be confused with the single
-:doc:`message passing <Message-Passing>` capability built into the
-thread control block which uses :source:`send() <system/send.c>` and
-:source:`receive() <system/receive.c>`.
+XINUにおいて **メールボックス** とは、プロセス間通信に使用される
+メッセージングキューのことです。メールボックスを
+:source:`send() <system/send.c>` と
+:source:`receive() <system/receive.c>` を使用するスレッド制御
+ブロックに組み込まれた :doc:`メッセージパッシング <Message-Passing>`
+機能と混同してはいけません。
 
-XINU allows for a finite number of mailboxes to be created. Each mailbox
-is identified by a number. Any number of processes can send and receive
-messages from the mailbox, provided the processes know the correct
-mailbox number.
+XINUでは有限個のメールボックスを作成することができます。各メール
+ボックスは番号で識別されます。プロセスが正しいメールボックス番号を
+知っている限り、どのような数のプロセスでもメールボックスで
+メッセージを送受信することができます。
 
-When a new mailbox is created (allocated) a maximum number of messages
-allowed in the queue must be specified. Memory for the messages is
-allocated when the mailbox is created. Once the mailbox message queue is
-full, processes that attempt to send a message must wait for space in
-the queue. If the queue is empty, processes that attempt to receive a
-message must wait for a message to be enqueued. A message is 4 bytes
-long (``int`` type).
+新しいメールボックスを作成する（割り当てる）際、キューが
+許容するメッセージの最大数を指定しなければなりません。メールボックスの
+作成される際にメッセージ用のメモリが割り当てられます。メールボックス
+メッセージキューが一杯になった場合、メッセージを送信しようとする
+プロセスはキューに空きができるのを待つ必要があります。キューが空の
+場合、メッセージを受信しようとするプロセスはメッセージがエンキュー
+されるのを待つ必要があります。メッセージは4バイト長（``int`` 型）です。
 
-When a mailbox is deleted all remaining messages in the queue are
-destroyed. Processes waiting to send or receive are released from the
-wait state.
+メールボックスが削除されるとキューに残っているメッセージはすべて
+破棄されます。送受信するために待機中のプロセスは待ち状態から解放
+されます。
