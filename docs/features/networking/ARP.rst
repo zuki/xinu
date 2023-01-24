@@ -1,37 +1,37 @@
 ARP
 ===
 
-As part of its :doc:`networking subsystem <index>`, XINU supports the
-**Address Resolution Protocol** (**ARP**), which allows protocol
-addresses (e.g. IPv4 addresses) to be translated into hardware
-addresses (e.g. MAC addresses).
+:doc:`networking subsystem <index>` の一環として、XINUはプロトコル
+アドレス（IPv4アドレスなど）をハードウェアアドレス（MACアドレスなど）に
+変換する **ARP** (**Address Resolution Protocol**) をサポートしています。
 
-ARP daemon
-----------
 
-The ARP daemon is run automatically on start up and waits for incoming
-ARP packets.  Incoming packets are filtered through :source:`netRecv()
-<network/net/netRecv.c>` and ARP requests/replies are sent on to the
-:source:`ARP Daemon <network/arp/arpDaemon.c>`.
-
-Use of ARP when sending packets
--------------------------------
-
-Callers of :source:`netSend() <network/net/netSend.c>` do not need to
-specify ``hwaddr``, the hardware address of the destination computer,
-and can leave this parameter as ``NULL``.  In such cases
-:source:`arpLookup() <network/arp/arpLookup.c>` is called to try to
-map the destination protocol address to a hardware address.  This
-first searches the ARP table, but if the relevant entry is not found,
-an ARP request is sent.  In the latter case, the calling thread is put
-to sleep until the ARP daemon wakes it up after receiving the
-corresponding reply, or until a designated timeout has elapsed.
-
-Shell commands
+ARPデーモン
 --------------
 
-To print the ARP table, run the **arp** command from the :doc:`XINU
-shell </features/Shell>`:
+ARPデーモンは起動時に自動的に実行され、ARPパケットの着信を待ちます。
+着信パケットは :source:`netRecv() <network/net/netRecv.c>` で
+フィルタリングされ、ARPリクエスト/リプライは
+:source:`ARP Daemon <network/arp/arpDaemon.c>` デーモンに送られます。
+
+パケット送信時のARPの使用
+-------------------------------
+
+:source:`netSend() <network/net/netSend.c>` の呼び出し側は宛先
+コンピュータのハードウェアアドレスである  ``hwaddr`` を指定する必要は
+なく、このパラメータを  ``NULL`` にしておくことができます。
+そのような場合、:source:`arpLookup() <network/arp/arpLookup.c>` が
+呼び出され、宛先プロトコルアドレスとハードウェアアドレスの対応付けが
+試みられます。これはまずARPテーブルが検索されますが、該当するエントリが
+見つからない場合はARPリクエストが送信されます。後者の場合、呼び出し側の
+スレッドは、ARPデーモンが対応する応答を受信して起床させるか、指定された
+タイムアウトが発生するまでスリープさせられます。
+
+シェルコマンド
+--------------
+
+ARPテーブルをプリントするには :doc:`XINUシェル </features/Shell>`
+から **arp** コマンドを実行します。
 
 .. code-block:: none
 
@@ -42,9 +42,10 @@ shell </features/Shell>`:
     192.168.6.101           00:16:B6:28:7D:4F       ETH0
     192.168.6.130           00:25:9C:3A:87:53       ETH0
 
-Currently there is no way to add/remove entries or clear the ARP table manually.
+現在のところ、マニュアルでAPRテーブルのエントリを追加・削除したり、
+ARPテーブルをクリアしたりする方法はありません。
 
-Resources
+参考資料
 ---------
 
 * :rfc:`826`
