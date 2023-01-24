@@ -1,89 +1,86 @@
-Memory management
+メモリ管理
 =================
 
-Memory management is an important aspect of any operating system. As
-such, XINU makes use of some aspects of the underlying hardware to
-build up a simple-to-understand memory management system.
+メモリ管理はすべてのオペレーティングシステムにおいて重要な要素です。
+そのため、XINUでは使用するハードウェアの機能を利用して、わかりやすい
+メモリ管理システムを構築しています。
 
-Memory allocators
+メモリアロケータ
 -----------------
 
-XINU maintains two memory allocators that work in tandem to provide
-dynamic memory to both kernel and user software. The first allocator
-is the kernel allocator which allocates small chunks of memory from
-the global memory heap as needed by the kernel. The second allocator
-is a user allocator, that allocates memory from a per-thread memory
-heap as needed by user processes.
+XINUでは2つのメモリアロケータを持っており、これらは連携してカーネルと
+ユーザソフトウェアに動的にメモリを提供します。第1のアロケータは
+カーネルアロケータであり、カーネルが必要とする小さなメモリチャンクを
+グローバルメモリーヒープから割り当てます。第2のアロケータはユーザ
+アロケータであり、ユーザプロセスが必要とするメモリをスレッドごとの
+メモリヒープから割り当てます。
 
-Kernel allocator
-~~~~~~~~~~~~~~~~
+カーネルアロケータ
+~~~~~~~~~~~~~~~~~~~
 
-The most basic memory allocator in the system is the kernel allocator
-which uses the ``memget`` and ``memfree`` functions. This operates on
-the global kernel heap that uses the ``memlist`` global variable. In
-this allocator the kernel developer is trusted to keep track of the
-accounting information for memory blocks. This makes a rather
-straightforward API.
+システムで最も基本的なメモリアロケータは ``memget`` 関数と
+``memfree`` 関数を使用するカーネルアロケータです。これはグローバル変数
+``memlist`` を使用するグローバルカーネルヒープ上で動作します。
+このアロケータはカーネル開発者がメモリブロックの会計情報を追跡
+するものと信用しています。このため、かなりわかりやすいAPIに なって
+います。
 
 .. code:: c
 
     void *memptr = memget(nbytes);
     memfree(memptr, nbytes);
 
-As can be seen in the above API, the allocation function takes a single
-parameter (``nbytes``) which is the number of bytes requested. The
-deallocation function takes two parameters (``memptr`` and ``nbytes``),
-where ``memptr`` is the memory address allocated via the ``memget``
-function and ``nbytes`` is the number of bytes requested with the
-original call.
+このAPIからわかるように、アロケーション関数は要求するバイト数である1つの
+パラメータ (``nbytes``) を取ります。でアロケーション関数は2つのパラメタ
+(``memptr`` と ``nbytes``) を取ります。 ``memptr`` は ``memget`` 関数
+関数で割り当てたメモリのアドレスであり、 ``nbytes`` は割り当て関数の
+呼び出しで要求したバイト数です。
 
-User allocator
-~~~~~~~~~~~~~~
+ユーザアロケータ
+~~~~~~~~~~~~~~~~~~
 
-Unlike the kernel allocator, the user allocator does not trust the
-programmer to remember the amount of memory requested and instead stores
-the accounting information immediately before the allocated memory. To
-the programmer the API for user memory is simply:
+カーネルアロケータとは異なり、ユーザアロケータはプログラマが要求した
+メモリ量を覚えていることを信用せず、代わりに割り当てられたメモリの
+直前に会計情報を格納します。プログラマにとってユーザメモリのAPIは
+単純なものです。
 
 .. code:: c
 
     void *memptr = malloc(nbytes);
     free(memptr);
 
-This allocator works on a per-thread memory list of free memory, this
-allows memory to be owned by the calling thread and prevents other
-threads from having access to the memory. This forms the basis of memory
-protection.
+このアロケータはスレッドごとの空きメモリリストで動作します。
+これによりメモリは呼び出し元のスレッドが所有することになり、他の
+スレッドがこのメモリにアクセスするのを防ぐことができます。これが
+メモリ保護の基礎となっています。
 
-When a request for memory comes in to the allocator, it attempts to
-satisfy the request with free memory that has already been allocated to
-thread. If that fails, the allocator will then attempt to acquire memory
-from the region allocator (described below). Since the region allocator
-works at page granularity, any excess memory is inserted into the
-thread's free memory list for future requests. When a block of memory is
-free'd, the memory is returned to the thread's free memory list.
+アロケータにメモリ要求が来ると、すでにスレッドに割り当てられている
+空きメモリで要求を満たそうとします。それが失敗するとアロケータは
+リージョンアロケータ（後述）からメモリを獲得しようとします。リージョン
+アロケータはページ単位で動作するので、余ったメモリは将来の要求のために
+スレッドの空きメモリリストに挿入されます。メモリブロックが解放されると
+そのメモリはスレッドの空きメモリリストに戻されます。
 
-It is not until the thread is killed that the memory is removed from the
-thread's protection domain and made available to the region allocator.
+メモリがスレッドの保護領域から削除され、リージョンアロケータが利用
+できるようになるのはスレッドがkillされた後です。
 
-Region allocator
-^^^^^^^^^^^^^^^^
+リージョンアロケータ
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The region allocator works beneath the user allocator and is
-initialized during the boot process. During system boot XINU uses
-``UHEAP_SIZE`` as defined in ``xinu.conf`` to allocate memory for the
-user heap. This memory is allocated via the kernel ``memget()``
-function and is then passed to the ``memRegionInit()`` function. Once
-the region allocator is initialized, the only user level interface to
-the region allocator is hidden behind the ``malloc`` and ``free``
-routines.
+リージョンアロケータはユーザアロケータの下で働き、ブートプロセス中に
+初期化されます。システムブート時にXINUは ``xinu.conf`` で定義されている
+``UHEAP_SIZE`` を使用してユーザヒープ用のメモリを割り当てます。この
+メモリはカーネルの ``memget()`` 関数により割り当てられ
+``memRegionInit()`` 関数に渡されます。リージョンアロケータは初期化
+されるとリージョンアロケータへの唯一のユーザレベルのインタフェースは
+``malloc`` 関数と ``free`` 関数の背後に隠蔽されます。
 
-Memory protection
+メモリ保護
 -----------------
 
 .. note::
 
-   This section applies to MIPS platforms only.
+   このセクションはMIPSプラットフォームにしか関係しません。
 
 Since XINU has limited resources to work with it does not provide a
 virtual memory system. It does take advantage of separate address
@@ -100,12 +97,12 @@ the kernel pages (i.e. pages that are not in the user heap), to every
 thread in the system as read only. This allows all threads to read from
 kernel data, but prevents overwriting of that data.
 
-Translation lookaside buffer
+TLB
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. note::
 
-   This section applies to MIPS platforms only.
+   このセクションはMIPSプラットフォームにしか関係しません。
 
 To facilitate memory protection, XINU uses the translation lookaside
 buffer (TLB) built into the MIPS processors of the WRT54GL series of
