@@ -29,10 +29,10 @@ read the source code.
 .. contents::
    :local:
 
-General USB Information
+一般的なUSBに関する情報
 -----------------------
 
-Bus Topology
+バストポロジ
 ~~~~~~~~~~~~
 
 Fundamentally, USB is just a way to connect devices to a computer
@@ -65,8 +65,8 @@ child devices.
 For its part, Embedded Xinu's USB implementation fully supports the
 dynamic tree topology of a USB bus.
 
-Devices
-~~~~~~~
+デバイス
+~~~~~~~~~
 
 Due to the generality of USB a USB device that is not a hub can be
 virtually anything at all. This is made possible in part by a highly
@@ -89,8 +89,8 @@ always sets the device to its first listed configuration, then attempts
 to bind a device driver to the entire device rather than examining
 individual interfaces to see if they need separate "interface drivers".
 
-Host Controllers
-~~~~~~~~~~~~~~~~
+ホストコントローラ
+~~~~~~~~~~~~~~~~~~~~
 
 USB is a polled bus, so all transfers over the USB are initiated by the
 **host**. The term "host" in this context means the USB software as well
@@ -113,7 +113,7 @@ the :doc:`/arm/rpi/Raspberry-Pi`.  Obviously, a standard interface is
 highly preferred when independently implementing a Host Controller
 Driver.
 
-Transfers
+転送
 ~~~~~~~~~
 
 To communicate with USB devices, the host sends and receives data over
@@ -138,13 +138,12 @@ with a specific type of USB transfer, which can be one of the following:
 -  **Isochronous** transfers. These are used for regular transmission of
    data with no error detecting (e.g. video capture).
 
-Embedded Xinu currently supports control, interrupt, and bulk transfers.
-Isochronous transfers have not yet been tested. Although currently
-functional, interrupt transfers may require some more work to guarantee,
-in all cases, the time-bounded transmission required by the USB
-specification.
+現在、Embedded Xinuはコントール転送、インターラプト転送、バルク転送を
+サポートしています。アイソクロナス転送はまだテストされていません。また、
+インターラプト転送は機能しますが、USBの仕様で要求されている時間的制約の
+ある転送を保証するためにもう少し作業が必要かもしれません。
 
-Speeds
+速度
 ~~~~~~
 
 USB supports multiple transfer speeds:
@@ -164,217 +163,202 @@ performed as a series of **split transactions**, which allow Low Speed
 or Full Speed transfers to occur without significantly slowing down the
 portion of the USB bus operating at a higher speed.
 
-As of this writing, Embedded Xinu's USB subsystem supports USB 2.0, so
-it supports devices operating at Low Speed, Full Speed, or High Speed.
-USB 3.0 Super Speed is not supported.
+これを書いている時点では、Embedded XinuのUSBサブシステムはUSB 2.0を
+サポートしており、LS、FS、HSで動作するデバイスをサポートしています。
+USB 3.0のSSはサポートされていません。
 
 .. _usb_subsystem:
 
-Embedded Xinu's USB subsystem
------------------------------
+Embedded XinuのUSBサブシステム
+---------------------------------
 
-Now that some general information about USB has been presented, it
-should be easier to understand the basic design of a USB software
-stack.  The description that follows is certainly not the only way to
-organize the code, but it is the way that is used in most operating
-systems and makes the most sense based on how USB was designed. In
-terms of Embedded Xinu, perhaps the main question is why USB devices
-and/or the USB controller do not, by default, show up as device(s) in
-``devtab`` like other Embedded Xinu devices. The reasons are that USB is
-a dynamic bus, so it cannot be described by a static table, and also
-because the highly nested structure of USB devices, as well as
-multiple supported transfer types, is too complicated for the simple
-":source:`read() <system/read.c>` and :source:`write()
-<system/write.c>` from a device" paradigm.
+USBに関する一般的な情報を示したので、USBソフトウェアスタックの
+基本設計を理解することは容易でしょう。以下の説明は、確かにコードを
+編成する唯一の方法ではありませんが、ほとんどのオペレーティング
+システムで使用されている方法であり、USBが設計思想に基づいたもっとも理に
+かなったものです。Embedded Xinuの観点からおそらく第一の疑問は、なぜUSB
+デバイスとUSBコントローラはデフォルトでは他のEmbedded Xinuデバイスのように
+``devtab`` にデバイスとして表示されないのかです。その理由は、USBは動的な
+バスなので静的なテーブルでは記述できないこと、USBデバイスが高度なネスト
+構造をとること、複数の転送タイプがサポートされていることにより、
+単純な「デバイスからの ":source:`read() <system/read.c>`, :source:`write() <system/write.c>`"」パラダイムには複雑すぎるからです。
 
 .. note::
-    Specific USB device drivers can still provide device entries in
-    ``devtab`` if needed.  However, they must account for the fact
-    that the physical devices are still hot-pluggable.
+    必要であれば、特定のUSBデバイスドライバを ``devtab``  にデバイス
+    エントリに提供することはできます。ただし、物理デバイスは依然として
+    ホットプラグ可能であることを考慮しなければなりません。
 
 .. note::
 
-    Not all Embedded Xinu :ref:`platforms <supported_platforms>`
-    support USB, either due to not having USB hardware available or
-    not having an appropriate USB host controller driver implemented.
+    すべてのEmbedded Xinu :ref:`platforms <supported_platforms>` が
+    USBをサポートしているわけではありません。USBハードウェアが利用
+    できないか、適切なUSBホストコントローラドライバが実装されていない
+    ためです。
 
 .. _usb_components:
 
-Components
+構成要素
 ~~~~~~~~~~
 
--  The **USB Host Controller Driver** is responsible for actually
-   sending and receiving data over the USB by making use of the
-   platform-dependent host controller hardware. The purpose of this
-   driver is to isolate differences in USB host controllers from all
-   other code dealing with USB.  In Embedded Xinu, USB Host Controller
-   Drivers must implement the interface declared in
-   :source:`include/usb_hcdi.h`.  (However, as of this writing, there
-   is only one Host USB Controller Driver implemented and it controls
-   the :doc:`/arm/rpi/Synopsys-USB-Controller` used on the
-   :doc:`/arm/rpi/Raspberry-Pi`.)
--  The **USB Core Driver** is responsible for maintaining the USB device
-   model, including the tree structure, and providing a framework in
-   which USB device drivers can be written. It provides many convenience
-   functions that simplify USB device driver development over using the
-   Host Controller Driver directly; this can be viewed as an attempt to
-   isolate the platform-dependent Host Controller Driver as much as
-   possible. It also handles configuration that is common to all USB
-   devices, such as setting a device configuration and address, and
-   reading descriptors. In Embedded Xinu, the USB Core Driver can be
-   found in :source:`device/usb/usbcore.c`.
--  **USB device drivers** are responsible for controlling specific USB
-   devices. Since USB is a dynamic bus, USB device drivers are bound to
-   actual USB devices at runtime with the help of USB Core Driver. A
-   very important USB device driver that must always be implemented in
-   any USB software stack is the **USB hub driver**, which is
-   responsible for monitoring the status of a USB hub and reporting to
-   the USB Core Driver when devices have been attached or detached.
-   Embedded Xinu's USB hub driver can be found in
-   :source:`device/usb/usbhub.c`. Other USB device
-   drivers can be found in :source:`device/`; e.g.
-   :source:`device/smsc9512/`.
+-  **USBホストコントローラドライバ** はプラットフォーム固有のホスト
+   コントローラハードウェアを利用して、USB上で実際にデータを送受信する
+   役割を担っています。このドライバの目的は、USBホストコントローラの違いを
+   USBを扱う他のすべてのコードから切り離すことです。Embedded Xinuでは
+   USBホストコントローラドライバは :source:`include/usb_hcdi.h` で宣言
+   されているインターフェイスを実装する必要があります（ただし、これを
+   書いている時点では、実装されているホストUSBコントローラドライバは1つ
+   だけで、 :doc:`/arm/rpi/Raspberry-Pi` で使用されている
+   :doc:`/arm/rpi/Synopsys-USB-Controller` を制御するものです）。
+-  **USBコアドライバ** はツリー構造を含むUSBデバイスモデルの維持と
+   USBデバイスドライバを記述するためのフレームワークを提供する役割を
+   担っています。ホストコントローラドライバを直接使用するよりもUSB
+   デバイスドライバの開発を容易にする多くの便利な機能を提供しています。
+   これはプラットフォーム固有のホストコントローラドライバをできるだけ
+   分離するための試みであると考えられます。また、デバイスの構成や
+   アドレスの設定、ディスクリプタの読み込みなど、すべてのUSBデバイスに
+   共通する設定も扱います。Embedded XinuのUSB Core Driverは
+   :source:`device/usb/usbcore.c` にあります。
+-  **USBデバイスドライバ** は特定のUSBデバイスを制御する役割を担って
+   います。USBは動的なバスなので、USBデバイスドライバはUSBコアドライバの
+   助けを借りて実行時に実際のUSBデバイスにバインドされます。すべてのUSB
+   ソフトウェアスタックで必ず実装されなければならない非常に重要なSUB
+   デバイスドライバが **USBハブドライバ** です。このドライバは、USBハブの
+   状態の監視とデバイスの着脱をUSBコアドライバに報告する役割を担っています。
+   Embedded XinuのUSBハブドライはたとえば。 :source:`device/smsc9512/`
+   のように  :source:`device/` にあります。
 
-.. note:: More complete (and complicated) USB software stacks, such as
-          Linux's, also support **USB interface drivers**, which are associated
-          with USB interfaces rather than USB devices.
+.. note:: Linuxのスタックのようなより完全（で複雑）なUSBソフトウェア
+          スタックでは、USBデバイスではなくUSBインタフェースに関連する
+          **USBインタフェースドライバ** もサポートされています。
 
-Enabling Embedded Xinu's USB Support
+Embedded XinuのUSBサポートの有効化
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To include support for USB in a given build of Embedded Xinu, define
-``WITH_USB`` in ``xinu.conf`` and add ``usb`` to the ``DEVICES``
-variable in ``platformVars``.  Note that the USB hub driver will be
-included automatically as it is required for USB to support any
-devices whatsoever.
+Embedded Xinuの特定のビルドにUSBのサポートを含めるには
+ ``xinu.conf`` で ``WITH_USB`` を定義し、 ``platformVars`` の
+ ``DEVICES`` 変数に  ``usb`` を追加してください。USBハブドライバは
+ USBがあらゆるデバイスをサポートするために必要なものなので自動的に
+ 含まれることに注意してください。
 
-In addition, you need to ensure that an appropriate Host Controller
-Driver, which is platform-dependent code and is not located in this
-directory, has been written and is compiled into the kernel.  For
-example, :source:`system/platforms/arm-rpi/usb_dwc_hcd.c` is the Host
-Controller Driver that is used on the Raspberry Pi hardware.
+さらに、プラットフォームに固有でこのディレクトリには存在しない
+適切なホストコントローラデバイスを書いて、カーネルにコンパイルする
+必要があります。たとえば、 :source:`system/platforms/arm-rpi/usb_dwc_hcd.c`
+はRaspberry Piハードウェアで使用されるホストコントローラデバイスです。
 
-Finally, you need to enable any actual USB devices you want to support
-by adding the corresponding device directories to the ``DEVICES``
-variable in ``platformVars``, then defining the appropriate static
-devices in ``xinu.conf``.  For example, on the Raspberry Pi, we enable
-the driver for the SMSC LAN9512 USB Ethernet Adapter, which is located
-in :source:`device/smsc9512`, by adding ``smsc9512`` to ``DEVICES``
-and defining the ``ETH0`` device in ``xinu.conf``.
+最後に、サポートしたい実際のUSBデバイスを対応するデバイスディレクトリを ``platformVars`` の ``DEVICES`` 変数に追加し、 ``xinu.conf`` で適切な
+スタティックデバイスを定義することにより有効にする必要があります。たとえば、Raspberry Piでは :source:`device/smsc9512` にあるSMSC LAN9512 USB Ethernet
+Adapterのドライバを有効にするために ``DEVICES`` に ``smsc9512`` を追加し、
+``xinu.conf`` で ``ETH0`` デバイスを定義しています。
 
-USB for embedded systems
+組込みシステム用のUSB
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-For fully embedded systems where debugging facilities are not
-critical, unnecessary human-friendly functionality can be omitted from
-the USB core.  See :source:`device/usb/usbdebug.c` for more details.
+デバッグ機能が重要でない完全な組み込みシステムの場合、不要なヒューマン
+フレンドリ機能はUSBコアから省略することができます。詳細については
+:source:`device/usb/usbdebug.c` を参照してください。
 
-USB-related shell commands
+USB関連のシェルコマンド
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The **usbinfo** :doc:`shell command <Shell>` prints out information
-about devices attached to the USB.  See :source:`shell/xsh_usbinfo.c`
-for more details, or run ``usbinfo --help``.
+**usbinfo** :doc:`シェルコマンド <Shell>` は、USBに接続されたデバイスの
+情報を表示します。詳細は :source:`shell/xsh_usbinfo.c` を参照するか、
+``usbinfo --help`` を実行してください。
 
 .. _how_to_write_usb_device_driver:
 
-How to write a USB device driver
+USBデバイスドライバの書き方
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You first of all must acquire any available documentation for the USB
-device.  Note that many devices do not have their own documentation
-because they conform to one of the USB *class specifications*; in such
-cases the documentation is the class specification, even though these
-are typically fairly long and complicated.
+まず、USBデバイスのドキュメントを入手する必要があります。多くのデバイスは
+USBの **クラス仕様** に準拠しているため独自のドキュメントを持っていない
+ことに注意してください。クラス仕様に準拠している場合、ドキュメントはクラス
+仕様書です。ただし、通常、これらは非常に長くて複雑です。
 
-For nonstandard devices with no documentation available, you will have
-to use whatever means are available to you for understanding the
-device protocol, such as source code for other operating systems.  As
-a last resort, the software interface to a USB device can be
-reverse-engineered by snooping on USB traffic generated by binary
-drivers.
+ドキュメントがない非標準デバイスの場合は、他のオペレーティングシステムの
+ソースコードなど、デバイスのプロトコルを理解するために利用可能なあらゆる
+手段を使用する必要があります。最後の手段として、バイナリドライバが生成する
+USBトラフィックを盗み見ることによりUSBデバイスのソフトウェアインタフェースを
+リバースエンジニアリングすることができます。
 
-Either way, to write the driver you will need to understand the format
-and meaning of messages sent to and from the device, and which USB
-endpoints and transfer types they are associated with.
+いずれにせよ、ドライバを書くためには、デバイスとやり取りされるメッセージの
+形式と意味、そしてそれらがどのUSBエンドポイントと転送タイプに関連付けられて
+いるかを理解する必要があります。
 
-Examples:
+例:
 
-- USB Human Interface Devices such as mice are required to have an IN
-  interrupt endpoint which is used to report input data such as mouse
-  coordinates, and certain metadata can be queried from the default
-  control endpoint.
-- USB networking devices, such as the :doc:`/arm/rpi/SMSC-LAN9512`,
-  provide a bulk IN endpoint for receiving networking packets and a
-  bulk OUT endpoint for sending network packets.
+- マウスウスなどのUSBヒューマンインタフェースデバイスはマウス座標などの
+  入力データの報告に使用されるINインターラプトエンドポイントが必要であり、
+  ある種のメタデータはデフォルトのコントロールエンドポイントから問い
+  合わせることができます。
+- :doc:`/arm/rpi/SMSC-LAN9512` のようなUSBネットワークデバイスは
+  ネットワークパケットを受信するためのバルクINエンドポイントと
+  ネットワークパケットを送信するためのバルクOUTエンドポイントを提供します。
 
-On to the code itself:  In Embedded Xinu, USB device drivers are
-implemented using the API provided by the USB Core Driver, which is
-declared in :source:`usb_core_driver.h`.  This API allows drivers to
-register themselves, bind themselves to USB devices that are detected
-by the core, and communicate with USB devices.  It is documented
-fairly extensively in the source; also see :source:`device/smsc9512/`
-for an example of a USB device driver.
+コードそのものについては、Embedded XinuではUSBデバイスドライバは
+:source:`usb_core_driver.h` で宣言されているUSBコアドライバが提供する
+APIを使って実装されます。このAPIによりドライバはドライバ自身の登録、
+コアによって検出されるUSBデバイスへのバインド、USBデバイスとの通信が
+可能になります。これらについてはソースコードに非常に詳しく記述されて
+います。また、USBデバイスドライバの例については
+:source:`device/smsc9512/` を参照してください。
 
-Note that Xinu's static device model is incompatible with USB's
-dynamic device model, which is something that needs to be worked
-around by the USB device drivers.  For example, the driver might
-refuse to bind itself to more than a fixed number of USB devices, and
-it might block or return failure if code tries to open the static
-device before it has actually been bound to an actual USB device.
+Xinuの静的デバイスモデルはUSBの動的デバイスモデルとは互換性がない
+ことに注意してください。そのためUSBデバイスドライバで回避策が必要な
+場合があります。たとえば、ドライバは一定数以上のUSBデバイスとの
+バインドを拒否するかもしれませんし、USBデバイスに実際にバインド
+される前にコードが静的デバイスを開こうとするとブロックしたり失敗を
+返したりするかもしれません。
 
-How to write a USB host controller driver
+USBホストコントローラドライバの書き方
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In Embedded Xinu, the USB Host Controller Driver is responsible for
-actually interacting with the hardware (the USB Host Controller) to
-send and receive data over the USB.  Unfortunately, USB Host
-Controllers are not standardized by the USB specification itself,
-which is why this abstraction layer is needed.  USB Host Controllers
-include those compliant with the UHCI, OHCI, or EHCI specifications,
-as well as nonstandard ones such as the
-:doc:`/arm/rpi/Synopsys-USB-Controller` used on the
-:doc:`/arm/rpi/Raspberry-Pi`.
+Embedded Xinuでは、USBホストコントローラドライバは実際にハードウェア
+（USBホストコントローラ）と対話し、USB上でデータを送受信する役割を担って
+います。残念ながら、USBホストコントローラはUSB仕様では標準化されておらず、
+それがこの抽象化レイヤが必要である理由となっています。USBホスト
+コントローラにはUHCI、OHCI、EHCIの各仕様に準拠したものもあれば、
+:doc:`/arm/rpi/Raspberry-Pi` に使用されている
+:doc:`/arm/rpi/Synopsys-USB-Controller` のような非標準のものもあります。
 
-The very first step is to determine whether Xinu already supports the USB Host
-Controller for the hardware under consideration.  If so, you can use that code,
-but some changes may be needed (e.g. the location of memory-mapped registers).
-Otherwise, read on....
+最初のステップは、Xinuが対象となるハードウェアのUSBホストコントローラを
+すでにサポートしているか否かを確認することです。もししていればそのコードを
+使うことができますが、変更が少し必要でしょう（たとえば、メモリマップド
+レジスタの位置など）。そうでない場合は、続きをお読みください。
 
-The USB Host Controller Driver must implement the interface declared in
-:source:`include/usb_hcdi.h`.
+USBホストコントローラドライバは :source:`include/usb_hcdi.h` で宣言
+されているインタフェースを実装する必要があります。
 
-You first must acquire any documentation (if it exists) for the Host
-Controller.  You also need to read relevant parts of the USB 2.0
-Specification, mainly those that describe control, interrupt, and bulk
-transfers.  Most of the 650 pages you do **not** need to read.
+まず、（もしあれば）ホストコントローラのドキュメントを入手する必要が
+あります。また、USB2.0仕様の関連部分（主にコントロール、インターラプト、
+バルクの各転送について記述されている部分）を読む必要があります。
+650ページのほとんどは読む必要が **ありません** 。
 
-Next, in ``hcd_start()``, you must write any code that is needed to prepare the
-Host Controller to be ready to use.
+次に、``hcd_start()`` にホストコントローラを使用可能な状態にするために
+必要なコードを書く必要があります。
 
-The next and essentially final step is to implement
-``hcd_submit_xfer_request()``, which is very difficult.  You should initially
-focus on faking requests that are sent to the root hub.  These will include
-various control transfers to and from the root hub's default endpoint as well
-as an interrupt transfer from the root hub's status change endpoint.  Some
-root hub requests can be handled entirely in software; others will need to
-communicate with the Host Controller.  Next, you must support control
-transfers to and from actual USB devices on the bus.  Finally, you must
-support interrupt and bulk transfers.  These must be asynchronous and
-interrupt-driven.  Note that the hub driver uses interrupt transfers in order
-to detect port status changes; thus, it will be impossible to enumerate the
-entire USB until interrupt transfers have been implemented.
+次の、そして本質的に最後のステップは ``hcd_submit_xfer_request()`` の
+実装ですが、これは非常に難しいです。最初は、ルートハブに送信される
+偽のリクエストに焦点を当てるべきです。これにはルートハブのデフォルト
+エンドポイントとの間の様々なコントロール転送とルートハブのステータス
+変更エンドポイントからのインターラプト転送が含まれます。ルートハブの
+リクエストにはソフトウェアですべて処理できるものと、ホストコントローラと
+通信する必要があるものがあります。次に、バス上の実際のUSBデバイスとの
+間のコントロール転送をサポートする必要があります。最後に、インターラプト
+転送とバルク転送をサポートする必要があります。これらは、非同期かつ
+割り込み駆動である必要があります。ハブドライバはポートの状態変化を
+検出するためにインターラプト転送を使用しますので、インターラプト転送を
+実装しないとUSB全体のエヌメレーションをすることができないことに注意
+してください。
 
-You can use the ``usb_debug()`` and ``usb_dev_debug()`` macros to
-print debugging messages.  Enable them by changing the logging
-priorities in :source:`include/usb_util.h`.
+デバッグメッセージを表示するために ``usb_debug()`` マクロと
+``usb_dev_debug()`` マクロを使用することができます。有効にするには
+:source:`include/usb_util.h` にあるログ優先順位を変更してください。
 
-Further reading
+さらなる読み物
 ---------------
 
 - `USB 2.0 Specification <http://www.usb.org/developers/docs/>`__
 - `USB 3.1 Specification <http://www.usb.org/developers/docs/>`__
-- Embedded Xinu USB 2.0 subsystem. (:source:`device/usb`)
-- Embedded Xinu USB device drivers. (Example: :source:`device/smsc9512/`)
-- Embedded Xinu USB host controller drivers. (Example: :source:`system/platforms/arm-rpi/usb_dwc_hcd.c`)
-
+- Embedded Xinu USB 2.0 サブシステム. (:source:`device/usb`)
+- Embedded Xinu USB デバイスドライバ. (例: :source:`device/smsc9512/`)
+- Embedded Xinu USB ホストコントローラドライバ. (例: :source:`system/platforms/arm-rpi/usb_dwc_hcd.c`)
