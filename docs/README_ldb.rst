@@ -10,6 +10,9 @@ Embedded Xinu, Copyright (C) 2008, 2009, 2010, 2013, 2018.  All rights reserved.
 私が取り組んでいることを追跡したいのであれば私は作業を行う度にwikiを更
 新しています。
 
+.. contents::
+   :local:
+
 0. 概要
 -----------------------
 

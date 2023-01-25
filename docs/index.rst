@@ -15,3 +15,4 @@ Embedded Xinuドキュメント: 目次
    teaching/index
    projects/index
    development/index
+   README_ldb
