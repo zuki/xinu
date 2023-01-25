@@ -1,20 +1,19 @@
 ICMP
 ====
 
-As part of its :doc:`Networking subsystem <index>`, XINU supports
-the **Internet Control Message Protocol** (**ICMP**).  The support can
-be found in the :source:`network/icmp/` directory.  This module
-features an ICMP daemon that runs on start up and responds to ICMP
-echo requests(pings).  The module implements the function
-:source:`icmpEchoRequest() <network/icmp/icmpEchoRequest.c>`, which is
-used by the **ping** :doc:`shell command </features/Shell>` to send
-ICMP echo requests to the specified IPv4 address.
+:doc:`ネットワークサブシステム <index>` の一部として、XINUは **ICMP**
+(**Internet Control Message Protocol**) をサポートしています。
+実装は :source:`network/icmp/` ディレクトリにあります。このモジュールには
+起動時に実行され、ICMPエコー要求（ping）に応答するICMPデーモンが
+あります。また、このモジュールには指定されたIPv4アドレスにICMPエコー要求を
+送信する **ping** :doc:`shell command </features/Shell>` で使用される
+:source:`icmpEchoRequest() <network/icmp/icmpEchoRequest.c>` 関数を実装
+しています。
 
-Note that order to either send or reply to ICMP echo packets, the
-network interface needs to be brought up (e.g. by using the **netup**
-at the shell).
+ICMPエコーパケットの送信や応答を行うには（たとえば、シェルで **netup** を
+使って）ネットワークインターフェイスを立ち上げる必要があります。
 
-Resources
+参考資料
 ---------
 
 - :rfc:`792`
