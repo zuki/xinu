@@ -1,7 +1,7 @@
 ARP
 ===
 
-:doc:`networking subsystem <index>` の一環として、XINUはプロトコル
+:doc:`ネットワークサブシステム <index>` の一部として、XINUはプロトコル
 アドレス（IPv4アドレスなど）をハードウェアアドレス（MACアドレスなど）に
 変換する **ARP** (**Address Resolution Protocol**) をサポートしています。
 
