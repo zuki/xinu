@@ -1,25 +1,24 @@
 DHCP
 ====
 
-**DHCP** (**Dynamic Host Configuration Protocol**) support has been
-added to XINU as part of its :doc:`networking subsystem <index>`.
-Currently, only IPv4 client support--- that is, acquiring IPv4 address
-information--- is supported. The code is located in
-:source:`network/dhcpc`, and the API is declared in
-:source:`include/dhcpc.h`.
+:doc:`ネットワークサブシステム <index>` の一部として、**DHCP**
+(**Dynamic Host Configuration Protocol**) のサポートがXINUに追加されました。
+現在のところ、IPv4クライアント（すなわち、IPv4アドレス情報の取得）だけが
+サポートされています。コードは :source:`network/dhcpc` にあり、APIは
+:source:`include/dhcpc.h` で宣言されています。
 
-In addition to basic IPv4 information (assigned IPv4 address, netmask,
-and gateway) the DHCP client returns the "bootfile" and "next-server"
-options if they are provided by the DHCP server.  If specified, this
-information can be used to download the boot file using XINU's
-:doc:`TFTP client <TFTP>`.
+DHCPクライアントは基本的なIPv4情報（割り当てられたIPv4アドレス、
+ネットマスク、ゲートウェイ）に加えて、DHCPサーバが提供していれば
+"bootfile"オプションと"next-server"オプションを返します。この情報を
+指定すると、XINUの :doc:`TFTPクライアント <TFTP>` を使用してブートファイルを
+ダウンロードするために使用することができます。
 
 .. note::
-    This page refers specifically to the DHCP client support built
-    into XINU, which is completely separate from the DHCP support
-    included in CFE, which is third-party firmware.
+    このページはXINUに組み込まれているDHCPクライアントのサポートだけを
+    説明したものであり、サードパーティファームウェアであるCFEに含まれて
+    いるDHCPサポートとは完全に別物です。
 
-Resources
+参考資料
 ---------
 
 - :wikipedia:`Dynamic Host Configuration Protocol - Wikipedia <Dynamic Host Configuration Protocol>`
