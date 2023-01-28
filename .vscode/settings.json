@@ -12,6 +12,7 @@
         "string": "cpp",
         "string_view": "cpp",
         "vector": "cpp",
-        "locale": "c"
+        "locale": "c",
+        "system_error": "c"
     }
 }
