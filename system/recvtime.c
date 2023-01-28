@@ -12,9 +12,9 @@
 /**
  * @ingroup threads
  *
- * wait to receive a message or timeout and return result
- * @param  maxwait ticks to wait before timeout
- * @return msg if becomes available, TIMEOUT if no message
+ * メッセージの受信またはタイムアウトを待って、結果を返す
+ * @param  maxwait タイムアウトになるまで待機するtick数
+ * @return 受信できたら msg、メッセージがなかったら TIMEOUT
  */
 message recvtime(int maxwait)
 {
@@ -31,6 +31,7 @@ message recvtime(int maxwait)
     if (FALSE == thrptr->hasmsg)
     {
 #if RTCLOCK
+        // sleepqに入れる
         if (SYSERR == insertd(thrcurrent, sleepq, maxwait))
         {
             restore(im);
@@ -46,8 +47,8 @@ message recvtime(int maxwait)
 
     if (thrptr->hasmsg)
     {
-        msg = thrptr->msg;      /* retrieve message              */
-        thrptr->hasmsg = FALSE; /* reset message flag            */
+        msg = thrptr->msg;      /* メッセージを取得              */
+        thrptr->hasmsg = FALSE; /* メッセージフラグをリセット    */
     }
     else
     {

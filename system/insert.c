@@ -11,10 +11,10 @@
 /**
  * @ingroup threads
  *
- * Insert a thread into a queue in descending key order.
- * @param tid    thread ID to insert
- * @param q      target queue
- * @param key    sorting key
+ * スレッドをキューにキーの降順に挿入する
+ * @param tid    挿入するスレッドID
+ * @param q      対象のキュー
+ * @param key    ソートキー
  * @return OK
  */
 int insert(tid_typ tid, qid_typ q, int key)
@@ -33,7 +33,7 @@ int insert(tid_typ tid, qid_typ q, int key)
         next = quetab[next].next;
     }
 
-    /* insert tid between prev and next */
+    /* prevとnextの間にtidを挿入 */
     quetab[tid].next = next;
     quetab[tid].prev = prev = quetab[next].prev;
     quetab[tid].key = key;

@@ -10,9 +10,9 @@
 #include <stdlib.h>
 
 /**
- * Unmap a page from the page table.
- * @param page page to remove from page table.
- * @return non-zero value on failure.
+ * ページテーブルからページをアンマップする
+ * @param page ページテーブルから削除するページ
+ * @return 失敗の場合は非ゼロ値
  */
 int safeUnmap(void *page)
 {
@@ -24,17 +24,17 @@ int safeUnmap(void *page)
         return 1;               /* invalid */
     }
 
-    /* find index of page table entry */
+    /* ページテーブル園t理のインデックスを計算 */
     index = (((uint)page & PMEM_MASK) >> 12);
     entry = &(pgtbl[index]);
 
-    /* make sure entry is correctly mapped */
+    /* エントリが正しくメッピングされているか確認する */
     if ((entry->entry & 0xffffffc0) != ((uint)page >> 6))
     {
         return 1;               /* corrupted page */
     }
 
-    /* clear entry from page table */
+    /* ページテール部からエントリをクリアする */
     bzero(entry, sizeof(struct pgtblent));
 
     return 0;

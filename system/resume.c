@@ -10,9 +10,9 @@
 /**
  * @ingroup threads
  *
- * Unsuspend a thread, making it ready
- * @param tid target thread
- * @return priority
+ * スレッドの一時停止を止め、readylistに置いて、リスケジュールする
+ * @param tid 対象のスレッド
+ * @return 優先度、または SYSERR
  */
 syscall resume(tid_typ tid)
 {

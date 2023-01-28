@@ -8,8 +8,7 @@
 #include <string.h>
 #include "smsc9512.h"
 
-/* Implementation of etherControl() for the smsc9512; see the documentation for
- * this function in ether.h.  */
+/* smsc9512 etherControl() の実装; ether.h にあるこの関数の文書を参照  */
 devcall etherControl(device *devptr, int req, long arg1, long arg2)
 {
     struct usb_device *udev;
@@ -28,38 +27,38 @@ devcall etherControl(device *devptr, int req, long arg1, long arg2)
 
     switch (req)
     {
-    /* Program MAC address into device. */
+    /* MACアドレスをデバイスに書き込む */
     case ETH_CTRL_SET_MAC:
         status = smsc9512_set_mac_address(udev, (const uchar*)arg1);
         break;
 
-    /* Get MAC address from device. */
+    /* デバイスからMACアドレスを取得する */
     case ETH_CTRL_GET_MAC:
         status = smsc9512_get_mac_address(udev, (uchar*)arg1);
         break;
 
-    /* Enable or disable loopback mode.  */
+    /* ループバックモードを有効/無効にする */
     case ETH_CTRL_SET_LOOPBK:
         status = smsc9512_modify_reg(udev, MAC_CR, ~MAC_CR_LOOPBK,
                                      ((bool)arg1 == TRUE) ? MAC_CR_LOOPBK : 0);
         break;
 
-    /* Get link header length. */
+    /* リンクヘッダー長を取得する */
     case NET_GET_LINKHDRLEN:
         return ETH_HDR_LEN;
 
-    /* Get MTU. */
+    /* MTUを取得する */
     case NET_GET_MTU:
         return ETH_MTU;
 
-    /* Get hardware address.  */
+    /* ハードウェアあれですを取得する  */
     case NET_GET_HWADDR:
         addr = (struct netaddr *)arg1;
         addr->type = NETADDR_ETHERNET;
         addr->len = ETH_ADDR_LEN;
         return etherControl(devptr, ETH_CTRL_GET_MAC, (long)addr->addr, 0);
 
-    /* Get broadcast hardware address. */
+    /* ブロードキャストアドレスを取得する */
     case NET_GET_HWBRC:
         addr = (struct netaddr *)arg1;
         addr->type = NETADDR_ETHERNET;

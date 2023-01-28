@@ -1,5 +1,5 @@
 /**
  * @defgroup arp ARP
  * @ingroup network
- * @brief Address Resolution Protocol
+ * @brief ARP: アドレスリゾルーションプロトコル
  */

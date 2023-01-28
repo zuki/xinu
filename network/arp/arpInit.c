@@ -16,28 +16,28 @@ mailbox arpqueue;
 /**
  * @ingroup arp
  *
- * Initializes ARP table and ARP daemon.
- * @return OK if initialization is successful, otherwise SYSERR
+ * ARPテーブルとARPデーモンを初期化する。
+ * @return 初期化が成功したら OK、そ例外は SYSERR
  */
 syscall arpInit(void)
 {
     int i = 0;
 
-    /* Initialize ARP table */
+    /* ARPテーブルを初期化する */
     for (i = 0; i < ARP_NENTRY; i++)
     {
         bzero(&arptab[i], sizeof(struct arpEntry));
         arptab[i].state = ARP_FREE;
     }
 
-    /* Initialize ARP queue */
+    /* ARPデーモンを初期化する */
     arpqueue = mailboxAlloc(ARP_NQUEUE);
     if (SYSERR == arpqueue)
     {
         return SYSERR;
     }
 
-    /* Spawn arpDaemon thread */
+    /* ARPデーモンスレッドを生成する */
     ready(create
           ((void *)arpDaemon, ARP_THR_STK, ARP_THR_PRIO, "arpDaemon", 0),
           RESCHED_NO);

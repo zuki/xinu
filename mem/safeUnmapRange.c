@@ -8,11 +8,11 @@
 #include <safemem.h>
 
 /**
- * Remove a range of pages from a page table starting at start and ending
- * after length bytes.
- * @param start beginning page address to remove.
- * @param length number of bytes to unmap for.
- * @return non-zero value on failure.
+ * ページテーブルからstartから始まり、lengthバイト後に終わる
+ * ページ領域を削除する
+ * @param start 削除する先頭のページアドレス
+ * @param length アンマップするバイト数
+ * @return 失敗した場合は 非ゼロ値
  */
 int safeUnmapRange(void *start, uint length)
 {

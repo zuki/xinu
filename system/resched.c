@@ -10,16 +10,16 @@
 #include <memory.h>
 
 extern void ctxsw(void *, void *, uchar);
-int resdefer;                   /* >0 if rescheduling deferred */
+int resdefer;                   /* 再スケジュールが遅延されたら >0 */
 
 /**
  * @ingroup threads
  *
- * Reschedule processor to highest priority ready thread.
- * Upon entry, thrcurrent gives current thread id.
- * Threadtab[thrcurrent].pstate gives correct NEXT state
- * for current thread if other than THRREADY.
- * @return OK when the thread is context switched back
+ * プロセッサを最も優先度の高いreadyスレッドにリスケジュールする。
+ * この関数が呼び出された際、thrcurrentには現在のスレッドIDが、
+ * Threadtab[thrcurrent].pstateにはTHRREADYでなければ現在の
+ * スレッドの正しいNEXT状態が設定されている。
+ * @return スレッドがコンテキストスイッチバックされたら OK
  */
 int resched(void)
 {
@@ -28,7 +28,7 @@ int resched(void)
     struct thrent *thrnew;      /* new thread entry */
 
     if (resdefer > 0)
-    {                           /* if deferred, increase count & return */
+    {                           /* 遅延されたら、countを増分して復帰 */
         resdefer++;
         return (OK);
     }
@@ -39,25 +39,28 @@ int resched(void)
 
     if (THRCURR == throld->state)
     {
+        // readylistの先頭のスレッドよりカレントスレッドの優先度が高い
         if (nonempty(readylist) && (throld->prio > firstkey(readylist)))
         {
+            // カレントスレッドを続ける
             restore(throld->intmask);
             return OK;
         }
+        // カレントスレッドをreadylistに入れる
         throld->state = THRREADY;
         insert(thrcurrent, readylist, throld->prio);
     }
 
-    /* get highest priority thread from ready list */
+    /* readlylistから優先度がもっとも高いスレッドを取得する */
     thrcurrent = dequeue(readylist);
     thrnew = &thrtab[thrcurrent];
     thrnew->state = THRCURR;
 
-    /* change address space identifier to thread id */
+    /* アドレス空間識別子をスレッドidに変更する: mips only, armは無視 */
     asid = thrcurrent & 0xff;
     ctxsw(&throld->stkptr, &thrnew->stkptr, asid);
 
-    /* old thread returns here when resumed */
+    /* 再開された時、もとのスレッドはここに返る */
     restore(throld->intmask);
     return OK;
 }

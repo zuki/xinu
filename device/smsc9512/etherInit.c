@@ -1,7 +1,7 @@
 /**
  * @file etherInit.c
  *
- * Initialization for the SMSC LAN9512 USB Ethernet Adapter.
+ * SMSC9512 USB Ethernetアダプタを初期化する
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
@@ -14,20 +14,21 @@
 #include <stdlib.h>
 #include <usb_core_driver.h>
 
-/* Global table of Ethernet devices.  */
+/* Ethernetデバイスのグローバルテーブル  */
 struct ether ethertab[NETHER];
 
 /**
- * Semaphores that indicate whether each given Ethernet device has actually been
- * connected to the system yet (here, attached to the USB).  Could be moved into
- * <code>struct ::ether</code> if other drivers needed it...
+ * 指定されたEthernetデバイスが実際にまだシステム（ここではUSB）に
+ * 接続されているか否かを示すセマフォ。他のドライバが必要であれば
+ * <code>struct ::ether</code> に移動させるかもしれない。
  */
 static semaphore smsc9512_attached[NETHER];
 
 /**
- * Try to bind the SMSC LAN9512 driver to a specific USB device.  This the @ref
- * usb_device_driver::bind_device "bind_device" implementation for the SMSC
- * LAN9512 driver and therefore complies with its documented behavior.
+ * 指定されたUSBデバイスへのSMSC LAN9512ドライバのバインドを試みる。
+ * @ref usb_device_driver::bind_device "bind_device" の
+ * SMSC LAN9512ドライバ用の実装であり、そのドキュメントに記載されて
+ * いる動作に準拠している。
  */
 static usb_status_t
 smsc9512_bind_device(struct usb_device *udev)
@@ -141,7 +142,7 @@ randomEthAddr(uchar addr[ETH_ADDR_LEN])
          * hash the serial number to remove any obvious non-randomness in the
          * way serial numbers are assigned, then extract the low 48 bits.  */
         unsigned long long serial_nr, hashval;
-        
+
         serial_nr = (unsigned long long)platform.serial_low |
                     ((unsigned long long)platform.serial_high << 32);
         hashval = serial_nr * 0x9e37fffffffc0001ULL;
@@ -198,7 +199,7 @@ smsc9512_wait_device_attached(ushort minor)
  * this function in ether.h.  */
 /**
  * @details
- * 
+ *
  * SMSC LAN9512-specific notes:  This function returns ::OK if the Ethernet
  * driver was successfully registered with the USB core, otherwise ::SYSERR.
  * This is a work-around to use USB's dynamic device model at the same time as

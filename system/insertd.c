@@ -11,10 +11,10 @@
 /**
  * @ingroup threads
  *
- * Insert a thread in delta queue in ascending order
- * @param tid    thread id to insert
- * @param q      queue in which thread should be inserted
- * @param key    delta key
+ * デルタキューにスレッドを昇順で挿入する
+ * @param tid    挿入するスレッドのid
+ * @param q      スレッドを挿入するキュー
+ * @param key    デルタキー
  * @return OK
  */
 int insertd(tid_typ tid, qid_typ q, int key)
@@ -31,7 +31,7 @@ int insertd(tid_typ tid, qid_typ q, int key)
     next = quetab[quehead(q)].next;
     while ((quetab[next].key <= key) && (next != quetail(q)))
     {
-        key -= quetab[next].key;
+        key -= quetab[next].key;    // keyをprev.keyとの差分に変換
         prev = next;
         next = quetab[next].next;
     }
@@ -42,7 +42,7 @@ int insertd(tid_typ tid, qid_typ q, int key)
     quetab[next].prev = tid;
     if (next != quetail(q))
     {
-        quetab[next].key -= key;
+        quetab[next].key -= key;    // nextのkeyをtidのkeyとの差分に変換
     }
 
     return OK;

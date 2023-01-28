@@ -2,8 +2,9 @@
  * @file usb_core_driver.h
  * @ingroup usbcore
  *
- * Interface to the core USB driver.  This is intended to be used by USB device
- * drivers and to some extent by USB host controller drivers.
+ * コアUSBドライバへのインタフェース。これはUSBデバイスドライバと
+ * ある程度はホストコントローラドライバにより仕様されることを意図
+ * している。
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
@@ -23,99 +24,108 @@ struct usb_xfer_request;
 /**
  * @ingroup usbcore
  *
- * Type of function called when an asynchronous (interrupt-driven) USB transfer
- * has completed or failed.  This will be called with IRQs disabled.  This
- * callback would generally be expected to handle the received data in some way
- * (if the transfer was input and was successful), then either free or re-submit
- * the struct usb_xfer_request.
+ * 非同期（割り込み駆動）USB転送が完了、または失敗したときに呼び出される
+ * 関数の型。
+ * これはIRQを無効にして呼び出される。一般に、このコールバックは受信した
+ * データを何らかの方法で処理し（転送が入力で成功した場合）、その後、
+ * struct usb_xfer_requestを解放、または再投入することが期待されている。
  */
 typedef void (*usb_xfer_completed_t)(struct usb_xfer_request *req);
 
 /**
  * @ingroup usbcore
  *
- * Specification of an asynchronous (interrupt-driven) USB transfer request.
- * This can be a control, bulk, or interrupt request.  To get one of these
- * structures, either call usb_alloc_xfer_request(), or allocate memory manually
- * in another way and call usb_init_xfer_request().  Submit to to the USB core
- * using usb_submit_xfer_request() after filling in the
+ * 非同期（割り込み駆動）USB 転送要求の仕様。
+ * コントロール、バルク、インターラプトのいずれかの転送要求である。
+ * これらの構造体を取得するには usb_alloc_xfer_request() を呼び出すか、
+ * 別の方法で手動でメモリを割り当てて usb_init_xfer_request() を呼び
+ * 出し、以下のメンバーを設定した後、usb_submit_xfer_request() を使って
+ * USBコアに送信する。
  * @ref usb_xfer_request::dev "dev",
  * @ref usb_xfer_request::endpoint_desc "endpoint_desc",
- * @ref usb_xfer_request::sendbuf "sendbuf" or
+ * @ref usb_xfer_request::sendbuf "sendbuf" または
  * @ref usb_xfer_request::recvbuf "recvbuf",
  * @ref usb_xfer_request::size "size",
- * and
- * @ref usb_xfer_request::completion_cb_func "completion_cb_func" members,
- * and optionally the
- * @ref usb_xfer_request::private "private" and
+ * @ref usb_xfer_request::completion_cb_func "completion_cb_func"
+ * 以下はオプション
+ * @ref usb_xfer_request::private "private"
  * @ref usb_xfer_request::setup_data "setup_data" members.
  */
 struct usb_xfer_request
 {
 
     /*********************
-     * Input variables   *
+     * 入呂っく変数      *
      *********************/
 
-    /** USB device to communicate with.  */
+    /** 通信相手のUSBデバイス  */
     struct usb_device *dev;
 
-    /** Pointer to the descriptor of the endpoint to communicate with.  You can
-     * get a pointer to one of these by searching the endpoints array of the
-     * struct usb_device.  Use @c NULL to specify the default control endpoint.
-     * */
+    /** 通信相手となるエンドポイントのディスクリプタへのポインタ。
+     * このポインタを取得するには struct usb_device の endpoints 配列を
+     * 検索する。デフォルトのコントロールエンドポイントを指定する場合は
+     * @c NULL を使用する。
+     */
     const struct usb_endpoint_descriptor *endpoint_desc;
 
-    /** Data buffer: whether the sendbuf or recvbuf is used depends on whether
-     * the endpoint_number specifies an IN or OUT endpoint.  */
+    /** データバッファ: endpoint_number が INエンドポイント、
+     * OUTエンドポイントのいずれを指定するかにより sendbufか
+     * recvbufのいずれかが使用される。
+     */
     union {
-        /** Buffer of data to send.  Ignored if size is 0.  */
+        /** 送信データのバッファ。sizeが0の場合は無視される。  */
         void *sendbuf;
-        /** Buffer into which to write the received data.  Ignored if size is 0.
-         * */
+        /** 受信データを書き込むバッファ。sizeが0の場合は無視される。 */
         void *recvbuf;
     };
 
-    /** Size of sendbuf or recvbuf.  For IN endpoints, this will be the maximum
-     * number of bytes of data to receive.  For OUT endpoints, this will be the
-     * exact number of bytes of data to send.  */
+    /** sendbufまたはrecvbufのサイズ。INエンドポイントの場合、これは
+     * 受信するデータの最大バイト数である。OUTエンドポイントの場合は
+     * 送信するデータの正確なバイト数である。
+     */
     uint size;
 
-    /** Setup data for the USB control request.  Must be filled in for control
-     * transfers; ignored otherwise.  Note: consider using usb_control_msg() for
-     * control transfers instead.  */
+    /** USBコントロール要求のためのデータを設定する。コントロール転送では
+     * 必ず設定する必要がある。その他の場合は、無視される。注: コントロール
+     * 転送では代わりに usb_control_msg() の仕様を検討されたい。
+     */
     struct usb_control_setup_data setup_data;
 
-    /** Callback function that will be called when this USB transfer has been
-     * successfully completed or has failed.  */
+    /** このUSB転送が成功裏に完了した、または、失敗した場合に呼び出される
+     * コールバック関数。
+     */
     usb_xfer_completed_t completion_cb_func;
 
-    /** USB device driver private data to be saved for the completion callback.
-     * Setting this is optional.  */
+    /** 完了コールバック用に保存されるUSBデバイスドライバプライベートデータ。
+     * このメンバの設定はオプションである。
+     */
     void *private;
 
     /*********************
-     * Output variables   *
+     * 出力変数          *
      *********************/
 
-    /** Status of the transfer: ::USB_STATUS_SUCCESS if successful, or another
-     * ::usb_status_t error code if the transfer failed.  ::USB_STATUS_SUCCESS
-     * is set if exactly the requested number of bytes were transferred with no
-     * error, or if the transfer was device-to-host (IN) and completed with no
-     * error but returned fewer bytes than requested.  */
+    /** 転送のステータス: 転送に成功した場合は ::USB_STATUS_SUCCESS、
+     * 失敗した場合は別の ::usb_status_t エラーコード。
+     * ::USB_STATUS_SUCCESS が設定されるのは、正確に要求されたバイト数が
+     * エラーなく転送された場合、またはデバイスからホストへの (IN) 転送で
+     * エラーなく完了したが要求より少ないバイト数で返された場合である。
+     */
     usb_status_t status;
 
-    /** Actual size of the data transferred.  This should be tested after a
-     * successful device-to-host (IN) transfer, since it is valid for such a
-     * transfer to complete with less than the number of bytes requested if for
-     * whatever reason the device was unable to provide the full size.  */
+    /** 転送されたデータの実際のサイズ。デバイスからホストへの (IN) 転送が
+     * 成功した場合、これはテストされるべきである。何らかの理由でデバイスが
+     * フルサイズを提供できなかった場合、要求されたバイト数よりも少ない
+     * バイト数で転送を完了するが、これは正当な結果だからである。
+     */
     uint actual_size;
 
     /*****************************************************************
-     * Private variables (mainly for Host Controller Drivers; do not *
-     * touch from device drivers).  TODO: a better design might      *
-     * allow HCDs to customize the variables they can use, perhaps   *
-     * by embedding the usb_xfer_request in another struct.          *
+     * プライベート変数（主にホストコントローラドライバ用でデバイス  *
+     * ドライバからは触れない）。                                    *
+     * TODO: デザインを良くすればHCDが使用できる変数をカスタマイズ   *
+     * することを可能にするかもしれない、おそらくusb_xfer_requestを  *
+     * 別の構造体に埋め込めば。                                      *
      *****************************************************************/
     void *cur_data_ptr;
     uint8_t complete_split : 1;
@@ -142,181 +152,176 @@ struct usb_xfer_request
  */
 struct usb_device_driver
 {
-    /** Name of the driver, for informational messages only.  This can be @c
-     * NULL.  */
+    /** デバイスの名前。情報メッセージ用のみ。 @c NULL でもよい。 */
     const char *name;
 
     /**
-     * Function called to possibly bind this USB device driver to a USB device.
-     * All USB device drivers are required to implement this function, so it
-     * cannot be @c NULL.
+     * このUSBデバイスドライバをUSBデバイスにバインドするために呼び出される関数である。
+     * すべてのUSBデバイスドライバはこの関数を実装する必要があるため、@c NULL を指定
+     * することはできない。
      *
-     * Implementations of this function must first check if the USB device is
-     * supported by the driver and return ::USB_STATUS_DEVICE_UNSUPPORTED if it
-     * is not.  To determine whether the USB device is supported,
-     * implementations can examine the @ref usb_device_descriptor::idVendor
-     * "vendor" and @ref usb_device_descriptor::idProduct "product" IDs in the
-     * @ref usb_device::descriptor "device descriptor", or the available @ref
-     * usb_device::interfaces "interfaces" and @ref usb_device::endpoints
-     * "endpoints".
+     * この関数の実装では、まずUSBデバイスがドライバによってサポートされているかを
+     * チェックし、サポートされていない場合は ::USB_STATUS_DEVICE_UNSUPPORTED を
+     * 返さなければならない。USBデバイスがサポートされているかどうかを判断するために
+     * 実装は @ref usb_device::descriptor ”device descriptor" の
+     * @ref usb_device_descriptor::idVendor "vendor" と
+     * @ref usb_device_descriptor::idProduct "product" ID、または利用可能な
+     * @ref usb_device::interfaces "interfaces" と
+     * @ref usb_device::endpoints "endpoints" を調べることができる。
      *
-     * If the USB device is indeed supported by the driver, this function must
-     * do any necessary device-specific setup, such as configuring the device
-     * with device-specific or class-specific control messages, and allocate any
-     * needed resources, such as @ref ::usb_xfer_request
-     * "USB transfer requests", needed to support the device.  If fully
-     * successful, ::USB_STATUS_SUCCESS must be returned; otherwise, any
-     * resources allocated for the device must be released and another
-     * ::usb_status_t error code must be returned.  If necessary, device drivers
-     * can store per-device, driver-specific data in the @ref
-     * usb_device::driver_private "driver_private" member of the USB device
-     * structure.
+     * USBデバイスがドライバによってサポートされている場合、この関数は、デバイス固有
+     * またはクラス固有のコントロールメッセージでデバイスを構成するなど、必要な
+     * デバイス固有の設定を行い、デバイスをサポートするために必要なリソース（たとえば、
+     * @ref ::usb_xfer_request "USB transfer requests" など) を割り当てなければならない。
+     * 完全に成功した場合は、USB_STATUS_SUCCESS を返さなければならない。そうでない場合は、
+     * デバイスに割り当てられたリソースをすべて解放し、別の usb_status_t エラーコードを
+     * 返さなければならない。必要であれば、デバイスドライバはUSBデバイス構造体の
+     * @ref usb_device::driver_private "driver_private" メンバにドライバ特有のデータを
+     * デバイス毎に格納することができる。
      *
-     * This function may continue to be called by the USB core with @a different
-     * USB devices even after the driver has been successfully bound to a USB
-     * device.  If the driver does not support controlling multiple USB devices
-     * simultaneously, this function must return ::USB_STATUS_DEVICE_UNSUPPORTED
-     * in such cases.  This function will not, however, be called @a
-     * concurrently with other calls to @ref usb_device_driver::bind_device
-     * "bind_device" or @ref usb_device_driver::unbind_device
-     * "unbind_device".
+     * この関数はドライバがあるUSBデバイスに正常にバインドされた後であっても
+     * USBコアにより続けて @a 別のUSBデバイス を引数に呼び出される可能性がある。
+     * デバイスが複数のUSBデバイスを同時に制御できない場合、この関数は
+     * ::USB_STATUS_DEVICE_UNSUPPORTED を返さなければならない。ただし、この関数は
+     * 他の @ref usb_device_driver::bind_device "bind_device" や
+     * @ref usb_device_driver::unbind_device "unbind_device" の呼び出しと
+     * @a 同時に 呼び出されることはない。
      *
-     * The USB device will already be configured with its first listed
-     * configuration when this function is called.  There is currently no way
-     * for device drivers to choose a different configuration.
+     * この関数が呼ばれたとき、USBデバイスは最初にリストされた構成ですでに
+     * 構成されている。現在のところ、デバイスドライバが別の構成を選択する方法は
+     * ない。
      */
     usb_status_t (*bind_device)(struct usb_device *dev);
 
     /**
-     * Function called to unbind a USB device driver from a USB device, due to
-     * the device being removed from the USB.  This can be called by the USB
-     * core at any time after @ref usb_device_driver::bind_device
-     * "bind_device" has returned successfully.  This function is responsible
-     * for releasing any resources allocated in @ref
-     * usb_device_driver::bind_device "bind_device" for the USB device.
-     * Device drivers are not strictly required to implement this function and
-     * can specify @c NULL here.  However, then any resources allocated in @ref
-     * usb_device_driver::bind_device "bind_device" will be leaked if the
-     * device is detached.
+     * デバイスがUSBから取り外されたために、USBデバイスドライバの
+     * バインドを解除するために呼び出される関数。これは、
+     * @ref usb_device_driver::bind_device "bind_device" が正常に
+     * 復帰した後は、USBコアから任意の時点で呼び出される可能性がある。
+     * この関数は @ref usb_device_driver::bind_device "bind_device " で
+     * USBデバイスに割り当てられたリソースを解放する役割を担っている。
+     * デバイスドライバはこの関数の実装を厳密には要求されておらず、
+     * ここでは @c NULL を指定することができる。ただし、その場合、
+     * @ref usb_device_driver::bind_device "bind_device" で割り当てられた
+     * リソースはデバイスが切り離された場合にリークする。
      *
-     * When this function is called, it is guaranteed that there are no longer
-     * any pending transfers to the corresponding USB device.  To implement
-     * this, for a period of time before this function is called the USB core
-     * ensures that any attempt to submit transfers to the device with either
-     * usb_submit_xfer_request() or usb_control_msg() will fail with
-     * ::USB_STATUS_DEVICE_DETACHED.  In the case of usb_submit_xfer_request(),
-     * the completion callback will not be called.  In addition, the completion
-     * callback will be called on all pending transfers and their status will be
-     * set to ::USB_STATUS_DEVICE_DETACHED.  The result is that when this unbind
-     * callback is called, all ::usb_xfer_request structures that may have been
-     * allocated are owned by the driver itself.  Therefore, such structures can
-     * immediately be freed, unless the driver itself holds additional
-     * references to them.
+     * この関数が呼ばれた時には、対応するUSBデバイスへの保留中の転送は
+     * ないことが保証される。これを実現するために、この関数が呼ばれる前の
+     * 一定期間、USBコアは usb_submit_xfer_request()、または、
+     * usb_control_msg() でそのデバイスに転送を行おうとしても
+     * ::USB_STATUS_DEVICE_DETACHED で失敗するようにする。
+     * usb_submit_xfer_request() の場合、完了コールバックは呼び出されない。
+     * さらに、すべての保留中の転送で完了コールバックが呼び出され、
+     * それらのステータスが ::USB_STATUS_DEVICE_DETACHED に設定される。
+     * この結果、このアンバインドコールバックが呼ばれると、割り当てられた
+     * すべての ::usb_xfer_request 構造体はドライバにより所有されることに
+     * なり、ドライバがそれらの参照を追加で保持しない限り、そのような構造体は
+     * すぐに解放することが可能である。
      *
-     * This function is always called with IRQs enabled, and it can be called
-     * multiple times in succession to unbind @a different devices bound to the
-     * same driver.  It will not, however, be called @a concurrently with other
-     * calls to either @ref usb_device_driver::bind_device "bind_device" or
-     * @ref usb_device_driver::unbind_device "unbind_device".
+     * この関数は、常にIRQが有効の状態で呼び出され、同じドライバにバインド
+     * されている @a 別の デバイスのバインドを解除するために連続して複数回
+     * 呼び出される場合がある。ただし、 @ref usb_device_driver::bind_device "bind_device"
+     * または、 @ref usb_device_driver::unbind_device "unbind_device" の
+     * 呼び出しと @a 同時に 呼び出されることはない。
      */
     void (*unbind_device)(struct usb_device *dev);
 };
 
-/** Maximum number of interfaces per device.  */
+/** デバイスあたりの最大インタフェース数  */
 #define USB_DEVICE_MAX_INTERFACES 8
 
-/** Maximum number of endpoints per interface.  */
+/** インタフェース足りの最大エンドポイント数  */
 #define USB_DEVICE_MAX_ENDPOINTS  8
 
 /**
  * @ingroup usbcore
  *
- * Information about a USB device.  This is provided by the USB core to device
- * drivers' @ref usb_device_driver::bind_device "bind_device" and @ref
- * usb_device_driver::unbind_device "unbind_device" callbacks.  Device drivers
- * (other than the hub driver) are not responsible for allocating or freeing
- * this structure.
+ * USBデバイスに関する情報。これは、USBコアからデバイスドライバの
+ * @ref usb_device_driver::bind_device "bind_device" コールバックと
+ * @ref usb_device_driver::unbind_device "unbind_device" コールバックに
+ * 提供される。（ハブドライバを除く）デバイスドライバはこの構造体の
+ * 割り当てと解放に責任を持たない。
  */
 struct usb_device
 {
-    /** TRUE if this structure is in use; FALSE if it is free to allocate to a
-     * new device.  Set by USB core.  */
+    /** この構造体が使用中の場合は TRUE; 新しいデバイスに割り当て可能な
+     * 場合は FALSE。USBコアによりセットされる。 */
     bool inuse;
 
-    /** Address of this device.  Set by USB core.  */
+    /** 今デバイスのアドレス。USBコアによりセットされる。  */
     uint address;
 
-    /** Depth of this device (root hub is 0, next level hub is 1, ...).  Set by
-     * USB core.  */
+    /** このデバイスの深さ（ルートハブは0、次のレベルのハブは1, ...）。
+     * USBコアによりセットされる  */
     uint depth;
 
-    /** 1-based index of the USB port on the parent hub this device is plugged
-     * into, or 0 if this is the root hub.  Set by USB core.  */
+    /** このデバイスが接続された親ハブ上のUSBポートの1始まりのインデックス。
+     * または、これがルートハブの場合は0。USBコアによりセットされる  */
     uint port_number;
 
-    /** Speed at which this device is attached to its hub.  Set by USB core.  */
+    /** このデバイスがハブに接続されたスピード。USBコアによりセットされる  */
     enum usb_speed speed;
 
-    /** Hub this USB device is connected to, or @c NULL if this is the root hub.
-     * Set by USB core.  */
+    /** このUSBデバイスが接続されたハブ。または、これがルートハブの場合は @c NUL 。
+     * USBコアによりセットされる  */
     struct usb_device *parent;
 
-    /** Current configuration index of this USB device.  Set by USB core.  */
+    /** このUSBデバイスの現在の構成インデックス。USBコアによりセットされる  */
     uint8_t configuration;
 
-    /** Device descriptor of this device.  Set by USB core.  */
+    /** このデバイスのデバイスディスクリプタ。USBコアによりセットされる  */
     struct usb_device_descriptor descriptor;
 
-    /** Pointer to the full configuration descriptor for the first configuration
-     * of this device.  Set by USB core.  */
+    /** このデバイスの最初のコンフィグレーションの完全なコンフィグレーション
+     * ディスクリプタへのポインタ。USBコアによりセットされる  */
     struct usb_configuration_descriptor *config_descriptor;
 
-    /** Pointers to all interface descriptors of this device.  Set by USB core.  */
+    /** このデバイスのすべてのインタフェースディスクリプタへのポインタ。
+     * USBコアによりセットされる  */
     struct usb_interface_descriptor *interfaces[USB_DEVICE_MAX_INTERFACES];
 
-    /** Pointers to all endpoint descriptors of this device, arranged by
-     * interface.  Set by USB core.  */
+    /** インタフェースにより用意されたこのデバイスのすべてのエンドポイント
+     * ディスクリプタへのポインタ。USBコアによりセットされる  */
     struct usb_endpoint_descriptor *endpoints[
                             USB_DEVICE_MAX_INTERFACES][USB_DEVICE_MAX_ENDPOINTS];
 
-    /** Null-terminated product string (ASCII encoded, and in English if
-     * available) of this device.  Will be the empty string if the device has
-     * no product string or it could not be read.  Set by USB core.  */
+    /** このデバイスのヌル終端された製品文字列（ASCIIエンコードで、可能であれば英語）。
+     * デバイスが製品文字列を持たない、または読み取れなかった場合は空文字列となる。
+     * USBコアによりセットされる  */
     char product[128];
 
-    /** Null-terminated manufacturer string (ASCII encoded, and in English if
-     * available) of this device.  Will be the empty string if the device has no
-     * manufacturer string or it could not be read.  Set by USB core.  */
+    /** このデバイスのヌル終端された製造者文字列（ASCIIエンコードで、可能であれば英語）。
+     * デバイスが製造者文字列を持たない、または読み取れなかった場合は空文字列となる。
+     * USBコアによりセットされる  */
     char manufacturer[128];
 
-    /** Private data for the driver of this USB device.  USB device drivers can
-     * place a pointer to a private data structure here in their @ref
-     * usb_device_driver::bind_device "bind_device" routines.  */
+    /** このUSBデバイスのドライバ用のプライベートデータ。USBデバイスドライバは
+     * @ref usb_device_driver::bind_device "bind_device" 関数のここにプライベート
+     * データ構造体を置くことができる。  */
     void *driver_private;
 
-    /** Driver bound to this device, if any.  Set by USB core.  */
+    /** もしあれば、このデバイスにバインドされたドライバ。 USBコアによりセットされる */
     const struct usb_device_driver *driver;
 
-    /** Number of USB transfers that have completed with failure status on this
-     * device.  */
+    /** このデバイスで失敗状態で完了したUSB転送の数  */
     ulong error_count;
 
-    /** Last error to occur on this device.  */
+    /** このデバイスで行った最新のエラー  */
     usb_status_t last_error;
 
-    /** USB core use only.  */
+    /** USBコアのみ使用  */
     enum {
         USB_DEVICE_ATTACHED,
         USB_DEVICE_DETACHMENT_PENDING,
     } state;
-    /** USB core use only.  */
+    /** USBコアのみ使用  */
     uint xfer_pending_count;
-    /** USB core use only.  */
+    /** USBコアのみ使用  */
     tid_typ quiescent_state_waiter;
 };
 
 
-/* The following functions are intended to be used by USB device drivers.  */
+/* 以下の関数はUSBデバイスドライバが使用することを意図している  */
 
 usb_status_t
 usb_register_device_driver(const struct usb_device_driver *drv);
@@ -345,8 +350,7 @@ usb_get_descriptor(struct usb_device *dev, uint8_t bRequest,
 		   uint8_t bmRequestType, uint16_t wValue, uint16_t wIndex,
 		   void *buf, uint16_t buflen);
 
-/* The following functions are available only in non-embedded builds of the USB
- * code.  */
+/* 以下の関数は非組み込みのUSBコードでのみ利用可能  */
 #if !USB_EMBEDDED
 usb_status_t
 usb_get_string_descriptor(struct usb_device *dev, uint8_t index, uint16_t lang_id,
@@ -373,8 +377,7 @@ usb_speed_to_string(enum usb_speed speed);
 
 #endif /* !USB_EMBEDDED */
 
-/* The following functions are intended to be used only by the USB hub device
- * driver.  */
+/* 以下の関数はUSBハブデバイスドライバだけが使用することを意図している。  */
 
 struct usb_device *
 usb_alloc_device(struct usb_device *parent);
@@ -385,12 +388,10 @@ usb_attach_device(struct usb_device *dev);
 void
 usb_free_device(struct usb_device *dev);
 
-/* The following functions are intended to be used only by the USB host
- * controller driver.  */
+/* 以下の関数はUSBホストコントローラドライバだけが使用することを意図している。  */
 
 /**
- * Returns TRUE if a given USB transfer request is a control request; FALSE
- * otherwise.
+ * 指定されたUSB転送要求がコントロール要求の場合は TRUE; そうでなければ FALSE
  */
 static inline bool
 usb_is_control_request(const struct usb_xfer_request *req)
@@ -400,8 +401,7 @@ usb_is_control_request(const struct usb_xfer_request *req)
 }
 
 /**
- * Returns TRUE if a given USB transfer request is an interrupt request; FALSE
- * otherwise.
+ * R指定されたUSB転送要求がインターラプト要求の場合は TRUE; そうでなければ FALSE
  */
 static inline bool
 usb_is_interrupt_request(const struct usb_xfer_request *req)
@@ -417,12 +417,12 @@ void usb_lock_bus(void);
 
 void usb_unlock_bus(void);
 
-/* The following functions are primarily intended to used by the USB host
- * controller and hub drivers; other device drivers probably will not need them.
+/** 以下の関数はUSBホストコントローラドライバとハブドライバシユすることを
+ * 主に意図している。その他のドライバにはおそらく必要がない。
  * */
 
 /**
- * Returns TRUE if a USB device is the root hub; FALSE otherwise.
+ * USBデバイスがルートハブの場合は TRUE; そうでなければ FALSE
  */
 static inline bool is_root_hub(const struct usb_device *dev)
 {
@@ -430,7 +430,7 @@ static inline bool is_root_hub(const struct usb_device *dev)
 }
 
 /**
- * Returns TRUE if a USB device is a hub; FALSE otherwise.
+ * USBデバイスがハブの場合は TRUE; そうでなければ FALSE
  */
 static inline bool is_hub(const struct usb_device *dev)
 {

@@ -14,21 +14,22 @@
 /**
  * @ingroup arp
  *
- * Obtains a hardware address from the ARP table given a protocol address.
- * @param netptr network interface
- * @param praddr protocol address
- * @param hwaddr buffer into which hardware address should be placed
- * @return OK if hardware address was obtained, otherwise TIMEOUT or SYSERR
+ * ARPテーブルから指定したプロトコルアドレスのハードウェア
+ * アドレスを取得する。
+ * @param netptr ネットワークインタフェース
+ * @param praddr プロトコルアドレス
+ * @param hwaddr ハードウェアアドレスを格納するバッファ
+ * @return ハードウェアが取得できたら OK、そうでなければ TIMEOUT か SYSERR
  */
 syscall arpLookup(struct netif *netptr, const struct netaddr *praddr,
                   struct netaddr *hwaddr)
 {
-    struct arpEntry *entry = NULL;  /**< pointer to ARP table entry   */
-    uint lookups = 0;                   /**< num of ARP lookups performed */
-    int ttl;                            /**< TTL for ARP table entry      */
-    irqmask im;                         /**< interrupt state              */
+    struct arpEntry *entry = NULL;  /**< ARPテーブルエントリへのポインタ   */
+    uint lookups = 0;               /**< ARP検索施行回数             */
+    int ttl;                        /**< ARPテーブルエントリのTTL     */
+    irqmask im;                     /**< 割り込みの状態               */
 
-    /* Error check pointers */
+    /* ポインタのエラーチェック */
     if ((NULL == netptr) || (NULL == praddr) || (NULL == hwaddr))
     {
         ARP_TRACE("Invalid args");
@@ -37,18 +38,19 @@ syscall arpLookup(struct netif *netptr, const struct netaddr *praddr,
 
     ARP_TRACE("Looking up protocol address");
 
-    /* Attempt to obtain destination hardware address from ARP table until:
-     * 1) lookup succeeds; 2) TIMEOUT occurs; 3) SYSERR occurs; or
-     * 4) maximum number of lookup attempts occrus. */
+    /* ARPテーブルから次のいずれかまで宛先のハードウェアアドレスの
+     * 取得を試みる:
+     * 1) 検索成功; 2) TIMEOUT発生; 3) SYSERR発生;
+     * 4) 最大検索思考回数になる. */
     while (lookups < ARP_MAX_LOOKUP)
     {
         lookups++;
 
-        /* Obtain entry from ARP table */
+        /* ARPテーブルからエントリを取得する */
         im = disable();
         entry = arpGetEntry(praddr);
 
-        /* If ARP entry does not exist; create an unresolved entry */
+        /* ARPエントリが存在しない場合は未解決のエントリを作成する */
         if (NULL == entry)
         {
             ARP_TRACE("Entry does not exist");
@@ -66,7 +68,7 @@ syscall arpLookup(struct netif *netptr, const struct netaddr *praddr,
             entry->count = 0;
         }
 
-        /* Place hardware address in buffer if entry is resolved */
+        /* エントリが解決されたらハードウェアアドレスをバッファにコピーする */
         if (ARP_RESOLVED == entry->state)
         {
             netaddrcpy(hwaddr, &entry->hwaddr);
@@ -74,7 +76,7 @@ syscall arpLookup(struct netif *netptr, const struct netaddr *praddr,
             return OK;
         }
 
-        /* Entry is unresolved; enqueue thread to wait for resolution */
+        /* エントリが未解決の場合、スレッドをエンキューして解決を待機 */
         if (entry->count >= ARP_NTHRWAIT)
         {
             restore(im);
@@ -86,7 +88,7 @@ syscall arpLookup(struct netif *netptr, const struct netaddr *praddr,
         ttl = (entry->expires - clktime) * CLKTICKS_PER_SEC;
         restore(im);
 
-        /* Send an ARP request and wait for response */
+        /* ARPリクエスを送信してレスポンスを待つ */
         if (SYSERR == arpSendRqst(entry))
         {
             ARP_TRACE("Failed to send request");
@@ -100,7 +102,7 @@ syscall arpLookup(struct netif *netptr, const struct netaddr *praddr,
             return SYSERR;
         case ARP_MSG_RESOLVED:
         default:
-            /* Reply received, address resolved, re-attempt lookup */
+            /* 応答受信、アドレス解決、検索の再試行 */
             continue;
         }
     }

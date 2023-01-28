@@ -14,9 +14,9 @@
 /**
  * @ingroup threads
  *
- * Remove thread from the sleep queue prematurely
- * @param tid  target thread
- * @return OK if thread removed, else SYSERR
+ * スレッドを通常より早くスリープキューから削除する
+ * @param tid  対象のスレッド
+ * @return スレッドが削除されたら OK、そうでなければ SYSERR
  */
 syscall unsleep(tid_typ tid)
 {
@@ -42,9 +42,11 @@ syscall unsleep(tid_typ tid)
     next = quetab[tid].next;
     if (next < NTHREAD)
     {
+        // 次のsleepスレッドの待ち時間を調整
         quetab[next].key += quetab[tid].key;
     }
 
+    // スレッドをreadyキューから削除
     getitem(tid);
     restore(im);
     return OK;

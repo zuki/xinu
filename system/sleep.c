@@ -14,15 +14,16 @@
 /**
  * @ingroup threads
  *
- * Yields the processor for the specified number of milliseconds, allowing other
- * threads to be scheduled.
+ * 指定されたミリ秒の間プロセッサを明け渡して、他のスレッドを
+ * スケジューリングできるようにする
  *
- * @param ms number of milliseconds to sleep
+ * @param ms スリープするミリ秒数
  *
  * @return
- *      If successful, the thread will sleep for the specified number of
- *      milliseconds, then return ::OK.  Otherwise, ::SYSERR will be returned.
- *      If a system timer is not supported, ::SYSERR will always returned.
+ *      成功した場合、スレッドは指定したミリ秒数だけスリープして
+ *      ::OK を返す。そうでない場合は、::SYSERR を返す。
+ *      システムタイマーがサポートされていない場合は、常に
+ *      ::SYSERR を返す
  */
 syscall sleep(uint ms)
 {

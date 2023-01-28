@@ -9,7 +9,7 @@
 /**
  * @ingroup threads
  *
- * Entered when a thread exits by return.
+ * スレッドがreturnで終了するときに呼ばれる
  */
 void userret(void)
 {

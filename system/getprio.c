@@ -9,9 +9,9 @@
 /**
  * @ingroup threads
  *
- * Return the scheduling priority of a thread
- * @param tid thread ID
- * @return priority of thread on success, SYSERR on failure
+ * スレッドのスケジューリング優先度を返す
+ * @param tid スレッドID
+ * @return 成功の場合はスレッドの優先度、失敗の場合は SYSERR
  */
 syscall getprio(tid_typ tid)
 {

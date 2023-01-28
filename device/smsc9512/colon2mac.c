@@ -13,11 +13,10 @@
 /**
  * @ingroup ether
  *
- * Convert a colon-separated string representation of a MAC into
- *  the equivalent byte array.
- * @param src pointer to colon-separated MAC string
- * @param dst pointer to byte array
- * @return number of octets converted.
+ * コロン区切りの文字列表記のMACを相当するbyte配列に変換する
+ * @param src コロン区切りのMAC文字列へのポインタ
+ * @param dst バイト配列へのポインタ
+ * @return 変換したオクテットの数
  */
 int colon2mac(char *src, uchar *dst)
 {
@@ -30,6 +29,7 @@ int colon2mac(char *src, uchar *dst)
 
     while ((count < ETH_ADDR_LEN) && ('\0' != *src))
     {
+        // bit [7:4]の変換
         c = *src++;
         if (isdigit(c))
         {
@@ -45,6 +45,7 @@ int colon2mac(char *src, uchar *dst)
         }
         dst[count] = digit * 16;
 
+        // bit [3:0]の変換
         c = *src++;
         if (isdigit(c))
         {

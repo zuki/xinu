@@ -8,15 +8,15 @@
 #include <thread.h>
 #include <queue.h>
 
-struct queent quetab[NQENT];    /**< global thread queue table       */
+struct queent quetab[NQENT];    /**< グローバルスレッドキューテーブル */
 
 /**
  * @ingroup threads
  *
- * Insert a thread at the tail of a queue
- * @param  tid  thread ID to enqueue
- * @param  q    target queue
- * @return thread id of enqueued thread
+ * スレッドをキューの末尾に挿入する
+ * @param  tid  エンキューするスレッドID
+ * @param  q    対象のキュー
+ * @return エンキューされたスレッドのスレッドID
  */
 tid_typ enqueue(tid_typ tid, qid_typ q)
 {
@@ -40,9 +40,9 @@ tid_typ enqueue(tid_typ tid, qid_typ q)
 /**
  * @ingroup threads
  *
- * Remove and return the first thread on a list
- * @param  q  target queue
- * @return thread id of removed thread, or EMPTY
+ * リストの先頭のスレッドを削除して返す
+ * @param  q  対象のキュー
+ * @return 削除されたスレッドのスレッドID、または EMPTY
  */
 tid_typ dequeue(qid_typ q)
 {

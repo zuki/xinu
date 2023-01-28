@@ -10,10 +10,10 @@
 /**
  * @ingroup threads
  *
- * Make a thread eligible for CPU service.
- * @param tid target thread
- * @param resch if RESCHED_YES, reschedules
- * @return OK if thread has been added to readylist, else SYSERR
+ * スレッドをCPUサービスの対象とする
+ * @param tid 対象のスレッド
+ * @param resch RESCHED_YESの場合、再スケジュールする
+ * @return スレッドをreadylistに追加したら OK、それ以外は SYSERR
  */
 int ready(tid_typ tid, bool resch)
 {

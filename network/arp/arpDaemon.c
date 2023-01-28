@@ -11,7 +11,7 @@
 /**
  * @ingroup arp
  *
- * ARP daemon to manage the ARP table.
+ * ARPテーブルを管理するARPデーモン
  */
 thread arpDaemon(void)
 {
@@ -28,7 +28,7 @@ thread arpDaemon(void)
 
         arpSendReply(pkt);
 
-        /* Free buffer for the packet */
+        /* パケット用のバッファを開放する */
         if (SYSERR == netFreebuf(pkt))
         {
             ARP_TRACE("Failed to free packet buffer");

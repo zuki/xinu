@@ -9,8 +9,8 @@
 /**
  * @ingroup threads
  *
- * Get the thread id of currently executing thread.
- * @return thread id of the currently running thread
+ * 現在実行しているスレッドのスレッドIDを取得する
+ * @return 現在実行しているスレッドのスレッドID
  */
 tid_typ gettid(void)
 {

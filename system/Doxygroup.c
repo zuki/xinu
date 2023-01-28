@@ -1,32 +1,32 @@
 /**
- * @defgroup system System Calls
- * @brief Embedded Xinu System Calls
+ * @defgroup system システムコール
+ * @brief Embedded Xinuのシステムコール
  *
- * @defgroup devcalls Devices
+ * @defgroup devcalls デバイス
  * @ingroup system
- * @brief Open, close, read, and write to devices
+ * @brief デバイスのOpen, close, read, write
  *
- * @defgroup memory_mgmt Memory Management
+ * @defgroup memory_mgmt メモリ管理
  * @ingroup system
- * @brief Allocate and free heap or buffer pool memory
+ * @brief ヒープまたはバッファプールメモリの割当と開放
  *
- * @defgroup misc Miscellaneous
+ * @defgroup misc その他関数
  * @ingroup system
- * @brief Debugging, tar, and other miscellaneous functions
+ * @brief デバッグ, tar, その他の様々な関数
  *
- * @defgroup monitors Monitors
+ * @defgroup monitors モニター
  * @ingroup system
- * @brief Monitor creation, locking, unlocking, and freeing
+ * @brief モニターの作成、ロック、アンロック、開放
  *
- * @defgroup semaphores Semaphores
+ * @defgroup semaphores セマフォ
  * @ingroup system
- * @brief Semaphore creation, waiting, signaling, and freeing
+ * @brief セマフォの作成、待機、シグナル、開放
  *
- * @defgroup timer Timer
+ * @defgroup timer タイマー
  * @ingroup system
- * @brief Initialize, update, and read the system timer
+ * @brief システムタイマーの初期化、更新、読み込み
  *
- * @defgroup threads Threads
+ * @defgroup threads スレッド
  * @ingroup system
- * @brief Thread functions
+ * @brief スレッド関数
  */

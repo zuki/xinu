@@ -9,8 +9,8 @@
 /**
  * @ingroup threads
  *
- * Yield processor.
- * @return OK when the thread is context switched back
+ * プロセッサを明け渡す
+ * @return スレッドがコンテキストスイッチから帰ったら OK
  */
 syscall yield(void)
 {

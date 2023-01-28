@@ -8,25 +8,28 @@
 #include <safemem.h>
 
 /**
- * Given a thread id, attempt to reclaim all the memory regions that were
- * allocated to that thread and return them to the region free list.
- * @param tid thread id holding memory regions.
+ * 指定されたスレッドIDについて、そのスレッドに割り当てられていた
+ * すべてのメモリ領域を回収してregion freeリストに返す。
+ * @param tid メモリ領域を保持しているスレッドID
  */
 void memRegionReclaim(tid_typ tid)
 {
     struct memregion *region, *nextregion;
 
-    /* Free allocated regions with tid */
+    /* tidに割り当てた領域を開放する */
     region = regalloclist;
     while ((int)region != SYSERR)
     {
-        /* store next region before mutating */
+        /* 変更する前に次の領域を保存 */
         nextregion = region->next;
 
         if (region->thread_id == tid)
         {
+            // 割り当てリストから削除
             memRegionRemove(region, &regalloclist);
+            // ページをアンマップ
             safeUnmapRange(region->start, region->length);
+            // フリーリストに挿入
             memRegionInsert(region, &regfreelist);
         }
 

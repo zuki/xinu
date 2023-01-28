@@ -10,9 +10,9 @@
 /**
  * @ingroup threads
  *
- * Suspend a thread, placing it in hibernation
- * @param tid target thread
- * @return priority or SYSERR
+ * スレッドを一時停止して、ハイバネーションに置く
+ * @param tid 対象のスレッド
+ * @return 優先度、または SYSERR
  */
 syscall suspend(tid_typ tid)
 {
@@ -32,11 +32,13 @@ syscall suspend(tid_typ tid)
         restore(im);
         return SYSERR;
     }
+    // raady状態にある場合は、readylistから削除
     if (THRREADY == thrptr->state)
     {
-        getitem(tid);           /* removes from queue */
+        getitem(tid);           /* キューから削除 */
         thrptr->state = THRSUSP;
     }
+    // 実行中の場合は、suspend状態にしてリスケジュール
     else
     {
         thrptr->state = THRSUSP;

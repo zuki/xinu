@@ -9,14 +9,12 @@
 /**
  * @ingroup threads
  *
- * Initialize a new queue in the global thread queue table
- * @return newly allocated queue ID or SYSERR
+ * グローバルスレッドキューテーブルの新しいキューを初期化する
+ * @return 新しく割り当てたキューのID、または SYSERR
  */
 qid_typ queinit(void)
 {
-    static int nextqid = NTHREAD;
-
-                                          /**< next available quetab entry   */
+    static int nextqid = NTHREAD;   /**< 次に利用可能なquetabエントリ */
     qid_typ q;
 
     if (nextqid > NQENT)

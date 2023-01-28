@@ -15,89 +15,89 @@
 #include <memory.h>
 #endif /* __ASSEMBLER__ */
 
-/* unusual value marks the top of the thread stack                      */
+/* スレッドスタックのトップをマークするありえない値                     */
 #define STACKMAGIC  0x0A0AAAA9
 
-/* thread state constants                                               */
-#define THRCURR     1           /**< thread is currently running        */
-#define THRFREE     2           /**< thread slot is free                */
-#define THRREADY    3           /**< thread is on ready queue           */
-#define THRRECV     4           /**< thread waiting for message         */
-#define THRSLEEP    5           /**< thread is sleeping                 */
-#define THRSUSP     6           /**< thread is suspended                */
-#define THRWAIT     7           /**< thread is on semaphore queue       */
-#define THRTMOUT    8           /**< thread is receiving with timeout   */
-#define THRMIGRATE  9           /**< thread is being migrated           */
+/* スレッド状態定位数                                                   */
+#define THRCURR     1           /**< スレッドは現在実行中               */
+#define THRFREE     2           /**< スレッドスロットは空いている       */
+#define THRREADY    3           /**< スレッドはreadyキューにある        */
+#define THRRECV     4           /**< スレッドはメッセージを待機中       */
+#define THRSLEEP    5           /**< スレッドはスリープ中               */
+#define THRSUSP     6           /**< スレッドはサスペンド中             */
+#define THRWAIT     7           /**< スレッドはsemaphoreキューにある    */
+#define THRTMOUT    8           /**< スレッドはタイムアウト付きで受信中 */
+#define THRMIGRATE  9           /**< スレッドはmigrate中                */
 
-/* miscellaneous thread definitions                                     */
-#define TNMLEN      16          /**< length of thread "name"            */
-#define NULLTHREAD  0           /**< id of the null thread              */
-#define BADTID      (-1)        /**< used when invalid tid needed       */
+/* 様々なスレッド定義                                                   */
+#define TNMLEN      16          /**< スレッド"名"の長さ                 */
+#define NULLTHREAD  0           /**< nullスレッドのID                   */
+#define BADTID      (-1)        /**< 不正なtidが必要な場合に使用する    */
 
-/* thread initialization constants */
+/* スレッド初夏家庭数 */
 #ifndef INITSTK
-#define INITSTK     65536       /**< initial thread stack size          */
+#define INITSTK     65536       /**< 初期スレッドスタックサイズ         */
 #endif
-#define INITPRIO    20          /**< initial thread priority            */
-#define MINSTK      128         /**< minimum thread stack size          */
+#define INITPRIO    20          /**< 初期スレッド優先度                 */
+#define MINSTK      128         /**< 最小スレッドスタックサイズ         */
 #ifdef JTAG_DEBUG
-#define INITRET   debugret      /**< threads return address for debug   */
+#define INITRET   debugret      /**< デバッグ用のスレッド復帰アドレス   */
 #else                           /* not JTAG_DEBUG */
-#define INITRET   userret       /**< threads return address             */
+#define INITRET   userret       /**< スレッド復帰アドレス               */
 #endif                          /* JTAG_DEBUG */
 
-/* Reschedule constants for ready  */
-#define RESCHED_YES 1           /**< tell ready to reschedule           */
-#define RESCHED_NO  0           /**< tell ready not to reschedule       */
+/* ready用の再スケジュール定数 */
+#define RESCHED_YES 1           /**< readyに再スケジュールを通知        */
+#define RESCHED_NO  0           /**< readyに再スケジュールしないよう通知*/
 
-/* Check for invalid thread ids.  Note that interrupts must be disabled */
-/* for the condition to hold true between statements.                   */
+/* 不正なスレッドIDをチェックする。ステートメント間でtrueを保持する     */
+/* ための条件のために割り込みは無効でなければならないことに注意         */
 #define isbadtid(x) ((x)>=NTHREAD || (x)<0 || THRFREE == thrtab[(x)].state)
 
-/** Maximum number of file descriptors a thread can hold */
+/** 1スレッドが保持できるファイルディスクリプタの最大数 */
 #define NDESC       5
 
-/** Maximum number of local devices */
+/** ローカルデバイスの最大数 */
 #define NLOCDEV     10
 
-/* Expose sizeof(struct thrent) and offsetof(struct thrent, stkdiv) to 
- * assembly files. */
+/* アセンブリファイルに公開する sizeof(struct thrent) と */
+/* offsetof(struct thrent, stkdiv)  */
 #define THRENTSIZE 148
 #define STKDIVOFFSET 104
 
 #ifndef __ASSEMBLER__
 
 /**
- * Defines what an entry in the thread table looks like.
+ * スレッドテーブルエントリが何であるかを定義する
  */
 struct thrent
 {
-    uchar state;                /**< thread state: THRCURR, etc.        */
-    int prio;                   /**< thread priority                    */
-    void *stkptr;               /**< saved stack pointer                */
-    void *stkbase;              /**< base of run time stack             */
-    ulong stklen;               /**< stack length in bytes              */
-    char name[TNMLEN];          /**< thread name                        */
-    irqmask intmask;            /**< saved interrupt mask               */
-    semaphore sem;              /**< semaphore waiting for              */
-    tid_typ parent;             /**< tid for the parent thread          */
-    message msg;                /**< message sent to this thread        */
-    bool hasmsg;                /**< nonzero iff msg is valid           */
-    struct memblock memlist;    /**< free memory list of thread         */
-    int fdesc[NDESC];           /**< device descriptors for thread      */
+    uchar state;                /**< スレッドの状態: THRCURR など       */
+    int prio;                   /**< スレッドの優先度                   */
+    void *stkptr;               /**< 保存されたスタックポインタ         */
+    void *stkbase;              /**< ランタイムスタックベース           */
+    ulong stklen;               /**< スタック長（バイト単位）           */
+    char name[TNMLEN];          /**< スレッド名                         */
+    irqmask intmask;            /**< 保存された割り込みマスク           */
+    semaphore sem;              /**< 待機しているセマフォ               */
+    tid_typ parent;             /**< 親スレッドのtid                    */
+    message msg;                /**< このスレッドへ送られたメッセージ   */
+    bool hasmsg;                /**< msgが有効な場合、非ゼロ            */
+    struct memblock memlist;    /**< スレッドの空きメモリリスト         */
+    int fdesc[NDESC];           /**< スレッドのデバイスディスクリプタ   */
 };
 
 extern struct thrent thrtab[];
-extern int thrcount;            /**< currently active threads           */
-extern tid_typ thrcurrent;      /**< currently executing thread         */
+extern int thrcount;            /**< 現在アクティブなスレッド           */
+extern tid_typ thrcurrent;      /**< 現在実行中のスレッド               */
 
-/* Inter-Thread Communication prototypes */
+/* スレッド間コミュニケーションのプロトタイプ */
 syscall send(tid_typ, message);
 message receive(void);
 message recvclr(void);
 message recvtime(int);
 
-/* Thread management function prototypes */
+/* スレッド管理関数のプロトタイプ */
 
 tid_typ create(void *procaddr, uint ssize, int priority,
                const char *name, int nargs, ...);
@@ -113,8 +113,8 @@ syscall yield(void);
 /**
  * @ingroup threads
  *
- * Enter some kind of powerdown state (if it exists) that suspends
- * execution until an interrupt is detected.
+ * 割り込みが検知されるまで実行を一時中断 (suspend) する
+ * （もしあるなら）何らかのパワーダウン状態に入る
  */
 void pause(void);
 

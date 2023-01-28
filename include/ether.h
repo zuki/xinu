@@ -159,13 +159,15 @@ devcall etherOpen(device *devptr);
 /**
  * \ingroup ether
  *
- * Close an Ethernet device.  This disables Tx and Rx functionality and sets the
- * device state to ::ETH_STATE_DOWN.  This should be called through close().
+ * Ethernet デバイスを閉じる。 これは Tx と Rx の機能を無効にし、
+ * デバイスの状態を ::ETH_STATE_DOWN にセットする。
+ * close() を通じて呼ばれなければならない。
  *
  * @param devptr
- *      Pointer to the entry in Xinu's device table for the Ethernet device.
+ *     Xinuデバイステーブルに置けるこのEthernetデバイスの
+ *     エントリへのポインタ
  *
- * @return ::OK if the device was closed successfully; otherwise ::SYSERR.
+ * @return デバイスのクローズが成功したら ::OK; それ以外は ::SYSERR.
  */
 devcall etherClose(device *devptr);
 

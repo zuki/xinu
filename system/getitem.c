@@ -10,9 +10,9 @@
 /**
  * @ingroup threads
  *
- * Remove a thread from front of queue
- * @param  q  target queue
- * @return thread ID of removed thread
+ * キューの先頭からスレッドを削除する
+ * @param  q  対象のキュー
+ * @return 削除したスレッドのスレッドID
  */
 tid_typ getfirst(qid_typ q)
 {
@@ -34,9 +34,9 @@ tid_typ getfirst(qid_typ q)
 /**
  * @ingroup threads
  *
- * Remove a thread from end of queue
- * @param  q  target queue
- * @return thread ID of removed thread
+ * キューの末尾からスレッドを削除する
+ * @param  q  対象のキュー
+ * @return 削除したスレッドのスレッドID
  */
 tid_typ getlast(qid_typ q)
 {
@@ -58,9 +58,9 @@ tid_typ getlast(qid_typ q)
 /**
  * @ingroup threads
  *
- * Remove a thread from anywhere in a queue
- * @param  tid  thread ID to get
- * @return thread ID of removed thread
+ * キューの任意の場所からスレッドを削除する
+ * @param  tid  削除するスレッドID
+ * @return 削除したスレッドのスレッドID
  */
 tid_typ getitem(tid_typ tid)
 {

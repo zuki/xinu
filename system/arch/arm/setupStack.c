@@ -6,46 +6,47 @@
 #include <platform.h>
 #include <arm.h>
 
-/* Length of ARM context record in words (includes r0-r11, cpsr, lr, pc).  */
+/* ワード単位のARMコンテキストレコード長（r0-r11, cpsr, lr, pcを含む) */
 #define CONTEXT_WORDS 15
 
-/* The standard ARM calling convention passes first four arguments in r0-r3; the
- * rest spill onto the stack.  */
+/* 標準的なARM呼び出し規約では最初の4引数はr0-r3で渡し、
+ * 残りはスタックで渡す  */
 #define MAX_REG_ARGS 4
 
-/** Set up the context record and arguments on the stack for a new thread
- * (ARM version)  */
+/** 新規スレッドのスタックにコンテキストレコードと引数をセットする
+ * (ARM版)  */
 void *setupStack(void *stackaddr, void *procaddr,
                  void *retaddr, uint nargs, va_list ap)
 {
-    uint spilled_nargs;
-    uint reg_nargs;
+    uint spilled_nargs;     // スタック渡しの引数の数
+    uint reg_nargs;         // レジスタ渡しの引数の数
     uint i;
     ulong *saddr = stackaddr;
 
-    /* Determine if any arguments will spill onto the stack (outside the context
-     * record).  If so, reserve space for them.  */
+    /* （コンテキストレコード以外に）スタックで渡す引数があるか判断する
+     * もしあれば、そのためのスペースを予約する  */
     if (nargs > MAX_REG_ARGS) {
         spilled_nargs = nargs - MAX_REG_ARGS;
         reg_nargs = MAX_REG_ARGS;
-        saddr -= spilled_nargs;
+        saddr -= spilled_nargs;     // 引数用のスペースを予約
     } else {
         spilled_nargs = 0;
         reg_nargs = nargs;
     }
 
-    /* Possibly skip a word to ensure the stack is aligned on 8-byte boundary
-     * after the new thread pops off the context record.  */
+    /* 新しいスレッドがコンテキストレコードをポップオフした後、
+     * スタックが8バイト境界にアラインされるように1ワード
+     * スキップする可能性がある  */
     if ((ulong)saddr & 0x4)
     {
         --saddr;
     }
 
-    /* Construct the context record for the new thread.  */
+    /* 新規スレッドためのコンテキストレコードを構築する */
 
     saddr -= CONTEXT_WORDS;
 
-    /* Arguments passed in registers (part of context record)  */
+    /* レジスタで渡される引数（コンテキストレコードの一部） */
     for (i = 0; i < reg_nargs; i++)
     {
         saddr[i] = va_arg(ap, ulong);
@@ -56,22 +57,22 @@ void *setupStack(void *stackaddr, void *procaddr,
         saddr[i] = 0;
     }
 
-    /* Control bits of program status register
-     * (SYS mode, IRQs initially enabled) */
+    /* プログラムステータスレジスタのコントロールビット
+     * (SYSモード, IRQは酒器には有効 */
     saddr[CONTEXT_WORDS - 3] = ARM_MODE_SYS | ARM_F_BIT;
 
-    /* return address  */
+    /* リターンアドレス  */
     saddr[CONTEXT_WORDS - 2] = (ulong)retaddr;
 
-    /* program counter  */
+    /* プログラムカウンタ  */
     saddr[CONTEXT_WORDS - 1] = (ulong)procaddr;
 
-    /* Arguments spilled onto stack (not part of context record)  */
+    /* スタック渡しの引数（コンテキストレコードではない）  */
     for (i = 0; i < spilled_nargs; i++)
     {
         saddr[CONTEXT_WORDS + i] = va_arg(ap, ulong);
     }
 
-    /* Return "top" of stack (lowest address).  */
+    /* スタックの「トップ」（最低位のアドレス）を返す  */
     return saddr;
 }

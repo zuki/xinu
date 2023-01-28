@@ -14,9 +14,9 @@
 
 #define PAGE_SIZE 4096
 
-/** Round a memory address to the upper page boundary */
+/** メモリアドレスを上位ページ境界に丸める */
 #define roundpage(x) ((4095 + (uint)(x)) & ~0x0FFF)
-/** Truncate a memory address to the lower page boundary */
+/** メモリアドレスを下位ページ境界に切り捨てる */
 #define truncpage(x) ((uint)(x) & ~0x0FFF)
 
 /* Region allocator */

@@ -1,6 +1,8 @@
 /**
  * @file pause.S
- * Platform-dependent code for idling the processor.
+ *
+ * @ingroup threads
+ * プロセスをアイドリング状態にするプラットフォーム固有のコード
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
@@ -8,6 +10,6 @@
 
 pause:
 	.func pause
-	wfi               /* ARM "wait for interrupt" instruction. */
+	wfi               /* ARMの "wait for interrupt" 命令 */
 	mov pc, lr
 	.endfunc

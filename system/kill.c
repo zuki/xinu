@@ -14,9 +14,9 @@ extern void xdone(void);
 /**
  * @ingroup threads
  *
- * Kill a thread and remove it from the system
- * @param tid target thread
- * @return OK on success, SYSERR otherwise
+ * スレッドをKillし、システムから削除する
+ * @param tid 対象のスレッド
+ * @return 成功の場合は OK、そうでなければ SYSERR
  */
 syscall kill(tid_typ tid)
 {
@@ -37,12 +37,13 @@ syscall kill(tid_typ tid)
     }
 
 #ifdef UHEAP_SIZE
-    /* reclaim used memory regions */
+    /* 使用したメモリ領域を回収する */
     memRegionReclaim(tid);
 #endif                          /* UHEAP_SIZE */
 
+    // 親に通知
     send(thrptr->parent, tid);
-
+    // スタックを開放
     stkfree(thrptr->stkbase, thrptr->stklen);
 
     switch (thrptr->state)
@@ -52,14 +53,14 @@ syscall kill(tid_typ tid)
         thrptr->state = THRFREE;
         break;
     case THRCURR:
-        thrptr->state = THRFREE;        /* suicide */
+        thrptr->state = THRFREE;        /* 自殺 */
         resched();
 
     case THRWAIT:
         semtab[thrptr->sem].count++;
 
     case THRREADY:
-        getitem(tid);           /* removes from queue */
+        getitem(tid);           /* readyキューから削除 */
 
     default:
         thrptr->state = THRFREE;

@@ -13,23 +13,23 @@
 /**
  * @ingroup arp
  *
- * Send a message to threads waiting on resolution of an ARP table entry.
- * @param entry ARP table entry
- * @param msg message to send to waiting threads
- * @return OK if successful, SYSERR if error occurs
+ * ARPテーブルエントリの解決を待っているスレッドにメッセージを送信する。
+ * @param entry ARPテーブルエントリ
+ * @param msg 待機スレッドに送信するメッセージ
+ * @return 成功したら OK、エラーが発生したら SYSERR
  */
 syscall arpNotify(struct arpEntry *entry, message msg)
 {
-    int i = 0;                          /**< index into ARP table         */
-    irqmask im;                     /**< interrupt state              */
+    int i = 0;                      /**< ARPテーブルを走査するインデックス         */
+    irqmask im;                     /**< 割り込み状態              */
 
-    /* Error check pointers */
+    /* ポインタのエラーチェック */
     if (NULL == entry)
     {
         return SYSERR;
     }
 
-    /* Send message to each waiting thread */
+    /* 各大気スレッドにメッセージを送信する */
     im = disable();
     for (i = 0; i < entry->count; i++)
     {
@@ -40,7 +40,7 @@ syscall arpNotify(struct arpEntry *entry, message msg)
         }
     }
 
-    /* Clear list of waiting threads */
+    /* 待機スレッドリストをクリアする */
     entry->count = 0;
     bzero(entry->waiting, sizeof(tid_typ) * ARP_NTHRWAIT);
 

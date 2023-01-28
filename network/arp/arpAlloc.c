@@ -11,10 +11,10 @@
 /**
  * @ingroup arp
  *
- * Allocates an entry from the ARP table.
- * @return entry in ARP table, SYSERR if error occurs
- * @pre-condition interrupts are disabled
- * @post-condition interrupts are still disabled
+ * ARPテーブルからエントリを割り当てる。
+ * @return ARPテーブルのエントリ、エラーが発生した場合は SYSERR
+ * @pre-condition 割り込みは無効であること
+ * @post-condition 割り込みは依然として無効であること
  */
 struct arpEntry *arpAlloc(void)
 {
@@ -25,7 +25,7 @@ struct arpEntry *arpAlloc(void)
 
     for (i = 0; i < ARP_NENTRY; i++)
     {
-        /* If entry is free, return entry */
+        /* エントリが未使用の場合、そのエントリを返す */
         if (ARP_FREE == arptab[i].state)
         {
             arptab[i].state = ARP_USED;
@@ -42,14 +42,14 @@ struct arpEntry *arpAlloc(void)
         }
     }
 
-    /* If no free or minimum expires entry was found an error occured */
+    /* 未使用または最小の有効期限切れのエントリがない場合はエラー */
     if (NULL == minexpires)
     {
         ARP_TRACE("\tNo free or minexpires entry");
         return (struct arpEntry *)SYSERR;
     }
 
-    /* Return entry with minimum expires */
+    /* 最小の有効期限切れのエントリを返す */
     bzero(minexpires, sizeof(struct arpEntry));
     minexpires->state = ARP_USED;
     return minexpires;

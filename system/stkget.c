@@ -12,17 +12,17 @@
 /**
  * @ingroup memory_mgmt
  *
- * Allocate stack memory.
+ * スタックメモリを割り当てる
  *
  * @param nbytes
- *      Number of bytes requested.
+ *      要求されたバイト数
  *
  * @return
- *      ::SYSERR if @p nbytes was 0 or there is no memory to satisfy the
- *      request; otherwise returns a pointer to the <b>topmost (highest address)
- *      word</b> of the allocated memory region.  The intention is that this is
- *      the base of a stack growing down.  Free the stack with stkfree() when
- *      done with it.
+ *      @p nbytes が 0 または、要求を満たすだけのメモリがなかった
+ *      場合は ::SYSERR; そうでなければ割り当てたメモリ領域の
+ *      <b>最上位（最大アドレス）ワード</b>へのポインタを返す。
+ *      これはスタックが下に伸びるベースとなることを意図している。
+ *      スタックを使い終わったら stkfree() でスタックを解放すること。
  */
 void *stkget(uint nbytes)
 {
@@ -34,7 +34,7 @@ void *stkget(uint nbytes)
         return (void *)SYSERR;
     }
 
-    /* round to multiple of memblock size   */
+    /* memblockサイズの倍数に丸める */
     nbytes = (uint)roundmb(nbytes);
 
     im = disable();
@@ -44,7 +44,7 @@ void *stkget(uint nbytes)
     fits = NULL;
     fitsprev = NULL;
 
-    /* scan list for highest block that fits */
+    /* 適合する最後尾のブロックをリストからスキャンする */
     while (next != NULL)
     {
         if (next->length >= nbytes)
@@ -58,7 +58,7 @@ void *stkget(uint nbytes)
 
     if (NULL == fits)
     {
-        /* no block big enough */
+        /* nbytes以上のブロックなし */
         restore(im);
         return (void *)SYSERR;
     }
@@ -69,12 +69,13 @@ void *stkget(uint nbytes)
     }
     else
     {
-        /* take top portion */
+        /* 先頭部分を切り取る（残す） */
         fits->length -= nbytes;
         fits = (struct memblock *)((ulong)fits + fits->length);
     }
 
     memlist.length -= nbytes;
     restore(im);
+    // 取得するのはnbytes以上ある最後尾のブロックの後ろからnbytes
     return (void *)((ulong)fits + nbytes - sizeof(int));
 }

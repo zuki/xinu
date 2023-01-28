@@ -12,27 +12,27 @@
 /**
  * @ingroup arp
  *
- * Frees an entry from the ARP table.
- * @return SYSERR if error occurs, otherwise OK
+ * ARPテーブルのエントリを開放する
+ * @return エラーが発生した場合は SYSERR、それ以外は OK
  */
 syscall arpFree(struct arpEntry *entry)
 {
     ARP_TRACE("Freeing ARP entry");
 
-    /* Error check pointers */
+    /* ポインタのエラーチェック */
     if (NULL == entry)
     {
         return SYSERR;
     }
 
-    /* Notify threads waiting on resolution */
+    /* 解決を待っているスレッドに通知する */
     if (ARP_UNRESOLVED == entry->state)
     {
         arpNotify(entry, TIMEOUT);
         ARP_TRACE("Waiting threads notified");
     }
 
-    /* Clear ARP table entry */
+    /* ARPテーブルエントリをクリアする */
     bzero(entry, sizeof(struct arpEntry));
     entry->state = ARP_FREE;
     ARP_TRACE("Freed entry %d",

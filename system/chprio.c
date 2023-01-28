@@ -9,10 +9,10 @@
 /**
  * @ingroup threads
  *
- * Change the scheduling priority of a thread
- * @param tid target thread
- * @param newprio new priority
- * @return old priority of thread
+ * スレッドのスケジューリング優先度を変更する
+ * @param tid 対象のスレッド
+ * @param newprio 新しい優先度
+ * @return スレッドの変更前の優先度
  */
 syscall chprio(tid_typ tid, int newprio)
 {

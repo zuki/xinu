@@ -12,23 +12,23 @@ static int thrnew(void);
 /**
  * @ingroup threads
  *
- * Create a thread to start running a procedure.
+ * プロシージャの実行を開始するためのスレッドを作成する
  *
  * @param procaddr
- *      procedure address
+ *      プロシージアドレス
  * @param ssize
- *      stack size in bytes
+ *      スタックサイズ（バイト単位）
  * @param priority
- *      thread priority (0 is lowest priority)
+ *      スレッドの優先度（0は最低の優先度）
  * @param name
- *      name of the thread, used for debugging
+ *      スレッド名。デバッグ時に使用
  * @param nargs
- *      number of arguments that follow
+ *      引数の数
  * @param ...
- *      arguments to pass to thread procedure
+ *      スレッドプロシージに渡す引数
  * @return
- *      the new thread's thread id, or ::SYSERR if a new thread could not be
- *      created (not enough memory or thread entries).
+ *      新規スレッドのid, （メモリ不足やスレッドエントリがフル
+ *      などで）新規スレッドが作成できなかった場合は ::SYSERR
  */
 tid_typ create(void *procaddr, uint ssize, int priority,
                const char *name, int nargs, ...)
@@ -46,7 +46,7 @@ tid_typ create(void *procaddr, uint ssize, int priority,
         ssize = MINSTK;
     }
 
-    /* Allocate new stack.  */
+    /* 新規スタックを割り当てる  */
     saddr = stkget(ssize);
     if (SYSERR == (int)saddr)
     {
@@ -54,7 +54,7 @@ tid_typ create(void *procaddr, uint ssize, int priority,
         return SYSERR;
     }
 
-    /* Allocate new thread ID.  */
+    /* 新規スレッドIDを割り当てる  */
     tid = thrnew();
     if (SYSERR == (int)tid)
     {
@@ -63,7 +63,7 @@ tid_typ create(void *procaddr, uint ssize, int priority,
         return SYSERR;
     }
 
-    /* Set up thread table entry for new thread.  */
+    /* 新規スレッド用のスレッドテーブルエントリを設定する */
     thrcount++;
     thrptr = &thrtab[tid];
 
@@ -77,33 +77,34 @@ tid_typ create(void *procaddr, uint ssize, int priority,
     thrptr->memlist.next = NULL;
     thrptr->memlist.length = 0;
 
-    /* Set up default file descriptors.  */
+    /* デフォルトのファイルディスクリプタを設定する  */
     thrptr->fdesc[0] = CONSOLE; /* stdin  is console */
     thrptr->fdesc[1] = CONSOLE; /* stdout is console */
     thrptr->fdesc[2] = CONSOLE; /* stderr is console */
 
-    /* Set up new thread's stack with context record and arguments.
-     * Architecture-specific.  */
+    /* 新規スレッドのスタックをコンテキストレコードと引数で設定する
+     * アーキテクチャ固有  */
     va_start(ap, nargs);
     thrptr->stkptr = setupStack(saddr, procaddr, INITRET, nargs, ap);
     va_end(ap);
 
-    /* Restore interrupts and return new thread TID.  */
+    /* 割り込み状態を復元して新規スレッドのTIDを返す  */
     restore(im);
     return tid;
 }
 
 /*
- * Obtain a new (free) thread ID.  Returns a free thread ID, or SYSERR if all
- * thread IDs are already in use.  This assumes IRQs have been disabled so that
- * the contents of the threads table are stable.
+ * 新規（空き）スレッドIDを取得する。空いているスレッドIDを返す。
+ * すべてのスレッドIDがすでに使用されている場合は SYSERR を返す。
+ * この関数はIRQは無効であると仮定しているので、スレッドテーブルの
+ * 内容は普遍である。
  */
 static int thrnew(void)
 {
     int tid;
     static int nexttid = 0;
 
-    /* check all NTHREAD slots    */
+    /* NTHREAD個のスロットをすべてチェックする   */
     for (tid = 0; tid < NTHREAD; tid++)
     {
         nexttid = (nexttid + 1) % NTHREAD;

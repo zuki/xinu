@@ -8,30 +8,30 @@
 #include <safemem.h>
 
 /**
- * Remove an existing region from a list.
- * @param region Region to remove.
- * @param list List the region exists in.
+ * リストから既存の領域を削除する
+ * @param region 削除する領域
+ * @param list 領域が存在するリスト
  */
 void memRegionRemove(struct memregion *region, struct memregion **list)
 {
-    /* If region has previous, set prev->next to region->next */
+    /* region->prevがある場合は、prev->nextをregion->nextに付け替える */
     if ((int)(region->prev) != SYSERR)
     {
         region->prev->next = region->next;
     }
     else
     {
-        /* otherwise, update the list pointer */
+        /* ない場合（先頭）はlistのポインタを更新する */
         *list = region->next;
     }
 
-    /* If region has next, set next->prev to region->prev */
+    /* region->nextがある場合は、netx->prevをregion->prevに付け替える */
     if ((int)(region->next) != SYSERR)
     {
         region->next->prev = region->prev;
     }
 
-    /* clear prev/next fields of this region */
+    /* この領域の prev/next フィールドをクリアする */
     region->prev = (struct memregion *)SYSERR;
     region->next = (struct memregion *)SYSERR;
 }

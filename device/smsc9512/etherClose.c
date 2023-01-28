@@ -5,10 +5,10 @@
 
 #include <ether.h>
 
-/* Implementation of etherClose() for the smsc9512; see the documentation for
- * this function in ether.h.  */
+/* smsc9512 用のetherClose() の実装;
+ *  ether.h にあるこの関数の文書を参照  */
 devcall etherClose(device *devptr)
 {
-    /* TODO: need to handle canceling all the outstanding USB requests, etc. */
+    /* TODO: すべての未処理のUSBリクエストのキャンセル処理などが必要 */
     return SYSERR;
 }

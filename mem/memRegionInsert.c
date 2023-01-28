@@ -12,16 +12,16 @@ extern struct memregion *regalloclist, *regfreelist;
 static void memRegionCoalesce(struct memregion *region);
 
 /**
- * Insert a region into a region list.  This will coalesce with neighboring
- * regions if applicable (list is free list).
- * @param region Region to insert.
- * @param list List to insert region in.
+ * regionをリストに挿入する。（リストがフリーリストの場合）、
+ * 該当すれば、近隣の地域と合体する
+ * @param region 挿入する領域
+ * @param list 領域を挿入するリスト
  */
 void memRegionInsert(struct memregion *region, struct memregion **list)
 {
     struct memregion *current, *previous;
 
-    /* See if list has *any* regions, if not just add. */
+    /* リストに領域があるか調べる。なければ単に追加する */
     if (SYSERR == (int)(*list))
     {
         *list = region;
@@ -29,7 +29,7 @@ void memRegionInsert(struct memregion *region, struct memregion **list)
         return;
     }
 
-    /* Look for existing region with address larger than our region */
+    /* regionのアドレスより大きなアドレスを持つ既存の領域を探す */
     current = *list;
     while ((SYSERR != (int)current) && (current->start < region->start))
     {
@@ -40,28 +40,28 @@ void memRegionInsert(struct memregion *region, struct memregion **list)
 
     if (SYSERR == (int)current)
     {
-        /* add after current */
+        /* currentの後に追加する: どの領域のアドレスより大きい場合 */
         previous->next = region;
         region->prev = previous;
         region->next = (struct memregion *)SYSERR;
     }
     else
     {
-        /* add before current */
+        /* currentの前に追加する: curr.prev < region < curr */
         region->prev = current->prev;
         region->next = current;
-        if ((int)(current->prev) != SYSERR)
+        if ((int)(current->prev) != SYSERR) // currentは先頭ではない
         {
             current->prev->next = region;
         }
         else
         {
-            *list = region;
+            *list = region;     // currentが先頭だったのでregionを先頭に
         }
         current->prev = region;
     }
 
-    /* region in free list, coalesce */
+    /* フリーリストの領域であれば合体する */
     if (*list == regfreelist)
     {
         memRegionCoalesce(region);
@@ -69,21 +69,22 @@ void memRegionInsert(struct memregion *region, struct memregion **list)
 }
 
 /**
- * Coalesce adjacent memory regions into one larger region.  This allows
- * large regions to be allocated if enough contiguous space exists.
- * @param region pointer to region to attempt to coalesce
+ * 隣接するメモリ領域を一つの大きな領域に合体する。
+ * これにより連続する大きなスペースが存在するようになれば
+ * 大きな領域を割り当てられるようになる
+ * @param region 合体を試みる領域のポインタ
  */
 static void memRegionCoalesce(struct memregion *region)
 {
     struct memregion *adjacent;
 
-    /* does region bump with region->next? */
+    /* regionはregion->nextと隣接するか? */
     adjacent = region->next;
     if (((int)adjacent != SYSERR)
         && ((uint)(region->start) + region->length)
         == (uint)(adjacent->start))
     {
-        /* coalesce region with region->next */
+        /* regionとregion->nextを合体 */
         region->length += adjacent->length;
         region->next = adjacent->next;
         if (SYSERR != (int)adjacent->next)
@@ -92,13 +93,13 @@ static void memRegionCoalesce(struct memregion *region)
         }
     }
 
-    /* does previous region bump with region? */
+    /* region->prevはregionと隣接するか? */
     adjacent = region->prev;
     if (((int)adjacent != SYSERR)
         && ((uint)(adjacent->start) + adjacent->length ==
             (uint)(region->start)))
     {
-        /* coalesce region with region->prev */
+        /* regionとregion->prevを合体 */
         adjacent->length += region->length;
         adjacent->next = region->next;
         if (SYSERR != (int)region->next)
