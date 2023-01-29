@@ -8,12 +8,13 @@
 #include <device.h>
 
 /**
- * XXX:  This function apparently isn't used anywhere currently.
+ * XXX:  この関数は現在のところ明らかにどこにも使用されていない
  *
- * position a device (very common special case of control)
- * @param descrp definition of device on which to seek
- * @param pos requested position to seek
- * @return function to seek on device on success, SYSERR on failure
+ * デバイスを位置づける（制御の非常に一般的な特殊ケース）
+ *
+ * @param descrp seekするデバイスの識別子
+ * @param pos seekする位置
+ * @return 成功時にはデバイスのseek位置、失敗時はSYSERR
  */
 devcall seek(int descrp, uint pos)
 {

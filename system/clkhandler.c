@@ -17,10 +17,10 @@ int resched(void);
 /**
  * @ingroup timer
  *
- * Interrupt handler function for the timer interrupt.  This schedules a new
- * timer interrupt to occur at some point in the future, then updates ::clktime
- * and ::clkticks, then wakes sleeping threads if there are any, otherwise
- * reschedules the processor.
+ * タイマー割り込み用の割り込みハンドラ関数。
+ * 将来のある時点で発生する新しいタイマー割り込みをスケジュールし、
+ * ::clktime と ::clkticks を更新し、スリープ中のスレッドがあれば
+ * 起床させ、 そうでなければプロセッサを再スケジュールする。
  */
 interrupt clkhandler(void)
 {
@@ -29,15 +29,15 @@ interrupt clkhandler(void)
     /* Another clock tick passes. */
     clkticks++;
 
-    /* Update global second counter. */
+    /* グローバル秒カウンタを更新する */
     if (CLKTICKS_PER_SEC == clkticks)
     {
         clktime++;
         clkticks = 0;
     }
 
-    /* If sleepq is not empty, decrement first key.   */
-    /* If key reaches zero, call wakeup.              */
+    /* sleepqがから出ない場合は、第一キーを減ずる     */
+    /* キーがゼロに達したら、wakeupを呼び出す         */
     if (nonempty(sleepq) && (--firstkey(sleepq) <= 0))
     {
         wakeup();

@@ -10,21 +10,21 @@
 /**
  * @ingroup devcalls
  *
- * Close a device.
+ * デバイスをクローズする
  *
  * @param descrp
- *      Index of the device to close.
+ *      クローズするデバイスのインデックス
  *
  * @return
- *      ::OK if device was successfully closed; ::SYSERR otherwise.
+ *      背バイスのクローズに成功した場合は ::OK; そうでない場合は ::SYSERR
  *
- * Most device drivers will return ::SYSERR if the device is not open but
- * otherwise will always be able to successfully close the device and return
- * ::OK.
+ * ほとんどデバイスドライバはデバイスがオープンされていない場合、
+ * ::SYSERR を返すが、それ以外は常にクローズは成功して、デバイスは
+ * ::OK を返す。
  *
- * Caveat:  You must not close the device while any threads are using it (e.g.
- * for read() or write()), unless the corresponding device driver documents this
- * as allowed.
+ * 注意事項: 使用中（read(), write()など）のスレッドがある間は、
+ * 対応するドライバがそれを許している場合を除いて、デバイスをクローズ
+ * してはならない。
  */
 devcall close(int descrp)
 {

@@ -13,9 +13,9 @@
 /**
  * @ingroup timer
  *
- * Timer resolution.  This refers to the maximum number of times that Xinu
- * schedules the timer interrupt per second, @a not to the number of native
- * clock cycles per second.
+ * タイマー解像度。Xinuが1秒あたりに割り込みをスケジュールする
+ * 最大回数を意味し、1秒あたりのネイティブクロックサイクルの数
+ * では @a ない
  */
 #define CLKTICKS_PER_SEC  1000
 
@@ -23,39 +23,75 @@ extern volatile ulong clkticks;
 extern volatile ulong clktime;
 extern qid_typ sleepq;
 
-/* Clock function prototypes.  Note:  clkupdate() and clkcount() are documented
- * here because their implementations are platform-dependent.  */
+/* クロック関数プロトタイプ。注: clkupdate() と clkcount() が
+ * ここにあるのはその実装がプラットフォーム依存だからである
+ */
 
+/**
+ * @ingroup timer
+ *
+ * クロックとスリープキューを初期化する. この関数は起動時に
+ * 呼び出される。
+ */
 void clkinit(void);
 
 /**
  * @ingroup timer
  *
- * Sets up a timer interrupt to trigger after a certain number of clock cycles
- * have elapsed.
+ * 指定したクロックサイクルが経過した後にタイマー割り込みを
+ * トリガーするように設定する
  *
  * @param cycles
- *     Number of cycles after which the timer interrupt is to be triggered.
- *     This refers to native clock cycles (whose frequency is specified in
- *     platform::clkfreq).
+ *     タイマー割り込みをトリガーするサイクル数. これはネイティブ
+ *     サイクルを意味する（その周波数は platform::clkfreq で指定
+ *     されている）
  */
 void clkupdate(ulong cycles);
 
 /**
  * @ingroup timer
  *
- * Gets the current system timer cycles.
+ * 現在のシステムタイマーサイクルを取得する
  *
  * @return
- *	The current number of timer cycles.  Generally, only the difference between
- *	the value returned by between two successive calls to this function is
- *	meaningful.  The number of cycles that elapse per second is specified by the
- *	@ref platform::clkfreq "value in platform".
+ *	現在のタイマーサイクル数. 一般に、この関数を連続して2回呼び出した
+ *  際に返される値の差分のみが意味を持つ。1秒間に経過するサイクル数は、
+ *  @ref platform::clkfreq の「プラットフォームにおける値」で指定される
  */
 ulong clkcount(void);
 
+/**
+ * @ingroup timer
+ *
+ * タイマー割り込み用の割り込みハンドラ関数.
+ * 将来のある時点で発生する新しいタイマー割り込みをスケジュールし、
+ * ::clktime と ::clkticks を更新し、スリープ中のスレッドがあれば
+ * 起床させ、 そうでなければプロセッサを再スケジュールする。
+ */
 interrupt clkhandler(void);
-void udelay(ulong);
-void mdelay(ulong);
+
+/**
+ * @ingroup timer
+ *
+ * 指定のマイクロ秒の間ビジーウェイトする. この関数は絶対に必要な
+ * 場合のみ使用すること。通常は sleep() を呼んで、他のスレッドが
+ * すぐにプロセッサを使えるようにするべきである。
+ *
+ * @param us
+ *    待機するマイクロ秒数
+ */
+void udelay(ulong us);
+
+/**
+ * @ingroup timer
+ *
+ * 指定のミリ秒の間ビジーウェイトする. この関数は絶対に必要な
+ * 場合のみ使用すること。通常は sleep() を呼んで、他のスレッドが
+ * すぐにプロセッサを使えるようにするべきである。
+ *
+ * @param ms
+ *    待機するミリ秒数
+ */
+void mdelay(ulong ms);
 
 #endif                          /* _CLOCK_H_ */

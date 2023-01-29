@@ -11,13 +11,13 @@
 /**
  * @ingroup devcalls
  *
- * Translates a device name into a device number.
+ * デバイス名をデバイス番号に変換する
  *
  * @param dev
- *      Name of the device.
+ *      デバイス名
  *
  * @return
- *      The number of the device, or ::SYSERR if the device was not found.
+ *      デバイス番号、デバイスが見つからなかった場合は ::SYSERR
  */
 syscall getdev(const char *dev)
 {

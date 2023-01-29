@@ -9,18 +9,18 @@
 /**
  * @ingroup devcalls
  *
- * Write one character to a device.
+ * デバイスに1文字書き出す
  *
  * @param descrp
- *      Index of device to which to write the character.
+ *      文字を書き出すデバイスのインデックス
  * @param ch
- *      character to write
+ *      書き出す文字
  *
  * @return
- *      On success, returns the character written as an <code>unsigned
- *      char</code> cast to an @c int.  On bad device descripter, returns @c
- *      ::SYSERR.  On other failure, returns ::SYSERR or ::EOF depending on the
- *      specific device driver it calls.
+ *      成功した場合、書き出した文字を <code>unsigned char</code> から
+ *      @c int にキャストして返す。descrpが正しくない場合は
+ *      ::SYSERR を返す。その他の失敗の場合は、呼び出したデバイス
+ *      ドライバにより ::SYSERR か ::EOF を返す。
  */
 devcall putc(int descrp, char ch)
 {

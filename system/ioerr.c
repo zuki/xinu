@@ -9,7 +9,7 @@
 /**
  * @ingroup devcalls
  *
- * Unconditionally return an error (used for "error" entries in devtab).
+ * 無条件にエラーを返す（devtabの "error" エントリで使用される）
  *
  * @return ::SYSERR
  */

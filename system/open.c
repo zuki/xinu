@@ -11,21 +11,20 @@
 /**
  * @ingroup devcalls
  *
- * Open a device so that read(), write(), putc(), and/or getc() operations can
- * be performed on it.
+ * デバイスをオープンして、read(), write(), putc(), getc() 操作が
+ * できるようにする
  *
  * @param descrp
- *      Index of the device to open.
+ *      オープンするデバイスのインデックス
  * @param ...
- *      Zero or more additional parameters that will be passed to the
- *      device-specific open function.
+ *      デバイス固有のopen関数に渡す0個以上の引数
  *
  * @return
- *      On success, returns ::OK.  If the device index is bad or if another
- *      error occurs, returns ::SYSERR.  Generally, device drivers will at least
- *      return ::SYSERR in the case that the device is already open, but
- *      ::SYSERR may also be returned because of failure to allocate resources
- *      or for device-specific errors.
+ *      成功の場合、::OK を返す。デバイスIDが不正、または、別の
+ *      エラーが発生した場合は ::SYSERR を返す。一般に、デバイスが
+ *      すでにオープンされている場合、デバイスドライバは少なくとも
+ *      ::SYSERR を返すが、リソースの割り当てに失敗した場合やデバイス
+ *      固有のエラーが発生した場合にも ::SYSERR が返される。
  */
 devcall open(int descrp, ...)
 {

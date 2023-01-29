@@ -15,19 +15,23 @@
 #include <clock.h>
 #include <queue.h>
 
-/** @ingroup timer
+/**
+ * @ingroup timer
  *
- * Number of timer interrupts that have occurred since ::clktime was
- * incremented.  When ::clkticks reaches ::CLKTICKS_PER_SEC, ::clktime is
- * incremented again and ::clkticks is reset to 0.
+ * ::clktime 以降に発生したタイマー割り込みの数は増分される。
+ * ::clkticks が ::CLKTICKS_PER_SEC に達したら、::clktime は
+ * 再び増分し、::clkticks は 0 にリセットされる。
  */
 volatile ulong clkticks;
 
-/** @ingroup timer
- * Number of seconds that have elapsed since the system booted.  */
+/**
+ * @ingroup timer
+ *
+ * システム起動からの経過秒数
+ */
 volatile ulong clktime;
 
-/** Queue of sleeping processes.  */
+/** スリープ中のプロセスのキュー  */
 qid_typ sleepq;
 
 /* TODO: Get rid of ugly x86 ifdef.  */
@@ -41,11 +45,12 @@ ulong time_intr_freq = 0;     /** frequency of XINU clock interrupt   */
 /**
  * @ingroup timer
  *
- * Initialize the clock and sleep queue.  This function is called at startup.
+ * クロックとスリープキューを初期化する。この関数は起動時に
+ * 呼び出される。
  */
 void clkinit(void)
 {
-    sleepq = queinit();         /* initialize sleep queue       */
+    sleepq = queinit();         /* sleepキューを初期化する */
 
     clkticks = 0;
 
@@ -64,7 +69,7 @@ void clkinit(void)
 	outb(CLOCKBASE, time_intr_freq >> 8); /* why??? */
 	set_evec(IRQBASE, (ulong)clockIRQ);
 #else
-    /* register clock interrupt */
+    /* クロック割り込みを登録する */
     interruptVector[IRQ_TIMER] = clkhandler;
     enable_irq(IRQ_TIMER);
     clkupdate(platform.clkfreq / CLKTICKS_PER_SEC);

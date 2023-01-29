@@ -9,7 +9,7 @@
 /**
  * @ingroup devcalls
  *
- * Do nothing (use for irrelevant entries in devtab).
+ * 何もしない（devtabのどうでもよいエントリで使用される）
  *
  * @return ::OK
  */

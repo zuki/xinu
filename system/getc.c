@@ -9,16 +9,16 @@
 /**
  * @ingroup devcalls
  *
- * Read one character from a device.
+ * デバイスから1文字読み込む
  *
  * @param descrp
- *      Index of device from which to read the character.
+ *      文字を読み込むデバイスのインデックス
  *
  * @return
- *      On success, returns the character read as an <code>unsigned char</code>
- *      cast to an @c int.  On bad device descripter, returns ::SYSERR.  On
- *      other failure, returns ::SYSERR or ::EOF depending on the specific
- *      device driver it calls.
+ *      成功した場合、読み込んだ文字を <code>unsigned char</code> から
+ *      @c int にキャストして返す。descrpが正しくない場合は
+ *      ::SYSERR を返す。その他の失敗の場合は、呼び出したデバイス
+ *      ドライバにより ::SYSERR か ::EOF を返す。
  */
 devcall getc(int descrp)
 {

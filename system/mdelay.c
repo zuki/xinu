@@ -12,12 +12,12 @@
 /**
  * @ingroup timer
  *
- * Busy-waits for a number of milliseconds.
- * Only use this function if absolutely necessary.  Normally you should call
- * sleep() so that other threads can use the processor immediately.
+ * 指定のミリ秒の間ビジーウェイトする。この関数は絶対に必要な
+ * 場合のみ使用すること。通常は sleep() を呼んで、他のスレッドが
+ * すぐにプロセッサを使えるようにするべきである。
  *
  * @param ms
- *    Number of milliseconds to wait for.
+ *    待機するミリ秒数
  */
 void mdelay(ulong ms)
 {

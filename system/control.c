@@ -10,22 +10,23 @@
 /**
  * @ingroup devcalls
  *
- * Execute an I/O Control request on a device.
+ * デバイス上でI/Oコントロールリクエストを実行する
  *
  * @param descrp
- *      Index of the device.
+ *      デバイスのインデックス
  * @param func
- *      Device-specific specific control "function".
+ *      デバイス固有の特定のコントロール「関数」
  * @param arg1
- *      Additional argument for the device-specific control function.
+ *      デバイス固有の特定のコントロール「関数」への第1引数
  * @param arg2
- *      Additional argument for the device-specific control function.
+ *      デバイス固有の特定のコントロール「関数」への第2引数
  *
  * @return
- *      Returns ::SYSERR if the device index does not correspond to an
- *      appropriate device or if the control function is not recognized;
- *      otherwise returns a request-specific value that is typically ::SYSERR on
- *      failure, but may be either ::OK or request-specific data on success.
+ *      デバイスインデックスに適当なデバイスが対応しない場合、または、
+ *      コントロール関数が認識できない場合は ::SYSERR を返す。
+ *      それ以外は、リクエスト固有の値を返す。通常は、失敗の場合は
+ *      ::SYSERR である。成功の場合は、::OK か リクエスト固有のデータ
+ *      である。
  */
 devcall control(int descrp, int func, long arg1, long arg2)
 {

@@ -10,23 +10,24 @@
 /**
  * @ingroup devcalls
  *
- * Write data to a device.
+ * デバイスにデータを書き出す
  *
  * @param descrp
- *      Index of the device to write to.
+ *      書き出すデバイスのインデックス to.
  * @param buffer
- *      Buffer of data to write.
+ *      書き出すデータバッファ
  * @param count
- *      Number of bytes of data to write.
+ *     書き出すデータのバイト数
  *
  * @return
- *      On success, returns the number of bytes written, which may be less than
- *      @p count in the event of a write error.  Alternatively, ::SYSERR is
- *      returned if the device index is not valid or if a write error occurred
- *      before any data at all was successfully written.
+ *      成功した場合、書き出したバイト数を返す。これは書き出し
+ *      エラーのために @p count より少ない場合がある。
+ *      それ以外で、デバイスインデックスが正しくなかったり、
+ *      データを書き出すのに成功する前に書き出しエラーが発生
+ *      した場合は ::SYSERR が返される。
  *
- * Note that, depending on the specific device, this function may simply buffer
- * the data to be written at some later time via interrupt handling code.
+ * デバイスによってはこの関数は単にデータをバッファリングするだけで
+ * 後で割り込み処理コードにより書き出す場合もあることに注意されたい。
  */
 devcall write(int descrp, const void *buffer, uint count)
 {

@@ -1,5 +1,5 @@
 /**
- * @file device.h 
+ * @file device.h
  *
  * Contains all definitions relating to the Xinu device subsystem.
  *
@@ -14,13 +14,15 @@
 #include <stddef.h>
 
 /**
- * Check that device id is between 0 and NDEVS. 
+ * @ingroup devcalls
  *
- * @param f id number to test
+ * デバイスIDが0とNDEVSの間にあるかチェックする
+ *
+ * @param f テストするID番号
  */
 #define isbaddev(f)  ( !(0 <= (f) && (f) < NDEVS) )
 
-/* Standard driver functions */
+/* 標準デバイス関数 */
 devcall open(int, ...);
 devcall close(int);
 devcall read(int, void *, uint);
