@@ -12,17 +12,17 @@
 /**
  * @ingroup memory_mgmt
  *
- * Acquire heap storage and subdivide into buffers.
+ * ヒープストレージを取得し、バッファに細分化する
  *
  * @param bufsize
- *      Size of individual buffers, in bytes.
+ *      個々のバッファのサイズ（バイト単位）
  *
  * @param nbuf
- *      Number of buffers in the pool.
+ *      プールにあるバッファ数
  *
  * @return
- *      On success, returns an identifier for the buffer pool that can be passed
- *      to bufget() or bfpfree().  On failure, returns ::SYSERR.
+ *      成功の場合、bufget(), bfpfree()にわたすことができる
+ *      バッファプールの識別子を返す。失敗の場合は ::SYSERR を返す。
  */
 int bfpalloc(uint bufsize, uint nbuf)
 {
@@ -48,15 +48,18 @@ int bfpalloc(uint bufsize, uint nbuf)
             break;
         }
     }
+    // プールは全て使用中
     if (NPOOL == id)
     {
         restore(im);
         return SYSERR;
     }
+
+    // 空きプールが見つかったので使用する
     bfpptr->state = BFPUSED;
     restore(im);
 
-    bfpptr->freebuf = semcreate(0);
+    bfpptr->freebuf = semcreate(0);     // countは0
     if (SYSERR == (int)bfpptr->freebuf)
     {
         bfpptr->state = BFPFREE;

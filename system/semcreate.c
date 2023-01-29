@@ -11,24 +11,24 @@ static semaphore semalloc(void);
 /**
  * @ingroup semaphores
  *
- * Creates a semaphore that initially has the specified count.
+ * 初期値として指定されたカウントを持つセマフォを作成する
  *
  * @param count
- *      Initial count of the semaphore (often the number of some resource that
- *      is available).  Must be non-negative.
+ *      セマフォの初期カウント（通常、利用可能な何らかのリソースの数）
+ *      非負数でなければならない。
  *
  * @return
- *      On success, returns the new semaphore; otherwise returns ::SYSERR.  The
- *      new semaphore must be freed with semfree() when no longer needed.  This
- *      function can only fail if the system is out of semaphores or if @p count
- *      was negative.
+ *      成功の場合、新しいセマフォを返す。そうでない場合、::SYSERR を返す。
+ *      新しいセマフォは不要になったら、semfree()で開放されなければならない。
+ *      この関数はシステムのセマフォが枯渇した場合、あるいは、 @p count が
+ *      縁の場合のみ失敗する。
  */
 semaphore semcreate(int count)
 {
     semaphore sem;
     irqmask im;
 
-    if (count < 0)          /* Don't allow starting with negative count.  */
+    if (count < 0)          /* 負値からはスタートできない  */
     {
         return SYSERR;
     }
@@ -45,10 +45,11 @@ semaphore semcreate(int count)
 }
 
 /**
- * Allocate an unused semaphore and return its ID.
- * Scan the global semaphore table for a free entry, mark the entry
- * used, and return the new semaphore
- * @return available semaphore ID on success, SYSERR on failure
+ * 未使用のセマフォを割り当て、そのIDを返す。
+ * 空きエントリを探してグローバルセマフォテーブルを走査し、
+ * 見つかったエントリに使用中のマークを付け、新しいセマフォを
+ * 返す。
+ * @return 成功の場合は利用可能なセマフォID、失敗の場合は SYSERR
  */
 static semaphore semalloc(void)
 {

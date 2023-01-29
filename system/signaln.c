@@ -9,20 +9,23 @@
 /**
  * @ingroup semaphores
  *
- * Signal a semaphore @p count times, releasing @p count waiting threads.
+ * 待機中のスレッドを @p count 個、開放するようセマフォに伝える
  *
- * signaln() may reschedule the currently running thread.  As a result,
- * signaln() should not be called from non-reentrant interrupt handlers unless
- * ::resdefer is set to a positive value at the start of the interrupt handler.
+ * signal()は現在実行中のスレッドを再スケジュールする可能性がある。
+ * そのため、 signal()は割り込みハンドラの冒頭で::resdeferに正値を
+ * 設定しない限り、非リエントラントな割り込み処理から呼び出しては
+ * ならない。
  *
  * @param sem
- *      Semaphore to signal.
+ *      シグナルを送るセマフォ
  * @param count
- *      Number of times to signal, which must be positive.
+ *      シグナルを送る回数。正値でなければならない。
  *
  * @return
  *      ::OK on success, ::SYSERR on failure.  This function can only fail if @p
- *      sem did not specify a valid semaphore of if @p count was not positive.
+ *      成功の場合は ::OK、失敗の場合は ::SYSERR。
+ *      この関数は @p sem に正しいセマフォが指定されなかった、または、
+ *      @p count が正値でなかった場合に失敗する。
  */
 syscall signaln(semaphore sem, int count)
 {

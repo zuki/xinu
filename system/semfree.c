@@ -9,16 +9,16 @@
 /**
  * @ingroup semaphores
  *
- * Frees a semaphore.  This can be done even if threads are waiting on it, in
- * which case they will be released and able to run.  However, be careful, since
- * such threads will return from wait()ing on a semaphore that no longer exists
- * and there may be assumptions that no longer hold.
+ * セマフォを開放する。スレッドがこのセマフォを待っている場合でも実行できる。
+ * その場合、スレッドは開放され実行可能になる。ただし、そのようなスレッドは
+ * もはや存在しないセマフォでwait()している状態から復帰するので、もうそれを
+ * 確保できないかもしれないという仮定があるので、注意が必要である。
  *
  * @param sem
- *      Semaphore to free (allocated by semcreate()).
+ *      開放するセマフォ（semcreate()で割り当てられた）
  *
  * @return
- *      ::SYSERR if @p sem did not specify a valid semaphore; otherwise ::OK.
+ *      @p sem が有効なセマフォを指定していない場合は、::SYSERR, そうでなければ ::OK
  */
 syscall semfree(semaphore sem)
 {
@@ -36,7 +36,7 @@ syscall semfree(semaphore sem)
     semptr = &semtab[sem];
     while (nonempty(semptr->queue))
     {
-        tid = dequeue(semptr->queue);   /* free waiting threads */
+        tid = dequeue(semptr->queue);   /* 待機中のスレッドを開放する */
         ready(tid, RESCHED_NO);
     }
 

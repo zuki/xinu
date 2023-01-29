@@ -9,29 +9,29 @@
 
 #include <queue.h>
 
-/* Semaphore state definitions */
-#define SFREE 0x01 /**< this semaphore is free */
-#define SUSED 0x02 /**< this semaphore is used */
+/* セマフォの状態定義 */
+#define SFREE 0x01 /**< このセマフォは空き */
+#define SUSED 0x02 /**< このセマフォは使用中 */
 
-/* type definition of "semaphore" */
+/* "semaphore"のタイプ定義 */
 typedef unsigned int semaphore;
 
 /**
- * Semaphore table entry
+ * セマフォテーブルエントリ
  */
-struct sement                   /* semaphore table entry      */
+struct sement                   /* セマフォテーブルエントリ     */
 {
-    char state;                 /**< the state SFREE or SUSED */
-    int count;                  /**< count for this semaphore */
-    qid_typ queue;              /**< requires queue.h.        */
+    char state;                 /**< 状態（SFREE か SUSED） */
+    int count;                  /**< このセマフォのカウント */
+    qid_typ queue;              /**< このセマフォで待機しているスレッドのキュー: queue.h が必要 */
 };
 
 extern struct sement semtab[];
 
-/* isbadsem - check validity of reqested semaphore id and state */
+/* isbadsem - 指定されたセマフォIDと状態をチェックする */
 #define isbadsem(s) ((s >= NSEM) || (SFREE == semtab[s].state))
 
-/* Semaphore function prototypes */
+/* セマフォ関数プロトタイプ */
 syscall wait(semaphore);
 syscall signal(semaphore);
 syscall signaln(semaphore, int);

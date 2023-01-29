@@ -12,15 +12,15 @@
 /**
  * @ingroup memory_mgmt
  *
- * Return a buffer to its buffer pool.
+ * バッファをバッファプールに返す
  *
  * @param buffer
- *      Address of buffer to free, as returned by bufget().
+ *      開放するバッファのアドレス（bufget()で返されたアドレス）
  *
  * @return
- *      ::OK if buffer was successfully freed; otherwise ::SYSERR.  ::SYSERR can
- *      only be returned as a result of memory corruption or passing an invalid
- *      @p buffer argument.
+ *      バッファの開放が成功した場合は ::OK; そうでなければ ::SYSERR
+ *      ::SYSERRが返されるのはメモリが破損した場合か @p buff に無効な
+ *      値が指定された場合だけ。
  */
 syscall buffree(void *buffer)
 {
@@ -28,6 +28,7 @@ syscall buffree(void *buffer)
     struct poolbuf *bufptr;
     irqmask im;
 
+    // -1 (bufget()で+1して返されるため)
     bufptr = ((struct poolbuf *)buffer) - 1;
 
     if (isbadpool(bufptr->poolid))

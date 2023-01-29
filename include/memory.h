@@ -10,21 +10,22 @@
 
 #include <stddef.h>
 
-/* roundmb - round address up to size of memblock  */
+/* roundmb - アドレスをメモリブロックサイズに丸めあげる */
 #define roundmb(x)  (void *)( (7 + (ulong)(x)) & ~0x07 )
-/* truncmb - truncate address down to size of memblock */
+/* truncmb - アドレスをメモリブロックサイズに切り捨てる */
 #define truncmb(x)  (void *)( ((ulong)(x)) & ~0x07 )
 
 /**
  * @ingroup memory_mgmt
  *
- * Frees memory allocated with stkget().
+ * stkget()で割り当てられたメモリを開放する
  *
  * @param p
- *      Pointer to the topmost (highest address) word of the allocated stack (as
- *      returned by stkget()).
+ *      割り当てられたスタックの最上位（最大アドレス）のワードへの
+ *      ポインタ（stkget()で返されたポインタ）
  * @param len
- *      Size of the allocated stack, in bytes.  (Same value passed to stkget().)
+ *      割り当てられたスタックのサイズ（バイト単位、stkget()に
+ *      渡された値と同じ）
  */
 #define stkfree(p, len) memfree((void *)((ulong)(p)         \
                                 - (ulong)roundmb(len)       \
@@ -33,23 +34,23 @@
 
 
 /**
- * Structure for a block of memory.
+ * メモリブロックの構造体
  */
 struct memblock
 {
-    struct memblock *next;          /**< pointer to next memory block       */
-    uint length;                    /**< size of memory block (with struct) */
+    struct memblock *next;          /**< 次のメモリブロックへのポインタ */
+    uint length;                    /**< メモリブロック（と構造体）のサイズ */
 };
 
-extern struct memblock memlist;     /**< head of free memory list           */
+extern struct memblock memlist;     /**< フリーメモリリストの先頭          */
 
-/* Other memory data */
+/* その他のメモリデータ */
 
-extern void *_end;              /**< linker provides end of image           */
-extern void *_etext;            /**< linker provides end of text segment    */
-extern void *memheap;           /**< bottom of heap                         */
+extern void *_end;              /**< リンカが提供するイメージの終端アドレス   */
+extern void *_etext;            /**< リンカが提供するテキストセグメント終端アドレス */
+extern void *memheap;           /**< ヒープの底                               */
 
-/* Memory function prototypes */
+/* メモリ関数プロトタイプ */
 void *memget(uint);
 syscall memfree(void *, uint);
 void *stkget(uint);

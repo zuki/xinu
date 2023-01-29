@@ -12,17 +12,17 @@
 /**
  * @ingroup memory_mgmt
  *
- * Allocate a buffer from a buffer pool.  If no buffers are currently available,
- * this function wait until one is, usually rescheduling the thread.  The
- * returned buffer must be freed with buffree() when the calling code is
- * finished with it.
+ * バッファプールからバッファを割り当てる。現在利用可能なバッファが
+ * ない場合、この関数はバッファが開いて、スレッドが再スケジュール
+ * されるまで待機する。呼び出したコードはバッファの利用が終わったら
+ * buffree()でバッファを返さなければならない。
  *
  * @param poolid
- *      Identifier of the buffer pool, as returned by bfpalloc().
+ *      バッファプールの識別子（bfpalloc()で返されたID）
  *
  * @return
- *      If @p poolid does not specify a valid buffer pool, returns ::SYSERR;
- *      otherwise returns a pointer to the resulting buffer.
+ *      @p poolid が正しいバッファプールを指定していない場合は
+ *      ::SYSErr を返す。そうでなければバッファへのポインタを返す。
  */
 void *bufget(int poolid)
 {
@@ -44,5 +44,5 @@ void *bufget(int poolid)
     restore(im);
 
     bufptr->next = bufptr;
-    return (void *)(bufptr + 1);        /* +1 to skip past accounting structure */
+    return (void *)(bufptr + 1);        /* 過去のaccount構造をスキップする+1 */
 }

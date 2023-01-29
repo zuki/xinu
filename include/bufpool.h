@@ -11,12 +11,12 @@
 #include <semaphore.h>
 #include <conf.h>
 
-/* Buffer pool state definitions */
+/* バッファプールの状態定義 */
 #define BFPFREE  1
 #define BFPUSED  2
 
 /**
- * Individual pool buffer
+ * 個々のプールバッファ
  */
 struct poolbuf
 {
@@ -25,7 +25,7 @@ struct poolbuf
 };
 
 /**
- * Buffer pool table entry
+ * バッファプールテーブルエントリ
  */
 struct bfpentry
 {
@@ -38,19 +38,19 @@ struct bfpentry
 };
 
 /**
- * isbadpool - check validity of reqested buffer pool id and state
- * @param p id number to test
+ * isbadpool - 指定されたバファプールidと状態の妥当性を・テストする
+ * @param p テストするid番号
  */
 #define isbadpool(p) ((p >= NPOOL)||(p < 0)||(BFPFREE == bfptab[p].state))
 
-/** roundword - round byte sized request to word size
- *  @param b size in bytes
+/** roundword - 指定されたバイト数をワードサイズに丸める
+ *  @param b バイト単位のサイズ
  */
 #define roundword(b) ((3 + b) & ~0x03)
 
 extern struct bfpentry bfptab[];
 
-/* function prototypes */
+/* 関数プロトタイプ */
 void *bufget(int);
 syscall buffree(void *);
 int bfpalloc(uint, uint);
@@ -60,7 +60,7 @@ syscall bfpfree(int);
 #  define NPOOL 0
 #endif
 
-/* Fill in dummy definitions if no pools are defined  */
+/* プールが定義されていない場合のダミー定義  */
 #if NPOOL == 0
 #  ifndef POOL_MAX_BUFSIZE
 #    define POOL_MAX_BUFSIZE 0

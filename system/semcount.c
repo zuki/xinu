@@ -9,14 +9,15 @@
 /**
  * @ingroup semaphores
  *
- * Retrieve a semaphore's count.
+ * セマフォのカウント値を取得する
  *
  * @param sem
- *      Semaphore to get the count of.
+ *      カウント値を取得するセマフォ
  *
  * @return
- *      On success, returns the semaphore's count; otherwise returns ::SYSERR.
- *      This function can only fail if @p sem did not specify a valid semaphore.
+ *      成功の場合、セマフォのカウント値を返す。そうでない場合は
+ *      ::SYSERR を返す。この関数は @p sem に正しいセマフォが指定
+ *      されなかった場合にだけ失敗する。
  */
 syscall semcount(semaphore sem)
 {

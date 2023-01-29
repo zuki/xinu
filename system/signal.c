@@ -9,18 +9,20 @@
 /**
  * @ingroup semaphores
  *
- * Signal a semaphore, releasing up to one waiting thread.
+ * 待機中のスレッドを1つ開放するようセマフォに伝える
  *
- * signal() may reschedule the currently running thread.  As a result, signal()
- * should not be called from non-reentrant interrupt handlers unless ::resdefer
- * is set to a positive value at the start of the interrupt handler.
+ * signal()は現在実行中のスレッドを再スケジュールする可能性がある。
+ * そのため、 signal()は割り込みハンドラの冒頭で::resdeferに正値を
+ * 設定しない限り、非リエントラントな割り込み処理から呼び出しては
+ * ならない。
  *
  * @param sem
- *      Semaphore to signal.
+ *      シグナルを送るセマフォ
  *
  * @return
- *      ::OK on success, ::SYSERR on failure.  This function can only fail if @p
- *      sem did not specify a valid semaphore.
+ *      成功の場合は ::OK、失敗の場合は ::SYSERR。
+ *      この関数は @p sem に正しいセマフォが指定されなかった場合に
+ *      だけ失敗する。
  */
 syscall signal(semaphore sem)
 {
