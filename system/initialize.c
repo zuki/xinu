@@ -1,8 +1,8 @@
 /**
  * @file initialize.c
- * The system begins intializing after the C environment has been
- * established.  After intialization, the null thread remains always in
- * a ready (THRREADY) or running (THRCURR) state.
+ *
+ * C環境の確立後に初期化を開始する。初期化後、NULLスレッドは常に
+ * 準備完了（THRREADY）または実行中（THRCURR）状態を維持する
  */
 /* Embedded Xinu, Copyright (C) 2009, 2013.  All rights reserved. */
 
@@ -33,53 +33,55 @@
 #  include <usb_subsystem.h>
 #endif
 
-/* Function prototypes */
-extern thread main(void);       /* main is the first thread created    */
-static int sysinit(void);       /* intializes system structures        */
+/* 関数プロトタイプ */
+extern thread main(void);       /* mainは最初に作成されるスレッド */
+static int sysinit(void);       /* システム構造体を初期化する     */
 
-/* Declarations of major kernel variables */
-struct thrent thrtab[NTHREAD];  /* Thread table                   */
-struct sement semtab[NSEM];     /* Semaphore table                */
-struct monent montab[NMON];     /* Monitor table                  */
-qid_typ readylist;              /* List of READY threads          */
-struct memblock memlist;        /* List of free memory blocks     */
-struct bfpentry bfptab[NPOOL];  /* List of memory buffer pools    */
+/* 主なカーネル変数の宣言 */
+struct thrent thrtab[NTHREAD];  /* スレッドテーブル               */
+struct sement semtab[NSEM];     /* セマフォテーブル               */
+struct monent montab[NMON];     /* モニターテーブル               */
+qid_typ readylist;              /* READYスレッドリスト            */
+struct memblock memlist;        /* フリーメモリブロックリスト     */
+struct bfpentry bfptab[NPOOL];  /* メモリバッファプールリスト     */
 
-/* Active system status */
-int thrcount;                   /* Number of live user threads         */
-tid_typ thrcurrent;             /* Id of currently running thread      */
+/* アクティブなシステムステータス */
+int thrcount;                   /* 生きているユーザスレッド数     */
+tid_typ thrcurrent;             /* 現在実行中のスレッドのID       */
 
-/* Params set by startup.S */
-void *memheap;                  /* Bottom of heap (top of O/S stack)   */
-ulong cpuid;                    /* Processor id                        */
+/* startup.S でセットされるパラメタ */
+void *memheap;                  /* ヒープの底（O/Sスタックのトップ） */
+ulong cpuid;                    /* プロセッサID                      */
 
-struct platform platform;       /* Platform specific configuration     */
+struct platform platform;       /* プラットフォーム固有の構成        */
 
 /**
- * Intializes the system and becomes the null thread.
- * This is where the system begins after the C environment has been 
- * established.  Interrupts are initially DISABLED, and must eventually 
- * be enabled explicitly.  This routine turns itself into the null thread 
- * after initialization.  Because the null thread must always remain ready 
- * to run, it cannot execute code that might cause it to be suspended, wait 
- * for a semaphore, or put to sleep, or exit.  In particular, it must not 
- * do I/O unless it uses kprintf for synchronous output.
+ * @ingroup boot
+ *
+ * システムを初期化して、ヌルスレッドとなる.
+ *
+ * C環境の確立後にシステムが開始する地点である。割り込みは初期状態では
+ * "無効"になっており、最終的には明示的に有効にする必要がある。この関数は
+ * 初期化後、自身をヌルスレッドにする。ヌルスレッドは常に実行可能な状態を
+ * 維持しなければならないので、サスペンド、セマフォ待ち、スリープ、終了などの
+ * 原因となるコードを実行することはできない。特に、同期出力用の kprintf を
+ * 使用しない限り、I/Oを行ってはならない。
  */
 void nulluser(void)
 {
-    /* Platform-specific initialization  */
+    /* プラットフォーム固有の初期化を行う  */
     platforminit();
 
-    /* General initialization  */
+    /* 一般的な初期化を行う  */
     sysinit();
 
-    /* Enable interrupts  */
+    /* 割り込みを有効にする  */
     enable();
 
-    /* Spawn the main thread  */
+    /* メインスレッドを起動する  */
     ready(create(main, INITSTK, INITPRIO, "MAIN", 0), RESCHED_YES);
 
-    /* null thread has nothing else to do but cannot exit  */
+    /* 塗るスレッドは他にすることはないが終了することはできない  */
     while (TRUE)
     {
 #ifndef DEBUG
@@ -89,8 +91,11 @@ void nulluser(void)
 }
 
 /**
- * Intializes all Xinu data structures and devices.
- * @return OK if everything is initialized successfully
+ * @ingroup boot
+ *
+ * Xinuのすべてのデータ構造とデバイスを初期化する.
+ *
+ * @return すべての初期化が成功したら OK
  */
 static int sysinit(void)
 {
@@ -98,11 +103,11 @@ static int sysinit(void)
     struct thrent *thrptr;      /* thread control block pointer  */
     struct memblock *pmblock;   /* memory block pointer          */
 
-    /* Initialize system variables */
-    /* Count this NULLTHREAD as the first thread in the system. */
+    /* システムテム変数を初期化する */
+    /* このNULLTHREADをシステムの最初のスレッドとしてカウントする */
     thrcount = 1;
 
-    /* Initialize free memory list */
+    /* フリーメモリリストを初期化する */
     memheap = roundmb(memheap);
     platform.maxaddr = truncmb(platform.maxaddr);
     memlist.next = pmblock = (struct memblock *)memheap;
@@ -110,13 +115,13 @@ static int sysinit(void)
     pmblock->next = NULL;
     pmblock->length = (uint)(platform.maxaddr - memheap);
 
-    /* Initialize thread table */
+    /* スレッドテーブルを初期化する */
     for (i = 0; i < NTHREAD; i++)
     {
         thrtab[i].state = THRFREE;
     }
 
-    /* initialize null thread entry */
+    /* ヌルスレッドエントリを初期化する*/
     thrptr = &thrtab[NULLTHREAD];
     thrptr->state = THRCURR;
     thrptr->prio = 0;
@@ -128,26 +133,26 @@ static int sysinit(void)
     thrptr->memlist.length = 0;
     thrcurrent = NULLTHREAD;
 
-    /* Initialize semaphores */
+    /* セマフォを初期化する */
     for (i = 0; i < NSEM; i++)
     {
         semtab[i].state = SFREE;
         semtab[i].queue = queinit();
     }
 
-    /* Initialize monitors */
+    /* モニターを初期化する */
     for (i = 0; i < NMON; i++)
     {
         montab[i].state = MFREE;
     }
 
-    /* Initialize buffer pools */
+    /* バッファプールを初期化する */
     for (i = 0; i < NPOOL; i++)
     {
         bfptab[i].state = BFPFREE;
     }
 
-    /* initialize thread ready list */
+    /* スレッドreadylistを初期化する */
     readylist = queinit();
 
 #if SB_BUS
@@ -155,42 +160,43 @@ static int sysinit(void)
 #endif                          /* SB_BUS */
 
 #if RTCLOCK
-    /* initialize real time clock */
+    /* リアルタイムクロックを初期化する */
     clkinit();
 #endif                          /* RTCLOCK */
 
 #ifdef UHEAP_SIZE
-    /* Initialize user memory manager */
+    /* ユーザメモリマネージャを初期化する */
     {
-        void *userheap;             /* pointer to user memory heap   */
+        void *userheap;             /* ユーザメモリヒープへのポインタ */
         userheap = stkget(UHEAP_SIZE);
         if (SYSERR != (int)userheap)
         {
             userheap = (void *)((uint)userheap - UHEAP_SIZE + sizeof(int));
             memRegionInit(userheap, UHEAP_SIZE);
 
-            /* initialize memory protection */
+            /* メモリプロテクションを初期化する */
             safeInit();
 
-            /* initialize kernel page mappings */
+            /* カーネルページマッピングを初期化する */
             safeKmapInit();
         }
     }
 #endif
 
 #if USE_TLB
-    /* initialize TLB */
+    /* TLBを初期化する */
     tlbInit();
-    /* register system call handler */
+    /* システムコールハンドラを登録する */
     exceptionVector[EXC_SYS] = syscall_entry;
 #endif                          /* USE_TLB */
 
 #if NMAILBOX
-    /* intialize mailboxes */
+    /* メールボックスを初期化する */
     mailboxInit();
 #endif
 
 #if NDEVS
+    /* デバイスを初期化する */
     for (i = 0; i < NDEVS; i++)
     {
         devtab[i].init((device*)&devtab[i]);
@@ -198,18 +204,22 @@ static int sysinit(void)
 #endif
 
 #ifdef WITH_USB
+    /* USBを初期化する */
     usbinit();
 #endif
 
 #if NVRAM
+    /* NVRAMを初期化する */
     nvramInit();
 #endif
 
 #if NNETIF
+    /* ネットインタフェースを初期化する */
     netInit();
 #endif
 
 #if GPIO
+    /* LEDを初期化する */
     gpioLEDOn(GPIO_LED_CISCOWHT);
 #endif
     return OK;

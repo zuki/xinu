@@ -8,25 +8,24 @@
 /**
  * @ingroup monitors
  *
- * Unlock a monitor.
+ * モニターをアンロックする.
  *
- * The monitor's lock count (indicating the number of times the owning thread
- * has locked the monitor) is decremented.  If the count remains greater than
- * zero, no further action is taken.  If the count reaches zero, the monitor is
- * set to unowned and up to one thread that may be waiting to lock() the monitor
- * is awakened.
+ * モニタのロックカウント（所有するスレッドがモニタをロックした
+ * 回数を示す）を減ずる。その結果、カウントがゼロより大きいままで
+ * あれば、それ以上のアクションは行わない。カウントが0になった場合、
+ * モニターは所有者なしに設定され、モニターのlock()を待っている
+ * 可能性のある最大1つのスレッドを起床させる。
  *
- * This normally should be called by the owning thread of the monitor
- * subsequently to a lock() by the same thread, but this also may be called
- * moncount(mon) times to fully unlock a monitor that was owned by a thread that
- * has been killed.
+ * これは通常、lock()を行った同じスレッドが引き続いて呼び出すはずの
+ * ものであるが、killされたスレッドが所有するモニターのロックを完全に
+ * アンロックするために moncount(mon) 回呼び出される場合もある。
  *
  * @param mon
- *      The monitor to unlock.
+ *      アンロックするモニター
  *
  * @return
- *      ::OK on success; ::SYSERR on failure (@p mon did not specify a valid,
- *      allocated monitor with nonzero lock count).
+ *      成功の場合は、::OK; 失敗の場合（@p mon が正しい、割り当て済みの
+ *      モニターであり、ロックカウントが非0でない）は、:SYSERR
  */
 syscall unlock(monitor mon)
 {
@@ -42,17 +41,17 @@ syscall unlock(monitor mon)
 
     monptr = &montab[mon];
 
-    /* safety check: monitor must be locked at least once  */
+    /* 安全性チェック: モニターは少なくとも1回はロックされていなければならない */
     if (monptr->count == 0)
     {
         restore(im);
         return SYSERR;
     }
 
-    /* decrement the monitor's count signifying one "unlock" */
+    /* "アンロック"を意味するモニターのカウントを1つ減らす */
     (monptr->count)--;
 
-    /* if this is the top-level unlock call, then free this monitor's lock */
+    /* これがトップレベルのアンロック呼び出しの場合、このモニターのロックを開放する */
     if (monptr->count == 0)
     {
         monptr->owner = NOOWNER;

@@ -8,19 +8,19 @@
 /**
  * @ingroup monitors
  *
- * Retrieve the count of a monitor --- that is, the number of times it has been
- * locked by the owning thread, or 0 if no thread currently owns the monitor.
+ * モニターのカウント（所有するスレッドによりロックされた回数。
+ * 現在、モニターを所有するスレッドがない場合は 0）を取得する.
  *
- * This function performs no locking.  The caller must temporarily disable
- * interrupts if the specified monitor could potentially be freed, locked, or
- * unlocked concurrently.
+ * この関数はロックをせずに実行する。指定したモニターが潜在的に同時に
+ * 解放、ロック、アンロックされる可能性がある場合、呼び出し側は一時的に
+ * 割り込みを無効にしなければならない。
  *
  * @param mon
- *      The monitor to retrieve the count of.
+ *      カウントを取得するモニター
  *
  * @return
- *      If @p mon specified a valid, allocated monitor, its count is returned.
- *      Otherwise, ::SYSERR is returned.
+ *      @p mon に正しい、割り当て済みのモニターが指定された場合、
+ *      そのカウントが返される。それ以外は、::SYSERRが返される。
  */
 syscall moncount(monitor mon)
 {

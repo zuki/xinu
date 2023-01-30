@@ -29,4 +29,8 @@
  * @defgroup threads スレッド
  * @ingroup system
  * @brief スレッド関数
+ *
+ * @defgroup boot ブート
+ * @ingroup system
+ * @brief ブート関係
  */

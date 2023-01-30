@@ -8,17 +8,18 @@
 /**
  * @ingroup monitors
  *
- * Free a monitor previously allocated with moncreate().
+ * moncreate()で割り当てられたモニターを開放する.
  *
- * A monitor must only be freed when no thread has it locked -- that is, either
- * the monitor is unowned, or is owned by a thread that has been killed.
+ * モニターはロックしているスレッドがなくなった場合にのみ
+ * 開放されなくてはならない。すなわち、モニターが所有されていない、
+ * killされたスレッドにより所有されているのいずれかである。
  *
  * @param mon
- *      The monitor to free.
+ *      開放するモニター
  *
  * @return
- *      ::OK on success; ::SYSERR on failure (@p mon did not specify a valid,
- *      allocated monitor).
+ *      成功の場合は、::OK; 失敗の場合（@p mon が正しい、割り当て済みの
+ *      モニターでない）は、:SYSERR
  */
 syscall monfree(monitor mon)
 {
@@ -36,7 +37,7 @@ syscall monfree(monitor mon)
 
     monptr = &montab[mon];
 
-    /* free the monitor's semaphore and mark the monitor table entry as free  */
+    /* モニターのセマフォを開放して、モニターテーブルエントリを空きとマークする  */
     semfree(monptr->sem);
     monptr->state = MFREE;
 

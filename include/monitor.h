@@ -13,32 +13,32 @@
 #  define NMON 0
 #endif
 
-/* Monitor state definitions */
-#define MFREE 0x01 /**< this monitor is free */
-#define MUSED 0x02 /**< this monitor is used */
+/* モニターの状態定義 */
+#define MFREE 0x01 /**< このモニターは空き */
+#define MUSED 0x02 /**< このモニターは使用済み */
 
-#define NOOWNER BADTID /**< no thread owns this monitor's lock */
+#define NOOWNER BADTID /**< このモニターのロックを所有しているスレッドはない */
 
-/** type definition of "monitor" */
+/** "monitor"のタイプ定義 */
 typedef unsigned int monitor;
 
 /**
- * Monitor table entry
+ * モニターテーブルエントリ
  */
 struct monent
 {
-    char state;       /**< monitor state (MFREE or MUSED)  */
-    tid_typ owner;    /**< thread that owns the lock, or NOOWNER if unowned  */
-    uint count;       /**< number of lock actions performed  */
-    semaphore sem;    /**< semaphore used by this monitor  */
+    char state;       /**< モニターの状態（MFREE か MUSED）  */
+    tid_typ owner;    /**< ロックを所有しているスレッド、所有者がない場合は NOOWNER */
+    uint count;       /**< 実行されたlockアクション数 */
+    semaphore sem;    /**< このモニターが使用するセマフォ  */
 };
 
 extern struct monent montab[];
 
-/** Determine if a monitor is invalid or not in use  */
+/**モニターが不正または未使用かチェックする  */
 #define isbadmon(m) ((m >= NMON) || (MFREE == montab[m].state))
 
-/* Monitor function prototypes */
+/* モニター関数プロトタイプ */
 syscall lock(monitor);
 syscall unlock(monitor);
 monitor moncreate(void);

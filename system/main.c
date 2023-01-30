@@ -14,9 +14,12 @@
 static void print_os_info(void);
 
 /**
- * Main thread.  You can modify this routine to customize what Embedded Xinu
- * does when it starts up.  The default is designed to do something reasonable
- * on all platforms based on the devices and features configured.
+ * @ingroup boot
+ *
+ * メインスレッド.  この関数を変更することによりEmbedded Xinuの起動時に行う
+ * ことをカスタマイズすることができる。デフォルトでは構成されたデバイスと
+ * 機能に基づいて、すべてのプラットフォームで妥当な動作をするように設計されて
+ * いる。
  */
 thread main(void)
 {
@@ -25,10 +28,10 @@ thread main(void)
     uint nshells = 0;
 #endif
 
-    /* Print information about the operating system  */
+    /* オペレーティングシステムに関する情報を表示する  */
     print_os_info();
 
-    /* Open all ethernet devices */
+    /* すべてのethernetデバイスをオープンする */
 #if NETHER
     {
         uint i;
@@ -44,7 +47,7 @@ thread main(void)
     }
 #endif /* NETHER */
 
-    /* Set up the first TTY (CONSOLE)  */
+    /* 最初のTTY (CONSOLE) を設定する  */
 #if defined(CONSOLE) && defined(SERIAL0)
     if (OK == open(CONSOLE, SERIAL0))
     {
@@ -63,10 +66,10 @@ thread main(void)
   #warning "No TTY for SERIAL0"
 #endif
 
-    /* Set up the second TTY (TTY1) if possible  */
+    /* 可能であれば2番めのTTY (TTY1) を設定する */
 #if defined(TTY1)
   #if defined(KBDMON0)
-    /* Associate TTY1 with keyboard and use framebuffer output  */
+    /* TTY1をキーボードに関連させ、フレームバッファを出力に使用する  */
     if (OK == open(TTY1, KBDMON0))
     {
     #if HAVE_SHELL
@@ -81,7 +84,7 @@ thread main(void)
         kprintf("WARNING: Can't open TTY1 over KBDMON0\r\n");
     }
   #elif defined(SERIAL1)
-    /* Associate TTY1 with SERIAL1  */
+    /* TTY1をSERIAL1に関連付ける  */
     if (OK == open(TTY1, SERIAL1))
     {
     #if HAVE_SHELL
@@ -104,7 +107,7 @@ thread main(void)
   #endif
 #endif /* TTY1 */
 
-    /* Start shells  */
+    /* シェルを開始する  */
 #if HAVE_SHELL
     {
         uint i;
@@ -129,7 +132,7 @@ thread main(void)
     return 0;
 }
 
-/* Start of kernel in memory (provided by linker)  */
+/* （リンカが提供する）メモリ内のカーネルのstart */
 extern void _start(void);
 
 static void print_os_info(void)
@@ -138,13 +141,13 @@ static void print_os_info(void)
     kprintf("\r\n\r\n");
 
 #ifdef DETAIL
-    /* Output detected platform. */
+    /* 検知したプラットフォームを出力する */
     kprintf("Processor identification: 0x%08X\r\n", cpuid);
     kprintf("Detected platform as: %s, %s\r\n\r\n",
             platform.family, platform.name);
 #endif
 
-    /* Output Xinu memory layout */
+    /* Xinuのメモリレイアウトを出力する */
     kprintf("%10d bytes physical memory.\r\n",
             (ulong)platform.maxaddr - (ulong)platform.minaddr);
 #ifdef DETAIL

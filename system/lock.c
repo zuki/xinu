@@ -8,24 +8,24 @@
 /**
  * @ingroup monitors
  *
- * Lock a monitor.
+ * モニターをロックする.
  *
- * If no thread owns the monitor, its owner is set to the current thread and its
- * count is set to 1.
+ * モニターを所有するスレッドがない場合、現在のスレッドを所有者とし、
+ * カウントを1に設定する。
  *
- * If the current thread already owns the monitor, its count is incremented and
- * no further action is taken.
+ * 現在のスレッドが既にこのモニターを所有している場合、そのカウントを増分して、
+ * それ以上の操作は行わない。
  *
- * If another thread owns the monitor, the current thread waits for the monitor
- * to become fully unlocked by that thread, then sets its owner to the current
- * thread and its count to 1.
+ * 他のスレッドがこのモニタを所有している場合、現在のスレッドはそのスレッドが
+ * モニタを完全にアンロックするのを待ち、その後、その所有者を現在のスレッドに、
+ * そのカウントを1に設定する。
  *
  * @param mon
- *      The monitor to lock.
+ *      ロックするモニター
  *
  * @return
- *      ::OK on success; ::SYSERR on failure (@p mon did not specify a valid,
- *      allocated monitor).
+ *      成功の場合は、::OK; 失敗の場合（@p mon が正しい、割り当て済みの
+ *      モニターでない）は、:SYSERR
  */
 syscall lock(monitor mon)
 {
@@ -41,7 +41,7 @@ syscall lock(monitor mon)
 
     monptr = &montab[mon];
 
-    /* if no thread owns the lock, the current thread claims it */
+    /* ロックを所有するスレッドがない場合、現在のスレッドを所有者とする */
     if (NOOWNER == monptr->owner)
     {
         monptr->owner = thrcurrent;     /* current thread now owns the lock  */
@@ -50,12 +50,12 @@ syscall lock(monitor mon)
     }
     else
     {
-        /* if current thread owns the lock increase count; dont wait on sem */
+        /* 現在のスレッドがロックの所有者の場合はカウントを増分しセマフォを待たない */
         if (thrcurrent == monptr->owner)
         {
             (monptr->count)++;
         }
-        /* if another thread owns the lock, wait on sem until monitor is free */
+        /* 別のスレッドが所有者の場合はモニターが開放されるまでセマフォを待つ */
         else
         {
             wait(monptr->sem);
