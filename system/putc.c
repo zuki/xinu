@@ -17,8 +17,8 @@
  *      書き出す文字
  *
  * @return
- *      成功した場合、書き出した文字を <code>unsigned char</code> から
- *      @c int にキャストして返す。descrpが正しくない場合は
+ *      成功した場合、<code>unsigned char</code>として書き出した
+ *      文字を @c int にキャストして返す。descrpが正しくない場合は
  *      ::SYSERR を返す。その他の失敗の場合は、呼び出したデバイス
  *      ドライバにより ::SYSERR か ::EOF を返す。
  */

@@ -14,7 +14,7 @@
 /**
  * @ingroup threads
  *
- * Wakeup and ready all threads that have no more time to sleep
+ * スリープ時間を超えたスレッドをすべて起床させ、ready状態に移す。
  */
 void wakeup(void)
 {
