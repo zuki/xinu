@@ -1,5 +1,5 @@
 /**
- * @defgroup mailbox Mailboxes
+ * @defgroup mailbox メールボックス
  *
  * @brief Xinuのメールボックスサブシステムはスレッド間での
  * メッセージの送受信を可能にする。

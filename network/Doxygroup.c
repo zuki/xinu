@@ -1,8 +1,7 @@
 /**
- * @defgroup network Networking
- * @brief Networking subsystem and protocols
+ * @defgroup network ネットワーク
+ * @brief ネットワークサブシステムトップロトコル
  *
- * Note: although they are network protocols, \ref udp "UDP" and \ref tcp "TCP"
- * are implemented as device drivers and therefore are not grouped in this
- * section.
+ * 注: \ref udp "UDP" と \ref tcp "TCP" はネットワークプロトコルであるが
+ * デバイスドライバとして実装されているので、このセクションには含まれない。
  */

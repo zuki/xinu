@@ -1,4 +1,4 @@
 /**
- * @defgroup libxc C library
- * @brief A simple C library supporting a number of standard functions
+ * @defgroup libxc C ライブラリ
+ * @brief 多くの標準的な関数をサポートしているシンプルなC ライブラリ
  */

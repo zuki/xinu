@@ -1,4 +1,4 @@
 /**
- * @defgroup shell Shell
- * @brief Embedded Xinu's interactive command-line interface.
+ * @defgroup shell シェル
+ * @brief Embedded Xinuの対話型コマンドラインインタフェース
  */

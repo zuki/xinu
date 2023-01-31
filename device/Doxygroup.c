@@ -1,8 +1,8 @@
 /**
- * @defgroup devices Device Drivers
- * @brief Embedded Xinu Device Drivers
+ * @defgroup devices デバイスドライバ
+ * @brief Embedded Xinuのデバイスドライバ
  *
- * The exact device drivers shown here depend on the platform for which the
- * documentation was built.  This lets you view the relevant documentation for a
- * specific platform without dealing with irrelevant details.
+ * ここに表示されるデバイスドライバはドキュメントが作成される
+ * プラットフォームに依存する。このため無関係な詳細を扱うことなく
+ * 特定のプラットフォームに関連するドキュメントを表示することができる。
  */
