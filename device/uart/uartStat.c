@@ -10,10 +10,10 @@
 /**
  * @ingroup uartgeneric
  *
- * Prints information about the current status of a UART.
+ * UARTの現在の状態に関する情報を表示する.
  *
  * @param uartnum
- *      The minor number of the UART.
+ *      UARTのマイナー番号
  */
 void uartStat(ushort uartnum)
 {

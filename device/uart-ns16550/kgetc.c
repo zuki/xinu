@@ -7,7 +7,6 @@
 #include "ns16550.h"
 
 /**
- * @ingroup uarthardware
  *
  * Synchronously read a character from a UART.  This blocks until a character is
  * available.  The interrupt handler is not used.

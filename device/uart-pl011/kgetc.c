@@ -9,15 +9,15 @@
 /**
  * @ingroup uarthardware
  *
- * Synchronously read a character from a UART.  This blocks until a character is
- * available.  The interrupt handler is not used.
+ * UARTから同期的に1文字読み込む.  1文字利用可能になるまでブロックする。
+ * 割り込みハンドラは使用しない。
  *
  * @param devptr
- *      Pointer to the device table entry for a UART.
+ *      UART用のデバイステーブルエントリへのポインタ
  *
  * @return
- *      The character read from the UART as an <code>unsigned char</code> cast
- *      to an <code>int</code>.
+ *      UARTから <code>unsigned char</code> として読み込み
+ *      <code>int</code> にキャストした文字
  */
 syscall kgetc(device *devptr)
 {
@@ -30,27 +30,26 @@ syscall kgetc(device *devptr)
     uartptr = &uarttab[devptr->minor];
     regptr = devptr->csr;
 
-    /* Save the UART's interrupt state and disable the UART's interrupts.  Note:
-     * we do not need to disable global interrupts here; only UART interrupts
-     * must be disabled, to prevent race conditions with the UART interrupt
-     * handler.  */
+    /* UARTの割り込み状態を保存し、UARTの割り込みを無効にする。
+     * 注: ここではグローバル割り込みを無効にする必要はない。
+     * UART割り込みハンドラとの競合状態を防ぐには、UART割り込みを
+     * 無効にすることだけが必要である */
     uart_im = regptr->imsc;
     regptr->imsc = 0;
 
-    /* Wait until a character is ready to be received.  */
+    /* 1文字受信可能になるまで待つ  */
     while ((regptr->fr & PL011_FR_RXFE))
     {
         /* Do nothing */
     }
 
-    /* Get the next character from the UART by reading it from the Data
-     * Register.  */
+    /* データレジスタを読み込むことでUARTから1文字取得する */
     c = regptr->dr;
 
-    /* Tally one character received.  */
+    /* 受信した1文字を足す */
     uartptr->cin++;
 
-    /* Restore UART interrupts and return the read character.  */
+    /* UARTの割り込みを復元して読み込んだ文字を返す  */
     regptr->imsc = uart_im;
     return c;
 }

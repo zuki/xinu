@@ -10,26 +10,27 @@
 /**
  * @ingroup uartgeneric
  *
- * Write a buffer of data to a UART.
+ * UARTにバッファのデータを書き出す.
  *
- * Caveat: this operates asynchronously, so the data written may be held in an
- * internal buffer and not yet actually written to the hardware.  The UART
- * driver's lower half (interrupt handler; see uartInterrupt()) is responsible
- * for actually writing the data to the hardware.  Exception: when the UART
- * transmitter is idle, uartWrite() can directly write one byte to the hardware.
+ * 注意事項: これは非同期で動作するため、書き出されたデータは
+ * 内部バッファに保存され、実際にはまだハードウェアに書き出されて
+ * いない可能性がある。実際にデータをハードウェアに書き出すのは
+ * UARTドライバの下半分（割り込みハンドラ; uartInterrupt()を参照）で
+ * ある。例外: UART送信機がアイドル状態の場合、uartWrite()は直接
+ * ハードウェアに1バイト書き出すことができる。
  *
  * @param devptr
- *      Pointer to the device table entry for a UART.
+ *      UART用のデバイステーブルエントリへのポインタ
  * @param buf
- *      Pointer to the buffer of data to write.
+ *      書き出すデータが置かれたバッファへのポインタ
  * @param len
- *      Number of bytes to write.
+ *      書き出すバイト数
  *
  * @return
- *      On success, returns the number of bytes written, which normally is @p
- *      len, but may be less than @p len if the UART has been set to
- *      non-blocking mode.  Returns ::SYSERR on other error (currently, only if
- *      uartInit() has not yet been called).
+ *      成功した場合、書き出したバイト数を返す。これは通常 @p len で
+ *      あるが、UARTがノンブロッキングモードに設定されている場合は
+ *      @p len より少ない場合がある。エラー（現在のところ、uartInit() が
+ *      呼ばれていない場合のみ）の場合は SYSERR を返す。
  */
 devcall uartWrite(device *devptr, const void *buf, uint len)
 {
@@ -42,23 +43,23 @@ devcall uartWrite(device *devptr, const void *buf, uint len)
     im = disable();
     uartptr = &uarttab[devptr->minor];
 
-    /* Make sure uartInit() has run.  */
+    /* uartInit() が実行済みであることを確認する */
     if (NULL == uartptr->csr)
     {
         restore(im);
         return SYSERR;
     }
 
-    /* Attempt to write each byte in the buffer.  */
+    /* バッファにある各バイトの書き出しを試みる */
     for (count = 0; count < len; count++)
     {
-        /* Next byte to write.  */
+        /* 書き出す次のバイト */
         uchar ch = ((const uchar *)buf)[count];
 
-        /* If the UART transmitter hardware is idle, write the byte directly to
-         * the hardware.  Otherwise, put the byte in the output buffer for the
-         * lower half (interrupt handler).  This may block if there is no space
-         * available in the output buffer.  */
+        /* UART送信器ハードウェアがアイドル状態の場合、そのバイトを
+         * 直接ハードウェアに書き出す。そうでなければ、そのバイトを
+         * 下半分（割り込みハンドラ）用に出力バッファに置く。出力
+         * バッファに空き巣ベースがない場合はこれはブロックされる。 */
         if (uartptr->oidle)
         {
             uartHwPutc(uartptr->csr, ch);
@@ -67,9 +68,10 @@ devcall uartWrite(device *devptr, const void *buf, uint len)
         }
         else
         {
-            /* If the UART is in non-blocking mode, ensure there is space for a
-             * byte in the output buffer for the lower half (interrupt handler).
-             * If not, return early with a short count.  */
+            /* UARTがノンブロッキングモードの場合、下半分（割り込み
+             * ハンドラ）用の出力バッファに1バイト置くためのスペースが
+             * あるか確認する。なければ、指定バイト書き出さずに早々に
+             * 復帰する。 */
             if ((uartptr->oflags & UART_OFLAG_NOBLOCK) &&
                 uartptr->ocount == UART_OBLEN)
             {

@@ -10,16 +10,16 @@
 /**
  * @ingroup uartgeneric
  *
- * Write a single character to a UART.
+ * UARTに1文字書き出す.
  *
  * @param devptr
- *      Pointer to the device table entry for a UART.
+ *      UART用のデバイステーブルエントリへのポインタ
  * @param ch
- *      The character to write.
+ *      書き出す文字
  *
  * @return
- *      On success, returns the character written as an <code>unsigned
- *      char</code> cast to an @c int.  On failure, returns SYSERR.
+ *      成功した場合、<code>unsigned char</code> として書き出した文字を
+ *      @c int にキャストして返す。失敗の場合は SYSERR を返す。
  */
 devcall uartPutc(device *devptr, char ch)
 {
@@ -28,7 +28,7 @@ devcall uartPutc(device *devptr, char ch)
     retval = uartWrite(devptr, &ch, 1);
     if (retval == 1)
     {
-        return (uchar)ch;
+        return (int)ch;
     }
     else
     {

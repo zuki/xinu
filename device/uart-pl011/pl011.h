@@ -8,8 +8,8 @@
 #define _PL011_H_
 
 /**
- * Control and status registers for the PL011 UART.  This structure is
- * mapped directly to the base address for the CSR.
+ * PL001 UARTの制御・ステータスレジスタ. この構造体はCSRのベースアドレスに
+ * 直接マッピングされる。
  */
 struct pl011_uart_csreg
 {
@@ -33,7 +33,7 @@ struct pl011_uart_csreg
     volatile unsigned int icr;         /**< Interupt Clear Register              */ //0x44
 };
 
-/* UART Bit flags for control and status registers                      */
+/* UART 制御・ステータスレジスタのビットフラグ                   */
 #define PL011_DR_OE (1<<11) //set to 1 on overrun error
 #define PL011_DR_BE (1<<10) //set to 1 on break condition
 #define PL011_DR_PE (1<<9)  //set to 1 on parity error
@@ -141,9 +141,9 @@ struct pl011_uart_csreg
 #define PL011_ICR_CTSMIC (1<<1)  //CTS interrupt clear
 #define PL011_ICR_RIMIC  (1<<0)  //RI interrupt clear
 
-#define PL011_FIFO_LEN   8       /**< During testing on a Raspberry Pi, I could only send 8. */
+#define PL011_FIFO_LEN   8       /**< Raspberry Piでのテストでは、8しか送れなかった */
 
 #define PL011_BAUD_INT(x) (3000000 / (16 * (x)))
-#define PL011_BAUD_FRAC(x) (int)((((3000000.0 / (16.0 * (x)))-PL011_BAUD_INT(x))*64.0)+0.5) //9600 baud may be slightly off with this calcualtion
+#define PL011_BAUD_FRAC(x) (int)((((3000000.0 / (16.0 * (x)))-PL011_BAUD_INT(x))*64.0)+0.5) // この計算では9600ボーでは若干ずれるかもしれない
 
 #endif                          /* _PL011_H_ */

@@ -10,7 +10,7 @@
 #include <semaphore.h>
 #include <stddef.h>
 
-/* UART Buffer lengths */
+/* UARTバッファ長 */
 #ifndef UART_IBLEN
 #define UART_IBLEN      1024
 #endif
@@ -18,60 +18,60 @@
 #define UART_OBLEN      1024
 #endif
 
-#define UART_BAUD       115200  /**< Default console baud rate.         */
+#define UART_BAUD       115200  /**< コンソールのデフォルト通信速度 */
 
 /**
- * UART control block
+ * UART制御ブロック
  */
 struct uart
 {
-    /* Pointers to associated structures */
-    void *csr;                  /**< Control & status registers         */
-    device *dev;                /**< Dev structure                      */
+    /* 関連する構造体へのポインタ */
+    void *csr;                  /**< 制御およびステータスレジスタ       */
+    device *dev;                /**< デバイス構造体                     */
 
-    /* Statistical Counts */
-    uint cout;                  /**< Characters output                  */
-    uint cin;                   /**< Characters input                   */
-    uint lserr;                 /**< Receiver error count               */
-    uint ovrrn;                 /**< Characters overrun                 */
-    uint iirq;                  /**< Input IRQ count                    */
-    uint oirq;                  /**< Output IRQ count                   */
+    /* 統計カウント */
+    uint cout;                  /**< 出力文字数                         */
+    uint cin;                   /**< ミュウ力文字数                     */
+    uint lserr;                 /**< 受信エラー回数                     */
+    uint ovrrn;                 /**< オーバーラン文字数                 */
+    uint iirq;                  /**< 入力IRQ回数                        */
+    uint oirq;                  /**< 出力IRQ回数                        */
 
-    /* UART input fields */
-    uchar iflags;               /**< Input flags                        */
-    semaphore isema;            /**< Count of input bytes ready         */
-    ushort istart;              /**< Index of first byte                */
-    ushort icount;              /**< Bytes in buffer                    */
-    uchar in[UART_IBLEN];       /**< Input buffer                       */
+    /* UART入力フィールド */
+    uchar iflags;               /**< 入力フラグ                         */
+    semaphore isema;            /**< 入力redayバイト数                  */
+    ushort istart;              /**< 最初のバイトのインデックス         */
+    ushort icount;              /**< バッファにあるバイト数             */
+    uchar in[UART_IBLEN];       /**< インプットバッファ                 */
 
-    /* UART output fields */
-    uchar oflags;               /**< Output flags                       */
-    semaphore osema;            /**< Count of buffer space free         */
-    ushort ostart;              /**< Index of first byte                */
-    ushort ocount;              /**< Bytes in buffer                    */
-    uchar out[UART_OBLEN];      /**< Output buffer                      */
-    volatile bool oidle;        /**< UART transmitter idle              */
+    /* UART出力フィールド */
+    uchar oflags;               /**< 出力フラグ                         */
+    semaphore osema;            /**< バッファの空きスペース数           */
+    ushort ostart;              /**< 最初のバイトのインデックス         */
+    ushort ocount;              /**< バッファにあるバイト数             */
+    uchar out[UART_OBLEN];      /**< 出力バッファ                       */
+    volatile bool oidle;        /**< UART送信器はアイドル状態？         */
 };
 
 extern struct uart uarttab[];
 
-/* UART input flags */
-#define UART_IFLAG_NOBLOCK    0x0001 /**< do non-blocking input         */
-#define UART_IFLAG_ECHO       0x0002 /**< echo input                    */
+/* UART入力フラグ */
+#define UART_IFLAG_NOBLOCK    0x0001 /**< ノンブロッキング入力を行う    */
+#define UART_IFLAG_ECHO       0x0002 /**< 入力をエコー                  */
 
-/* UART output flags */
-#define UART_OFLAG_NOBLOCK    0x0001 /**< do non-blocking output        */
+/* UART出力フラグ */
+#define UART_OFLAG_NOBLOCK    0x0001 /**< ノンブロッキング出力を行う    */
 
-/* uartControl() functions  */
-#define UART_CTRL_SET_IFLAG   0x0010 /**< set input flags               */
-#define UART_CTRL_CLR_IFLAG   0x0011 /**< clear input flags             */
-#define UART_CTRL_GET_IFLAG   0x0012 /**< get input flags               */
-#define UART_CTRL_SET_OFLAG   0x0013 /**< set output flags              */
-#define UART_CTRL_CLR_OFLAG   0x0014 /**< clear output flags            */
-#define UART_CTRL_GET_OFLAG   0x0015 /**< get output flags              */
-#define UART_CTRL_OUTPUT_IDLE 0x0016 /**< determine if transmit idle    */
+/* uartControl() 関数  */
+#define UART_CTRL_SET_IFLAG   0x0010 /**< 入力フラグをセット            */
+#define UART_CTRL_CLR_IFLAG   0x0011 /**< 入力フラグをクリア            */
+#define UART_CTRL_GET_IFLAG   0x0012 /**< 入力フラグを取得              */
+#define UART_CTRL_SET_OFLAG   0x0013 /**< 出力フラグをセット            */
+#define UART_CTRL_CLR_OFLAG   0x0014 /**< 出力フラグをクリア            */
+#define UART_CTRL_GET_OFLAG   0x0015 /**< 出力フラグを取得              */
+#define UART_CTRL_OUTPUT_IDLE 0x0016 /**< 送信器はアイドル状態か          */
 
-/* Driver functions */
+/* ドライバ関数 */
 devcall uartInit(device *);
 devcall uartRead(device *, void *, uint);
 devcall uartWrite(device *, const void *, uint);
@@ -84,21 +84,23 @@ void uartStat(ushort);
 /**
  * @ingroup uarthardware
  *
- * Initialize the UART hardware.
+ * UARTハードウェアを初期化する.
+ *
+ * @param devptr デバイスへのポインタ
  */
-devcall uartHwInit(device *);
+devcall uartHwInit(device *devptr);
 
 /**
  * @ingroup uarthardware
  *
- * Immediately put a character to the UART.
+ * 1文字をUARTに直ちにputする.
  */
 void uartHwPutc(void *, uchar);
 
 /**
  * @ingroup uarthardware
  *
- * Print hardware-specific statistics about the UART.
+ * UARTに関するハードウェア固有の統計を表示する.
  */
 void uartHwStat(void *);
 

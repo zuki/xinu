@@ -10,17 +10,17 @@
 /**
  * @ingroup uartgeneric
  *
- * kernel printf: formatted, synchronous output to SERIAL0.
+ * カーネルprintf: フォーマットしてSERIAL0に同期出力する.
  *
  * @param format
- *      The format string.  Not all standard format specifiers are supported by
- *      this implementation.  See _doprnt() for a description of supported
- *      conversion specifications.
+ *      フォーマット文字列。 この実装では標準的なすべての書式指定子を
+ *      サポートしているわけではない。サポートしている変換指定子の説明に
+ *      ついては _doprnt() を参照のこと。
  * @param ...
- *      Arguments matching those in the format string.
+ *      フォーマット文字列にマッチする引数
  *
  * @return
- *      The number of characters written.
+ *      書き出した文字数
  */
 syscall kprintf(const char *format, ...)
 {

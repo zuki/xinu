@@ -7,7 +7,6 @@
 #include "ns16550.h"
 
 /**
- * @ingroup uarthardware
  *
  * Synchronously write a character to a UART.  This blocks until the character
  * has been written to the hardware.  The interrupt handler is not used.

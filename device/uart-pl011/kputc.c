@@ -9,17 +9,17 @@
 /**
  * @ingroup uarthardware
  *
- * Synchronously write a character to a UART.  This blocks until the character
- * has been written to the hardware.  The interrupt handler is not used.
+ * UARTに同期的に1文字書き出す.  ハードウェアに1文字書き出すまで
+ * ブロックする。割り込みハンドラは使用しない。
  *
  * @param c
- *      The character to write.
+ *      書き出す文字
  * @param devptr
- *      Pointer to the device table entry for a UART.
+ *      UART用のデバイステーブルエントリへのポインタ
  *
  * @return
- *      The character written to the UART as an <code>unsigned char</code> cast
- *      to an <code>int</code>.
+ *      UARTに <code>unsigned char</code> として書き出し
+ *      <code>int</code> にキャストした文字
  */
 syscall kputc(uchar c, device *devptr)
 {
@@ -31,27 +31,26 @@ syscall kputc(uchar c, device *devptr)
     uartptr = &uarttab[devptr->minor];
     regptr = devptr->csr;
 
-    /* Save the UART's interrupt state and disable the UART's interrupts.  Note:
-     * we do not need to disable global interrupts here; only UART interrupts
-     * must be disabled, to prevent race conditions with the UART interrupt
-     * handler.  */
+    /* UARTの割り込み状態を保存し、UARTの割り込みを無効にする。
+     * 注: ここではグローバル割り込みを無効にする必要はない。
+     * UART割り込みハンドラとの競合状態を防ぐには、UART割り込みを
+     * 無効にすることだけが必要である */
     uart_im = regptr->imsc;
     regptr->imsc = 0;
 
-    /* Wait until UART is ready for another character  */
+    /* 次の文字の送信準備ができるまで待つ  */
     while ((regptr->fr & PL011_FR_TXFF))
     {
         /* Do nothing */
     }
 
-    /* Put the character to the UART by writing it to the UART's data register.
-     * */
+    /* データレジスタに書き出すことでUARTに1文字送信する */
     regptr->dr = c;
 
-    /* Tally one character sent.  */
+    /* 送信した1文字を足す */
     uartptr->cout++;
 
-    /* Restore UART interrupts and return the put character.  */
+    /* UARTの割り込みを復元して送信した文字を返す */
     regptr->imsc = uart_im;
     return c;
 }

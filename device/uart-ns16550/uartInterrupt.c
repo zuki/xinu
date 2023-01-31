@@ -11,7 +11,6 @@
 extern int resdefer;
 
 /**
- * @ingroup uarthardware
  *
  * Decode hardware interrupt request from UART device.
  */

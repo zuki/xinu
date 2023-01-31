@@ -10,20 +10,20 @@
 /**
  * @ingroup uartgeneric
  *
- * Reads data from a UART.
+ * UARTからデータを読み込む.
  *
  * @param devptr
- *      Pointer to the device table entry for a UART.
+ *      UART用のデバイステーブルエントリへのポインタ
  * @param buf
- *      Pointer to a buffer into which to place the read data.
+ *      読み込んだデータを置くバッファへのポインタ
  * @param len
- *      Maximum number of bytes of data to read.
+ *      読み込むデータの最大バイト数
  *
  * @return
- *      On success, returns the number of bytes read, which normally is @p len,
- *      but may be less than @p len if the UART has been set to non-blocking
- *      mode.  Returns SYSERR on other error (currently, only if uartInit() has
- *      not yet been called).
+ *      成功した場合、読み込んだバイト数を返す。これは通常 @p len で
+ *      あるが、UARTがノンブロッキングモードに設定されている場合は
+ *      @p len より少ない場合がある。エラー（現在のところ、uartInit() が
+ *      呼ばれていない場合のみ）の場合は SYSERR を返す。
  */
 devcall uartRead(device *devptr, void *buf, uint len)
 {
@@ -36,33 +36,33 @@ devcall uartRead(device *devptr, void *buf, uint len)
     im = disable();
     uartptr = &uarttab[devptr->minor];
 
-    /* Make sure uartInit() has run.  */
+    /* uartInit() が実行済みであることを確認する */
     if (NULL == uartptr->csr)
     {
         restore(im);
         return SYSERR;
     }
 
-    /* Attempt to read each byte requested.  */
+    /* 指定された各バイトの読み込みを試みる */
     for (count = 0; count < len; count++)
     {
-        /* If the UART is in non-blocking mode, ensure there is a byte available
-         * in the input buffer from the lower half (interrupt handler).  If not,
-         * return early with a short count.  */
+        /* UARTがノンブロッキングモードの場合、下半分（割り込みハンドラ）
+         * からの入力バッファに利用可能なバイトがあることを確認する。ない
+         * 場合は、指定バイト読み込まずに早々に復帰する。 */
         if ((uartptr->iflags & UART_IFLAG_NOBLOCK) && uartptr->icount == 0)
         {
             break;
         }
 
-        /* Wait for there to be at least one byte in the input buffer from the
-         * lower half (interrupt handler), then remove it.  */
+        /* 下半分（割り込みハンドラ）からの入力バッファに少なくとも1バイト
+         * 現れるまで待ち、それをバッファにセットして、削除する。 */
         wait(uartptr->isema);
         c = uartptr->in[uartptr->istart];
         ((uchar*)buf)[count] = c;
         uartptr->icount--;
         uartptr->istart = (uartptr->istart + 1) % UART_IBLEN;
 
-        /* If the UART is in echo mode, echo the byte back to the UART.  */
+        /* UARTがエコーモードの場合、そのバイトをUARTにエコーバックする */
         if (uartptr->iflags & UART_IFLAG_ECHO)
         {
             uartPutc(uartptr->dev, c);

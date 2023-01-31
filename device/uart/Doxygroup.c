@@ -1,15 +1,13 @@
 /**
  * @defgroup uartdriver UART
  * @ingroup devices
- * @brief Universal Asynchronous Receiver/Transmitter driver
+ * @brief UART (Universal Asynchronous Receiver/Transmitter)ドライバ
  *
- * @defgroup uartgeneric UART Generic Functions
- * @brief These UART functions are implemented the same way regardless of the
- * exact type of UART.
+ * @defgroup uartgeneric UART一般関数
+ * @brief これらのUART関数はUARTのタイプによらず同じ方法で実装される.
  * @ingroup uartdriver
  *
- * @defgroup uarthardware UART Hardware Functions
- * @brief These UART functions are implemented differently for different UART
- * types.
+ * @defgroup uarthardware UARTハードウェア関数
+ * @brief これらの関数はUARTのタイプにより様々な方法で実装される.
  * @ingroup uartdriver
  */

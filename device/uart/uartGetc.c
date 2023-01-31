@@ -10,15 +10,15 @@
 /**
  * @ingroup uartgeneric
  *
- * Read a single character from a UART.
+ * UARTから1文字読み込む.
  *
  * @param devptr
- *      Pointer to the device table entry for a UART.
+ *      UART用のデバイステーブルエントリへのポインタ
  *
  * @return
- *      On success, returns the character read as an <code>unsigned char</code>
- *      cast to an <code>int</code>.  On read error, invalid device, or end-of
- *      file, returns SYSERR.
+ *      成功した場合、<code>unsigned char</code>として読み込んだ文字を
+ *      <code>int</code> にキャストして返す。読み込みエラー（不正な
+ *      デバイス、またはeof）の場合は SYSERR を返す。
  */
 devcall uartGetc(device *devptr)
 {
@@ -28,7 +28,7 @@ devcall uartGetc(device *devptr)
     retval = uartRead(devptr, &ch, 1);
     if (retval == 1)
     {
-        return ch;
+        return (int)ch;
     }
     else
     {

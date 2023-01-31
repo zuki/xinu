@@ -12,26 +12,27 @@
 /**
  * @ingroup uartgeneric
  *
- * kernel printf: formatted, synchronous output to SERIAL0.
+ * カーネルprintf: フォーマットしてSERIAL0に同期出力する.
  *
  * @param format
- *      The format string.  Not all standard format specifiers are supported by
- *      this implementation.  See _doprnt() for a description of supported
- *      conversion specifications.
+ *      フォーマット文字列。 この実装では標準的なすべての書式指定子を
+ *      サポートしているわけではない。サポートしている変換指定子の説明に
+ *      ついては _doprnt() を参照のこと。
  * @param ap
- *      Arguments matching those in the format string.
+ *      フォーマット文字列にマッチする引数
  *
  * @return
- *      The number of characters written.
+ *      書き出した文字数
  */
 syscall kvprintf(const char *format, va_list ap)
 {
     int retval;
     irqmask im;
 
-    /* Note: it isn't strictly necessary to disable global interrupts here, but
-     * it prevents kprintf()'s from stepping on each other toes if you happen to
-     * call kprintf() from an interrupt handler.  */
+    /* 注: グローバル割り込みを無効にする必要は厳密にはないが、割り込み
+     * ハンドラからうっかり kprintf() を呼び出して kprintf() が互いの
+     * つま先を踏んでしまうのを防ぐために無効にする。
+     */
     im = disable();
     retval = _doprnt(format, ap, (int (*)(int, int))kputc, (int)&devtab[SERIAL0]);
     restore(im);
