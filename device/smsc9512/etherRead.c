@@ -8,8 +8,8 @@
 #include <interrupt.h>
 #include <string.h>
 
-/* Implementation of etherRead() for the smsc9512; see the documentation for
- * this function in ether.h.  */
+/* smsc LAN9512用の etherRead() の実装; この関数のドキュメントはether.hを
+ * 参照 */
 devcall etherRead(device *devptr, void *buf, uint len)
 {
     irqmask im;
@@ -18,7 +18,7 @@ devcall etherRead(device *devptr, void *buf, uint len)
 
     im = disable();
 
-    /* Make sure device is actually up.  */
+    /* デバイスはupしていること */
     ethptr = &ethertab[devptr->minor];
     if (ethptr->state != ETH_STATE_UP)
     {
@@ -26,31 +26,29 @@ devcall etherRead(device *devptr, void *buf, uint len)
         return SYSERR;
     }
 
-    /* Wait for received packet to be available in the ethptr->in circular
-     * queue.  */
+    /* ethptr->in 循環キューに受信パケットが現れるのを待つ */
     wait(ethptr->isema);
 
-    /* Remove the received packet from the circular queue.  */
+    /* 受信パケットを循環キューから削除する  */
     pkt = ethptr->in[ethptr->istart];
     ethptr->istart = (ethptr->istart + 1) % ETH_IBLEN;
     ethptr->icount--;
 
-    /* TODO: we'd like to restore interrupts here (before the memcpy()), but
-     * this doesn't work yet because smsc9512_rx_complete() expects a buffer to
-     * be available if icount < ETH_IBLEN; therefore, since we decremented
-     * icount, we can't restore interrupts until we actually release the
-     * corresponding buffer.  */
+    /* TODO: ここで（memcpy() の前に）割り込みを復元したいがまだできない。
+     * smsc9512_rx_complete() は icount < ETH_IBLEN であればバッファが
+     * 利用可能であると期待するからである。したがって icount を原分したので、
+     * 実際に対応するバッファを解放するまで割り込みを復元することはできない
+     */
 
-    /* Copy the data from the packet buffer, being careful to copy at most the
-     * number of bytes requested. */
+    /* データをパケットバッファからコピーする。要求されたバイト数だけ
+     * コピーするよう注意する */
     if (pkt->length < len)
     {
         len = pkt->length;
     }
     memcpy(buf, pkt->buf, len);
 
-    /* Return the packet buffer to the pool, then return the length of the
-     * packet received.  */
+    /* パケットバッファをプールに戻し、受信したパケットの長さを返す */
     buffree(pkt);
     restore(im);
     return len;

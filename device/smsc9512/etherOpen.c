@@ -1,7 +1,7 @@
 /**
  * @file etherOpen.c
  *
- * Code for opening a SMSC LAN9512 USB Ethernet Adapter device.
+ * SMSC LAN9512 USB Ethernetアダプタデバイスをオープンするためのコード.
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
@@ -12,16 +12,16 @@
 #include <string.h>
 #include <usb_core_driver.h>
 
-/* Implementation of etherOpen() for the smsc9512; see the documentation for
- * this function in ether.h.  */
+/* smsc9512用の etherOpen() の実装; この関数のドキュメントは
+ * ether.h を参照  */
 /**
  * @details
  *
- * SMSC LAN9512-specific notes:  as a work-around to use USB's dynamic device
- * model at the same time as Xinu's static device model, this function will
- * block until the corresponding USB device has actually been attached to the
- * USB.  Strictly speaking, there is no guarantee as to when this will actually
- * occur, even if the device is non-removable.
+ * SMSC LAN9512固有の注記:  USBの動的デバイスモデルを同時にXinuの静的
+ * デバイスモデルと使用するための回避策として、この関数は対応するUSB
+ * デバイスが実際にUSBに接続されるまでブロックされる。厳密にいえば、
+ * デバイスが取り外せないものであっても、これが実際に発生するかは保証
+ * されない。
  */
 devcall etherOpen(device *devptr)
 {
@@ -33,20 +33,20 @@ devcall etherOpen(device *devptr)
 
     im = disable();
 
-    /* Wait for USB device to actually be attached.  */
+    /* USBデバイスが実際に接続されるのを待つ  */
     if (smsc9512_wait_device_attached(devptr->minor) != USB_STATUS_SUCCESS)
     {
         goto out_restore;
     }
 
-    /* Fail if device is not down.  */
+    /* デバイスがdownしている場合は失敗  */
     ethptr = &ethertab[devptr->minor];
     if (ethptr->state != ETH_STATE_DOWN)
     {
         goto out_restore;
     }
 
-    /* Create buffer pool for Tx transfers.  */
+    /* Tx転送のためのバッファプールを作成する  */
     ethptr->outPool = bfpalloc(sizeof(struct usb_xfer_request) + ETH_MAX_PKT_LEN +
                                    SMSC9512_TX_OVERHEAD,
                                SMSC9512_MAX_TX_REQUESTS);
@@ -55,8 +55,8 @@ devcall etherOpen(device *devptr)
         goto out_restore;
     }
 
-    /* Create buffer pool for Rx packets (not the actual USB transfers, which
-     * are allocated separately).  */
+    /* Rxパケットのためのバッファプールを作成する（実際のUSB転送用ではない。
+     * それは別に割り当てられる） */
     ethptr->inPool = bfpalloc(sizeof(struct ethPktBuffer) + ETH_MAX_PKT_LEN,
                               ETH_IBLEN);
     if (ethptr->inPool == SYSERR)
@@ -64,28 +64,30 @@ devcall etherOpen(device *devptr)
         goto out_free_out_pool;
     }
 
-    /* We're abusing the csr field to store a pointer to the USB device
-     * structure.  At least it's somewhat equivalent, since it's what we need to
-     * actually communicate with the device hardware.  */
+    /* csrフィールドを悪用してUSBデバイス構造体へのポインタを保存する。
+     * 少なくともそれはほぼ同等である。なぜなら、実際にデバイスハード
+     * ウェアと通信するために必要なものだからである。
+     */
     udev = ethptr->csr;
 
-    /* Set MAC address */
+    /* MACアドレスをセットする */
     if (smsc9512_set_mac_address(udev, ethptr->devAddress) != USB_STATUS_SUCCESS)
     {
         goto out_free_in_pool;
     }
 
-    /* Initialize the Tx requests.  */
+    /* Txリクエストを初期化する  */
     {
         struct usb_xfer_request *reqs[SMSC9512_MAX_TX_REQUESTS];
         for (i = 0; i < SMSC9512_MAX_TX_REQUESTS; i++)
         {
             struct usb_xfer_request *req;
-            
+
             req = bufget(ethptr->outPool);
             usb_init_xfer_request(req);
             req->dev = udev;
-            /* Assign Tx endpoint, checked in smsc9512_bind_device() */
+            /* smsc9512_bind_device() でチェックされたTxエンドポイントを
+             * 割り当てる */
             req->endpoint_desc = udev->endpoints[0][1];
             req->sendbuf = (uint8_t*)req + sizeof(struct usb_xfer_request);
             req->completion_cb_func = smsc9512_tx_complete;
@@ -98,28 +100,28 @@ devcall etherOpen(device *devptr)
         }
     }
 
-    /* Allocate and submit the Rx requests.  TODO: these aren't freed anywhere.
-     * */
+    /* Rxリクエストを割り当て発行する。TODO: これは開放されていない */
     for (i = 0; i < SMSC9512_MAX_RX_REQUESTS; i++)
     {
         struct usb_xfer_request *req;
-        
+
         req = usb_alloc_xfer_request(SMSC9512_DEFAULT_HS_BURST_CAP_SIZE);
         if (req == NULL)
         {
             goto out_free_in_pool;
         }
         req->dev = udev;
-        /* Assign Rx endpoint, checked in smsc9512_bind_device() */
+        /* smsc9512_bind_device() でチェックされたRxエンドポイントを割り当てる */
         req->endpoint_desc = udev->endpoints[0][0];
         req->completion_cb_func = smsc9512_rx_complete;
         req->private = ethptr;
         usb_submit_xfer_request(req);
     }
 
-    /* Enable transmit and receive on the actual hardware.  After doing this and
-     * restoring interrupts, the Rx transfers can complete at any time due to
-     * incoming packets.  */
+    /* 実際のハードウェア上で送受信を有効にする。これを行い、割り込みを
+     * 復元した後、Rx転送は着信パケットの受信をいつでも完了することが
+     * できる
+     */
     udev->last_error = USB_STATUS_SUCCESS;
     smsc9512_set_reg_bits(udev, MAC_CR, MAC_CR_TXEN | MAC_CR_RXEN);
     smsc9512_write_reg(udev, TX_CFG, TX_CFG_ON);
@@ -128,7 +130,7 @@ devcall etherOpen(device *devptr)
         goto out_free_in_pool;
     }
 
-    /* Success!  Set the device to ETH_STATE_UP. */
+    /* 成功!  デバイスに ETH_STATE_UP をセットする */
     ethptr->state = ETH_STATE_UP;
     retval = OK;
     goto out_restore;

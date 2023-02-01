@@ -1,8 +1,8 @@
 /**
  * @file     smsc9512.c
  *
- * This file provides various functions needed by the SMSC LAN9512 USB Ethernet
- * Driver.
+ * このファイルはSMSC LAN9512 USB Ethernetドライバに日露な
+ * 様々な関数を提供する.
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
@@ -10,20 +10,20 @@
 #include <usb_core_driver.h>
 
 /**
- * @ingroup etherspecific
+ * @ingroup ether_lan9512
  *
- * Write to a register on the SMSC LAN9512 USB Ethernet Adapter.
+ * SMSC LAN9512 USB Ethernetアダプタのレジスタに書き出す.
  *
  * @param udev
- *      USB device for the adapter
+ *      このアダプタ用のUSBデバイス
  * @param index
- *      Index of the register to write
+ *      書き出すレジスタのインデックス
  * @param data
- *      Value to write to the register
+ *      レジスタに書き出す値
  *
  * @return
- *      ::USB_STATUS_SUCCESS on success; otherwise another ::usb_status_t error
- *      code.
+ *      成功した場合は ::USB_STATUS_SUCCES; それ以外あh ::usb_status_t
+ *      エラーコード
  */
 usb_status_t
 smsc9512_write_reg(struct usb_device *udev, uint32_t index, uint32_t data)
@@ -37,20 +37,20 @@ smsc9512_write_reg(struct usb_device *udev, uint32_t index, uint32_t data)
 }
 
 /**
- * @ingroup etherspecific
+ * @ingroup ether_lan9512
  *
- * Read from a register on the SMSC LAN9512 USB Ethernet Adapter.
+ * SMSC LAN9512 USB Ethernetアダプタのレジスタから読み込む.
  *
  * @param udev
- *      USB device for the adapter
+ *      このアダプタ用のUSBデバイス
  * @param index
- *      Index of the register to read
+ *      読み込むレジスタのインデックス
  * @param data
- *      Pointer into which to write the register's value
+ *      レジスタの値を書き込む場所へのポインタ
  *
  * @return
- *      ::USB_STATUS_SUCCESS on success; otherwise another ::usb_status_t error
- *      code.
+ *      成功した場合は ::USB_STATUS_SUCCES; それ以外あh ::usb_status_t
+ *      エラーコード
  */
 usb_status_t
 smsc9512_read_reg(struct usb_device *udev, uint32_t index, uint32_t *data)
@@ -64,25 +64,23 @@ smsc9512_read_reg(struct usb_device *udev, uint32_t index, uint32_t *data)
 }
 
 /**
- * @ingroup etherspecific
+ * @ingroup ether_lan9512
  *
- * Modify the value contained in a register on the SMSC LAN9512 USB Ethernet
- * Adapter.
+ * SMSC LAN9512 USB Ethernetアダプトのレジスタにある値を変更する.
  *
  * @param udev
- *      USB device for the adapter
+ *      このアダプタ用のUSBデバイス
  * @param index
- *      Index of the register to modify
+ *      変更するレジスタのインデックス
  * @param mask
- *      Mask that contains 1 for the bits where the old value in the register
- *      will be kept rather than cleared (unless those bits also appear in @p
- *      set, in which case they will still be set).
+ *      レジスタの古い値をクリアせず保持する位置のビットを1としたマスク
+ *      （これらのビットが @p set に現れる場合は除く。その場合はセットされる）
  * @param set
- *      Mask of bits to set in the register.
+ *      レジスタにセットするためのビットのマスク
  *
  * @return
- *      ::USB_STATUS_SUCCESS on success; otherwise another ::usb_status_t error
- *      code.
+ *      成功した場合は ::USB_STATUS_SUCCES; それ以外あh ::usb_status_t
+ *      エラーコード
  */
 usb_status_t
 smsc9512_modify_reg(struct usb_device *udev, uint32_t index,
@@ -102,21 +100,20 @@ smsc9512_modify_reg(struct usb_device *udev, uint32_t index,
 }
 
 /**
- * @ingroup etherspecific
+ * @ingroup ether_lan9512
  *
- * Set bits in a register on the SMSC LAN9512 USB Ethernet Adapter.
+ * SMSC LAN9512 USB Ethernetアダプタのレジスタのビットをセットする.
  *
  * @param udev
- *      USB device for the adapter
+ *      このアダプタ用のUSBデバイス
  * @param index
- *      Index of the register to modify
+ *      変更するレジスタのインデックス
  * @param set
- *      Bits to set in the register.  At positions where there is a 0, the old
- *      value in the register will be written.
+ *      レジスタ内のセットするビット。 0がある位置には古い値が書き出される。
  *
  * @return
- *      ::USB_STATUS_SUCCESS on success; otherwise another ::usb_status_t error
- *      code.
+ *      成功した場合は ::USB_STATUS_SUCCES; それ以外あh ::usb_status_t
+ *      エラーコード
  */
 usb_status_t
 smsc9512_set_reg_bits(struct usb_device *udev, uint32_t index, uint32_t set)
@@ -125,19 +122,19 @@ smsc9512_set_reg_bits(struct usb_device *udev, uint32_t index, uint32_t set)
 }
 
 /**
- * @ingroup etherspecific
+ * @ingroup ether_lan9512
  *
- * Change the MAC address of the SMSC LAN9512 USB Ethernet Adapter.
+ * SMSC LAN9512 USB EthernetアダプタのMACアドレスを変更する.
  *
  * @param udev
- *      USB device for the adapter
+ *      このアダプタ用のUSBデバイス
  * @param macaddr
- *      New MAC address to set (6 bytes long)
+ *      セットする新しいMACアドレス（6バイト長）
  *
  * @return
- *      ::USB_STATUS_SUCCESS on success; otherwise another ::usb_status_t error
- *      code.  On failure the existing MAC address may have been partially
- *      modified.
+ *      成功した場合は ::USB_STATUS_SUCCES; それ以外あh ::usb_status_t
+ *      エラーコード。失敗の場合は既存のMACアドレスの一部が変更される可能性が
+ *      ある。
  */
 usb_status_t
 smsc9512_set_mac_address(struct usb_device *udev, const uint8_t *macaddr)
@@ -157,18 +154,18 @@ smsc9512_set_mac_address(struct usb_device *udev, const uint8_t *macaddr)
 }
 
 /**
- * @ingroup etherspecific
+ * @ingroup ether_lan9512
  *
- * Reads the MAC address of the SMSC LAN9512 USB Ethernet Adapter.
+ * SMSC LAN9512 USB EthernetアダプタのMACアドレスを読み込む.
  *
  * @param udev
- *      USB device for the adapter
+ *      このアダプタ用のUSBデバイス
  * @param macaddr
- *      Pointer into which to write the MAC address (6 bytes long)
+ *      MACアドレスを書き出す場所へのポインタ（6バイト長）
  *
  * @return
- *      ::USB_STATUS_SUCCESS on success; otherwise another ::usb_status_t error
- *      code.
+ *      成功した場合は ::USB_STATUS_SUCCES; それ以外あh ::usb_status_t
+ *      エラーコード
  */
 usb_status_t
 smsc9512_get_mac_address(struct usb_device *udev, uint8_t *macaddr)

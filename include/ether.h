@@ -13,7 +13,7 @@
 #include <stddef.h>
 #include <semaphore.h>
 
-/* Tracing macros */
+/* トレースマクロ */
 //#define TRACE_ETHER   TTY1
 #ifdef TRACE_ETHER
 #include <stdio.h>
@@ -25,147 +25,147 @@
 #define ETHER_TRACE(...)
 #endif
 
-#define ETH_ADDR_LEN        6   /**< Length of ethernet address         */
+#define ETH_ADDR_LEN        6   /**< Ethernetアドレス長                 */
 
 #include <vlan.h>
 
-/* ETH Buffer lengths */
-#define ETH_IBLEN           1024 /**< input buffer size                 */
+/* ETHバファ長 */
+#define ETH_IBLEN           1024 /**< 入力バッファサイズ                */
 
-/* Ethernet DMA buffer sizes */
-#define ETH_MTU             1500 /**< Maximum transmission units        */
-#define ETH_HEADER_LEN      ETH_HDR_LEN  /**< Length of Ethernet header */
-#define ETH_VLAN_LEN        4   /**< Length of Ethernet vlan tag        */
-#define ETH_CRC_LEN         4   /**< Length of Ethernet CRC             */
+/* Ethernet DMA バッファサイズ */
+#define ETH_MTU             1500 /**< MTU（最大転送ユニット）           */
+#define ETH_HEADER_LEN      ETH_HDR_LEN  /**< Ethernetヘッダー長        */
+#define ETH_VLAN_LEN        4   /**< Ethernet vlanタグ長                */
+#define ETH_CRC_LEN         4   /**< Ethernet CRC長                     */
 #define ETH_MAX_PKT_LEN     ( ETH_HEADER_LEN + ETH_VLAN_LEN + ETH_MTU )
 
 #define ETH_RX_BUF_SIZE     ( ETH_MAX_PKT_LEN + ETH_CRC_LEN \
                               + sizeof(struct rxHeader) )
 #define ETH_TX_BUF_SIZE     ( ETH_MAX_PKT_LEN )
 
-/* ETH states */
+/* ETH状態 */
 #define ETH_STATE_FREE       0
 #define ETH_STATE_DOWN       1
 #define ETH_STATE_UP         2
 
-/* ETH control codes */
-#define ETH_CTRL_CLEAR_STATS 1  /**< Clear Ethernet Statistics          */
-#define ETH_CTRL_SET_MAC     2  /**< Set the MAC for this device        */
-#define ETH_CTRL_GET_MAC     3  /**< Get the MAC for this device        */
-#define ETH_CTRL_SET_LOOPBK  4  /**< Set Loopback Mode                  */
-#define ETH_CTRL_RESET       5  /**< Reset the Ethernet device          */
-#define ETH_CTRL_DISABLE     6  /**< Disable the Ethernet device        */
+/* ETH制御コード */
+#define ETH_CTRL_CLEAR_STATS 1  /**< Ethernet統計をクリアする           */
+#define ETH_CTRL_SET_MAC     2  /**< このデバイスのMACをセットする      */
+#define ETH_CTRL_GET_MAC     3  /**< このデバイスのMACを取得する        */
+#define ETH_CTRL_SET_LOOPBK  4  /**< ループバックモードをセットする     */
+#define ETH_CTRL_RESET       5  /**< Ethernetデバイスをリセットする     */
+#define ETH_CTRL_DISABLE     6  /**< Ethernetデバイスを無効にする       */
 
 /**
- * Ethernet packet buffer
+ * Ethernetパケットバッファ
  */
 struct ethPktBuffer
 {
-    uchar *buf;                 /**< Pointer to buffer space            */
-    uchar *data;                /**< Start of data within buffer        */
-    int length;                 /**< Length of packet data              */
+    uchar *buf;                 /**< バッファへのポインタ               */
+    uchar *data;                /**< バッファ内のデータの開始地点       */
+    int length;                 /**< パケットデータ長                   */
 };
 
-/* Ethernet control block */
-#define ETH_INVALID  (-1)       /**< Invalid data (virtual devices)     */
+/* Ethernetコントロールブロック */
+#define ETH_INVALID  (-1)       /**< 不正なデータ（仮想デバイス）       */
 
 /**
- * Ethernet control block
+ * Ethernetコントロールブロック
  */
 struct ether
 {
-    uchar state;                /**< ETH_STATE_*above                   */
-    device *phy;                /**< physical eth device for Tx DMA     */
+    uchar state;                /**< 状態: ETH_STATE_*                  */
+    device *phy;                /**< Tx DMA用の物理ethデバイス          */
 
-    /* Pointers to associated structures */
-    device *dev;                /**< eth device structure               */
-    void *csr;                  /**< control and status registers       */
+    /* 関連する構造体へのポインタ */
+    device *dev;                /**< ethデバイス構造体                  */
+    void *csr;                  /**< 制御及びステータスレジスタ         */
 
-    ulong interruptMask;        /**< interrupt mask                     */
-    ulong interruptStatus;      /**< interrupt status                   */
+    ulong interruptMask;        /**< 割り込みマスク                     */
+    ulong interruptStatus;      /**< 割り込みステータス                 */
 
-    struct dmaDescriptor *rxRing; /**< array of receiving ring descs.   */
-    struct ethPktBuffer **rxBufs; /**< Rx ring array                    */
-    ulong rxHead;               /**< Rx ring head index                 */
-    ulong rxTail;               /**< Rx ring tail index                 */
-    ulong rxRingSize;           /**< Number of Rx ring descriptors      */
-    ulong rxirq;                /**< Count of Rx interrupt requests     */
-    ulong rxOffset;             /**< Size in bytes of rxHeader          */
-    ulong rxErrors;             /**< Count of Rx errors.                */
+    struct dmaDescriptor *rxRing; /**< 受信リングディスクリプタの配列   */
+    struct ethPktBuffer **rxBufs; /**< Rxリング配列                     */
+    ulong rxHead;               /**< Rxリングの先頭のインデックス       */
+    ulong rxTail;               /**< Rxリングの末尾のインデックス       */
+    ulong rxRingSize;           /**< Rxリングディクリプタの数           */
+    ulong rxirq;                /**< Rx割り込み要求の回数               */
+    ulong rxOffset;             /**< rxHeaderのバイト長                 */
+    ulong rxErrors;             /**< Rxエラー回数                       */
 
-    struct dmaDescriptor *txRing; /**< array of transmit ring descs.    */
-    struct ethPktBuffer **txBufs; /**< Tx ring array                    */
-    ulong txHead;               /**< Tx ring head index                 */
-    ulong txTail;               /**< Tx ring tail index                 */
-    ulong txRingSize;           /**< Number of Tx ring descriptors      */
-    ulong txirq;                /**< Count of Tx interrupt requests     */
+    struct dmaDescriptor *txRing; /**< 送信リングディスクリプタの配列   */
+    struct ethPktBuffer **txBufs; /**< Tx リング配列                    */
+    ulong txHead;               /**< Txリングの先頭のインデックス       */
+    ulong txTail;               /**< Txリングの末尾のインデックス       */
+    ulong txRingSize;           /**< Txリングディクリプタの数           */
+    ulong txirq;                /**< Tx割り込み要求の回数               */
 
     uchar devAddress[ETH_ADDR_LEN];
 
-    uchar addressLength;        /**< Hardware address length            */
-    ushort mtu;                 /**< Maximum transmission units         */
+    uchar addressLength;        /**< ハードウェアアドレス長             */
+    ushort mtu;                 /**< MTU (Maximum transmission units)   */
 
-    ulong errors;               /**< Number of Ethernet errors          */
-    ushort ovrrun;              /**< Buffer overruns                    */
-    semaphore isema;            /**< I/0 sem for eth input              */
-    ushort istart;              /**< Index of first byte                */
-    ushort icount;              /**< Packets in buffer                  */
+    ulong errors;               /**< Ethernetエラー数                   */
+    ushort ovrrun;              /**< バッファオーバーラン               */
+    semaphore isema;            /**< eth入力用のI/0セマフォ             */
+    ushort istart;              /**< 最初のバイトのインデックス         */
+    ushort icount;              /**< バッファ内のパケット               */
 
-    struct ethPktBuffer *in[ETH_IBLEN]; /**< Input buffer               */
+    struct ethPktBuffer *in[ETH_IBLEN]; /**< 入力バッファ               */
 
-    int inPool;                 /**< buffer pool id for input           */
-    int outPool;                /**< buffer pool id for output          */
+    int inPool;                 /**< 入力用のバッファプールID           */
+    int outPool;                /**< 出力用のバッファプールID           */
 };
 
 /**
  * \ingroup ether
  *
- * Global table of ethernet devices.  Note that Xinu does not support multiple
- * types of Ethernet devices concurrently, only all the same kind.
+ * Ethernetデバイスのグローバルテーブル.  Xinuは複数のタイプのEthernet
+ * デバイスを同時にはサポートしておらず、すべて同じ種類しかサポートして
+ * いないことに注意されたい。
  */
 extern struct ether ethertab[];
 
-/* Ethernet driver functions */
+/* Ethernetドライバ関数 */
 
 /**
  * \ingroup ether
  *
- * Do one-time initialization of an Ethernet device.  This performs
- * initialization of the Ethernet device that perists through calls to
- * etherOpen() and etherClose(), such as initializing the Ethernet control block
- * and setting hardware parameters.
+ * Ethernetデバイスの一回限りの初期化を行う.  Ethernetコントロールブロック
+ * の初期化やハードウェアパラメータの設定など、etherOpen() の呼び出しから
+ * etherClose() の呼び出しまで存在するthernetデバイスの初期化を行う。
  *
  * @param devptr
- *      Pointer to the entry in Xinu's device table for the Ethernet device.
+ *      このethernetデバイス用のXinuのデバイステーブルのエントリへのポインタ
  * @return
- *      ::OK if the device was initialized successfully; otherwise ::SYSERR.
+ *      デバイスの初期化に成功したら ::OK; それ以外は ::SYSERR.
  */
 devcall etherInit(device *devptr);
 
 /**
  * \ingroup ether
  *
- * Open an Ethernet device.  This enables Tx and Rx functionality and sets the
- * device state to ::ETH_STATE_UP.  This should be called through open().
+ * Ethernetデバイスをオープンする.   TxとRxの機能を有効にし、デバイスの
+ * 状態を ::ETH_STATE_UP に設定する。 open() 関数から呼び出す必要が
+ * ある。
  *
  * @param devptr
- *      Pointer to the entry in Xinu's device table for the Ethernet device.
+ *      このethernetデバイス用のXinuのデバイステーブルのエントリへのポインタ
  *
  * @return
- *      ::OK if the device was opened successfully; otherwise ::SYSERR.
+ *      デバイスのオープンに成功したら ::OK; それ以外は ::SYSERR.
  */
 devcall etherOpen(device *devptr);
 
 /**
  * \ingroup ether
  *
- * Ethernet デバイスを閉じる。 これは Tx と Rx の機能を無効にし、
- * デバイスの状態を ::ETH_STATE_DOWN にセットする。
- * close() を通じて呼ばれなければならない。
+ * Ethernetデバイスをクローズする。 TxとRxの機能を無効にし、デバイスの
+ * 状態を ::ETH_STATE_DOWN に設定する。 close() 関数から呼び出す必要が
+ * ある。
  *
  * @param devptr
- *     Xinuデバイステーブルに置けるこのEthernetデバイスの
- *     エントリへのポインタ
+ *     このethernetデバイス用のXinuのデバイステーブルのエントリへのポインタ
  *
  * @return デバイスのクローズが成功したら ::OK; それ以外は ::SYSERR.
  */
@@ -174,98 +174,93 @@ devcall etherClose(device *devptr);
 /**
  * \ingroup ether
  *
- * Read an Ethernet frame from an Ethernet device.  This should be called
- * through read().
+ * EthernetデバイスからEthernetフレームを読み込む.  read() 関数から
+ * 呼び出す必要がある。
  *
- * This function blocks until a frame has actually been received.  There is no
- * timeout.
+ * この関数は実際にフレームが受信されるまでブロックする。タイムアウトはしない。
  *
  * @param devptr
- *      Pointer to the entry in Xinu's device table for the Ethernet device.
+ *      このethernetデバイス用のXinuのデバイステーブルのエントリへのポインタ
  * @param buf
- *      Buffer in which to receive the Ethernet frame.  The received frame will
- *      start with the MAC destination address and end with the payload.
+ *      Ethernetフレームを受信するバッファ。受信されるフレームは宛先のMAC
+ *      アドレスから始まり、ペイロードで終わる。
  * @param len
- *      Maximum length, in bytes, of the Ethernet frame to receive (size of @p
- *      buf).
+ *      受信するEthernetフレームの（バイト単位の）最大長（ @p buf のサイズ）
  *
  * @return
- *      ::SYSERR if the Ethernet device is not currently up; otherwise the
- *      actual length of the Ethernet frame received and written to @p buf.
+ *      Ethernetデバイスが現在upでない場合は ::SYSERR; そうでない場合は、
+ *      受信して @p buf に書き出したEthernetフレームの実際の長さ
  */
 devcall etherRead(device *devptr, void *buf, uint len);
 
 /**
  * \ingroup ether
  *
- * Write an Ethernet frame (excluding certain fields) to an Ethernet device.
- * This should be called through write().
+ * Ethernetフレーム（一部フィールドは除く）をEthernetデバイスに書き出す.
+ * write() 関数から呼び出す必要がある。
  *
- * This function actually only buffers the frame to be sent at some later time.
- * Therefore, there is no guarantee the frame has actually been transmitted on
- * the wire when this function returns.
+ * この関数は実際には後ほど送信するフレームをバッファリングしているだけで
+ * ある。したがって、この関数が復帰したときにフレームが実際に送信されている
+ * 保証はない。
  *
  * @param devptr
- *      Pointer to the entry in Xinu's device table for the Ethernet device.
+ *      このethernetデバイス用のXinuのデバイステーブルのエントリへのポインタ
  * @param buf
- *      Buffer that contains the Ethernet frame to send.  It must start with the
- *      MAC destination address and end with the payload.
+ *      送信するEthernetフレームが格納されているバッファ。宛先のMACアドレスで
+ *      始まり、ペイロードで終わっていなければならない。
  * @param len
- *      Length, in bytes, of the Ethernet frame to send.
+ *      送信するEthernetフレームの（バイト単位の）長さ
  *
  * @return
- *      ::SYSERR if packet is too small, too large, or the Ethernet device is
- *      not currently up; otherwise @p len, the number of bytes submitted to be
- *      written at some later time.
+ *      パケットが短すぎる、長すぎる、または、Ethernetデバイスが現在upされて
+ *      いない場合は ::SYSERR; そうでない場合は、後ほど書き出されて送信される
+ *      バイト数である @p len
  */
 devcall etherWrite(device *devptr, const void *buf, uint len);
 
 /**
  * \ingroup ether
  *
- * Execute a control function on an Ethernet device.  This should be called
- * through control().
+ * Ethernetデバイス上で制御関数を実行する.  control() 関数から呼び出す
+ * 必要がある。
  *
  * @param devptr
- *      Pointer to the entry in Xinu's device table for the Ethernet device.
+ *      このethernetデバイス用のXinuのデバイステーブルのエントリへのポインタ
  * @param req
- *      Control request to execute.
+ *      実行する制御リクエスト
  * @param arg1
- *      First argument (if any) for the control request.
+ *      （もしあれば）制御リクエスに渡す第1引数
  * @param arg2
- *      Second argument (if any) for the control request.
+ *      （もしあれば）制御リクエスに渡す第2引数
  *
  * @return
- *      The result of the control request, or ::SYSERR if the control request
- *      @p req was not recognized.
+ *      制御リクエストの結果、または、制御リクエスト @p req が認識できなかった
+ *      場合は ::SYSERR
  */
 devcall etherControl(device *devptr, int req, long arg1, long arg2);
 
 /**
  * \ingroup ether
  *
- * Print information about an Ethernet device.
+ * Ethernetデバイスに関する情報を表示する.
  *
  * @param minor
- *      Minor number of the Ethernet device to print information about.
+ *      情報を表示するEthernetデバイスのマイナー番号
  */
 void etherStat(ushort minor);
 
 /**
  * \ingroup ether
  *
- * Print throughput data about an Ethernet device.
+ * Ethernetデバイスに関するスループットデータを表示する.
  *
  * @param minor
- *      Minor number of the Ethernet device to print throughput data about.
+ *      スループットデータを表示するEthernetデバイスのマイナー番号
  */
 void etherThroughput(ushort minor);
 
 interrupt etherInterrupt(void);
 
-/**
- * \ingroup ether
- */
 int colon2mac(char *, uchar *);
 int allocRxBuffer(struct ether *, int);
 int waitOnBit(volatile uint *, uint, const int, int);

@@ -1,11 +1,11 @@
 /**
  * @file smsc9512.h
  *
- * This header mostly provides definitions of the registers of the SMSC LAN9512
- * USB Ethernet Adapter.  Since there is no publicly available documentation for
- * this hardware, these definitions were borrowed primarily from SMSC's Linux
- * driver.  However, based on experiment and educated guesswork, we have also
- * added explanations of what various registers and fields actually mean.
+ * このヘッダーは主にSMSC LAN9512 USB Ethernetアダプタのレジスタ定義を
+ * 提供する。このハードウェアには一般公開されているドキュメントがないため、
+ * これらの定義は主にSMSCのLinuxドライバから拝借したものである。しかし、
+ * 実験と推測に基づき、様々なレジスタやフィールドが実際に何を意味して
+ * いるのかについての説明も加えている。
  */
 #ifndef _SMSC9512_H_
 #define _SMSC9512_H_
@@ -75,7 +75,7 @@ __smsc9512_dump_reg(struct usb_device *udev, uint32_t index, const char *name)
 /****************************************************************************/
 
 
-/* 
+/*
  * Transmitted Ethernet frames (as written to the SMSC LAN9512's Bulk OUT
  * endpoint) must be prefixed with an 8-byte header containing the "Tx command
  * word A" followed by the "Tx command word B".  It apparently is possible to

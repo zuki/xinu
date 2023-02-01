@@ -35,10 +35,11 @@ smsc9512_bind_device(struct usb_device *udev)
 {
     struct ether *ethptr;
 
-    /* Check if this is actually a SMSC LAN9512 by checking the USB device's
-     * standard device descriptor, which the USB core already read into memory.
-     * Also check to make sure the expected endpoints for sending/receiving
-     * packets are present and that the device is operating at high speed.  */
+    /* USBコアが既にメモリに読み込んでいるUSBデバイスの標準デバイス
+     * ディスクリプタを確認して、これが実際にSMSC LAN9512であることを確認する。
+     * また、パケットの送受信に必要なエンドポイントが存在するか、デバイスが
+     * High Speedで動作するかも確認する。
+     */
     if (udev->descriptor.idVendor != SMSC9512_VENDOR_ID ||
         udev->descriptor.idProduct != SMSC9512_PRODUCT_ID ||
         udev->interfaces[0]->bNumEndpoints < 2 ||
@@ -51,8 +52,8 @@ smsc9512_bind_device(struct usb_device *udev)
         return USB_STATUS_DEVICE_UNSUPPORTED;
     }
 
-    /* Make sure this driver isn't already bound to a SMSC LAN9512.
-     * TODO: Support multiple devices of this type concurrently.  */
+    /* このデバイスがすでにSMSC LAN9512にバインドされていないか確認する。
+     * TODO: このタイプの複数のデバイスを並行してサポートする  */
     ethptr = &ethertab[0];
     STATIC_ASSERT(NETHER == 1);
     if (ethptr->csr != NULL)
@@ -60,36 +61,37 @@ smsc9512_bind_device(struct usb_device *udev)
         return USB_STATUS_DEVICE_UNSUPPORTED;
     }
 
-    /* The rest of this function is responsible for making the SMSC LAN9512
-     * ready to use, but not actually enabling Rx and Tx (which is done in
-     * etherOpen()).  This primarily involves writing to the registers on the
-     * SMSC LAN9512.  But these are not memory mapped registers, as this is a
-     * USB Ethernet Adapter that is attached on the USB!  Instead, registers are
-     * read and written using USB control transfers.  It's somewhat of a pain,
-     * and also unlike memory accesses it is possible for USB control transfers
-     * to fail.  However, here we perform lazy error checking where we just do
-     * all the needed reads and writes, then check at the end if an error
-     * occurred.  */
+    /* この関数の残りの部分ではSMSC LAN9512を使用可能な状態にするが
+     * 実際にRxとTxを有効にすることはない（これはetherOpen() で行う）。
+     * 個々での作業は主にSMSC LAN9512のレジスタへの書き込むである。
+     * ただし、これはUSBに接続されたUSBイーサネットアダプタなので
+     * メモリマップドレジスタではない。レジスタの読み書きはUSBの
+     * コントロール転送を利用して行われる。少し面倒であり、メモリ
+     * アクセスと違ってUSBコントロール転送は失敗する可能性もある。
+     * しかし、ここでは必要な読み書きをすべて行い、最後にエラーが
+     * 発生したか否をチェックする遅延エラーチェックを行っている。
+     */
 
     udev->last_error = USB_STATUS_SUCCESS;
 
-    /* Resetting the SMSC LAN9512 via its registers should not be necessary
-     * because the USB code already performed a reset on the USB port it's
-     * attached to.  */
+    /* SMSC LAN9512をレジスタ軽腕リセットする必要はないはずである。
+     * USBコードがLAN9512が接続されたUSBポートのリセットを既に実行
+     * しているからである
+     */
 
-    /* Set MAC address.  */
+    /* MACアドレスをセットする */
     smsc9512_set_mac_address(udev, ethptr->devAddress);
 
-    /* Allow multiple Ethernet frames to be received in a single USB transfer.
-     * Also set a couple flags of unknown function.  */
+    /* 1回のUSB転送で複数のEthernetフレームを受信できるようにする。
+     * また、機能不明のフラグをいくつかセットする。 */
     smsc9512_set_reg_bits(udev, HW_CFG, HW_CFG_MEF | HW_CFG_BIR | HW_CFG_BCE);
 
-    /* Set the maximum USB (not networking!) packets per USB Rx transfer.
-     * Required when HW_CFG_MEF was set.  */
+    /* USB Rx転送あたりの最大USB（ネットワークではない！）パケットをセットする。
+     * HW_CFG_MEFが設定された場合に必要になる */
     smsc9512_write_reg(udev, BURST_CAP,
                        SMSC9512_DEFAULT_HS_BURST_CAP_SIZE / SMSC9512_HS_USB_PKT_SIZE);
 
-    /* Check for error and return.  */
+    /* エラーをチェックして復帰する */
     if (udev->last_error != USB_STATUS_SUCCESS)
     {
         return udev->last_error;
@@ -101,27 +103,25 @@ smsc9512_bind_device(struct usb_device *udev)
 }
 
 /**
- * Unbinds the SMSC LAN9512 driver from a SMSC LAN9512 that has been detached.
- * This the @ref usb_device_driver::unbind_device "unbind_device" implementation
- * for the SMSC LAN9512 driver and therefore complies with its documented
- * behavior.
+ * デタッチされたSMSC LAN9512から SMSC LAN9512ドライバをアンバインドする。
+ * これはSMSC LAN9512 ドライバの @ref usb_device_driver::unbind_device
+ * "unbind_device" の実装であり、ドキュメントに記載されている動作に準ずる。
  */
 static void
 smsc9512_unbind_device(struct usb_device *udev)
 {
     struct ether *ethptr = udev->driver_private;
 
-    /* Reset attached semaphore to 0.  */
+    /* アタッチされていたセマフォを0にリセットする  */
     wait(smsc9512_attached[ethptr - ethertab]);
 
-    /* Close the device.  */
+    /* デバイスをクローズする  */
     etherClose(ethptr->dev);
 }
 
 /**
- * Specification of a USB device driver for the SMSC LAN9512.  This is
- * specifically for the USB core and is not related to Xinu's primary device and
- * driver model, which is static.
+ * SMSC LAN9512のUSBデバイスドライバの仕様。これはUSBコアに特化したものであり、
+ * Xinuの主要なデバイスとドライバの（静的な）モデルとは関係しない。
  */
 static const struct usb_device_driver smsc9512_driver = {
     .name          = "SMSC LAN9512 USB Ethernet Adapter Driver",
@@ -135,12 +135,14 @@ randomEthAddr(uchar addr[ETH_ADDR_LEN])
     uint i;
     if (platform.serial_low != 0 && platform.serial_high != 0)
     {
-        /* Use value generated from platform's serial number.  The problem here
-         * is that we must generate a 48-bit MAC address from a 64-bit serial
-         * number but avoid mapping multiple serial numbers to the same MAC
-         * address.  This is impossible, so we perform an approximation where we
-         * hash the serial number to remove any obvious non-randomness in the
-         * way serial numbers are assigned, then extract the low 48 bits.  */
+        /* プラットフォームのシリアル番号から生成された値を使用する。
+         * ここで問題となるのは、64ビットのシリアル番号から48ビットの
+         * MACアドレスを生成しなければならないが、複数のシリアル番号を
+         * 同じMACアドレスにマッピングすることは避けなければならないと
+         * いう点である。これは不可能なので、シリアル番号をハッシュ化し、
+         * シリアル番号の割り当て方法における明らかな非ランダム性を取り
+         * 除き、下位48ビットを抽出することで近似を行うこととする。
+         */
         unsigned long long serial_nr, hashval;
 
         serial_nr = (unsigned long long)platform.serial_low |
@@ -154,38 +156,39 @@ randomEthAddr(uchar addr[ETH_ADDR_LEN])
     }
     else
     {
-        /* Generate value using the C library's random number generator, seeded
-         * on the current system timer tick count.  */
+        /* Cライブラリの乱数生成器を使用し、現在のシステムタイマーの
+         * ティックカウントを種として値を生成する  */
         srand(clkcount());
         for (i = 0; i < ETH_ADDR_LEN; i++)
         {
             addr[i] = rand();
         }
     }
-    /* Clear multicast bit and set locally assigned bit */
+    /* マルチキャストビットをクリアし、ローカルにアサインしたビットをセットする */
     addr[0] &= 0xfe;
     addr[0] |= 0x02;
 }
 
 /**
- * @ingroup etherspecific
+ * @ingroup ether_lan9512
  *
- * Wait until the specified Ethernet device has actually been attached.
+ * 指定したEthernetデバイスが実際に接続されるまで待つ.
  *
- * This is necessary because USB is a dynamic bus, but Xinu expects static
- * devices.  Therefore, code opening a static ethernet device must wait until
- * the corresponding USB device has actually been detected and attached.  Fun
- * fact: the USB standard places no constraints on how long this will actually
- * take, even if the device is physically soldered to the board.
+ * USBは動的なバスであるが、Xinuは静的なデバイスを想定している
+ * のでこれが必要となる。したがって、静的なイーサネットデバイスを
+ * オープンするコードは対応するUSBデバイスが実際に検出・接続される
+ * まで待つ必要がある。面白いことに、USBの規格では、デバイスが
+ * ボードに物理的にはんだ付けされている場合であっても、実際に
+ * これにかかる時間については制約を設けていない。
  *
- * TODO: Wait for at most a certain amount of time before returning failure.
+ * TODO: 失敗を返すまでに少なくともある一定時間待つようにする
  *
  * @param minor
- *     Minor number of the Ethernet device to wait for.
+ *     接続を待つEthernetデバイスのマイナー番号
  *
  * @return
- *      Currently ::USB_STATUS_SUCCESS.  TODO: implement timeouts and return
- *      ::USB_STATUS_TIMEOUT if timed out.
+ *      現在のところ ::USB_STATUS_SUCCESS.  TODO: タイムアウトを実装して、
+ *      タイムアウトの場合は USB_STATUS_TIMEOUT を返すようにする
  */
 usb_status_t
 smsc9512_wait_device_attached(ushort minor)
@@ -195,24 +198,24 @@ smsc9512_wait_device_attached(ushort minor)
     return USB_STATUS_SUCCESS;
 }
 
-/* Implementation of etherInit() for the smsc9512; see the documentation for
- * this function in ether.h.  */
+/* smsc9512用の etherInit() の実装; この関数に関するドキュメントは
+ * ether.h を参照 */
 /**
  * @details
  *
- * SMSC LAN9512-specific notes:  This function returns ::OK if the Ethernet
- * driver was successfully registered with the USB core, otherwise ::SYSERR.
- * This is a work-around to use USB's dynamic device model at the same time as
- * Xinu's static device model, and there is no guarantee that the device
- * actually exists when this function returns.  (If it doesn't, the problem is
- * delayed until the device is actually opened with etherOpen()).
+ * SMSC LAN9512-固有の注記:  この関数はEthernetドライバがUSBコアに
+ * 正常に登録された場合は ::OK、そうでない場合は ::SYSERR を返す。
+ * これはUSBの動的デバイスモデルとXinuの静的デバイスモデルを同時に
+ * 使用するための回避策であり、この関数が復帰した時に実際にデバイスが
+ * 存在する保証はない(存在しない場合、etherOpen() で実際にデバイスを
+ * オープンするまで問題は引き伸ばされる)。
  */
 devcall etherInit(device *devptr)
 {
     struct ether *ethptr;
     usb_status_t status;
 
-    /* Initialize the static `struct ether' for this device.  */
+    /* このデバイス用の静的な `struct ether' を初期化する */
     ethptr = &ethertab[devptr->minor];
     bzero(ethptr, sizeof(struct ether));
     ethptr->dev = devptr;
@@ -232,13 +235,14 @@ devcall etherInit(device *devptr)
         goto err_free_isema;
     }
 
-    /* The SMSC LAN9512 on the Raspberry Pi does not have an EEPROM attached.
-     * The EEPROM is normally used to store the MAC address of the adapter,
-     * along with some other information.  As a result, software needs to set
-     * the MAC address to a value of its choosing (such as a random number).  */
+    /* Raspberry Piに搭載されているSMSC LAN9512にはEEPROMが付属していない。
+     * 通常、EEPROMはアダプタのMACアドレスとその他の情報を格納するために
+     * 使用される。そのため、ソフトウェアは（乱数などで）選択した任意の
+     * MACアドレスを設定する必要がある。
+     */
     randomEthAddr(ethptr->devAddress);
 
-    /* Register this device driver with the USB core and return.  */
+    /* このデバイスドライバをUSBコアに登録して復帰する */
     status = usb_register_device_driver(&smsc9512_driver);
     if (status != USB_STATUS_SUCCESS)
     {

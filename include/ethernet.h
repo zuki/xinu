@@ -9,7 +9,7 @@
 
 #include <stddef.h>
 
-/* Ether Packet Types */
+/** Etherパケットタイプ */
 #define ETHER_TYPE_IPv4   0x0800
 #define ETHER_TYPE_ARP    0x0806
 
@@ -33,7 +33,9 @@
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  */
 
-/* Ethernet packet header */
+/**
+ * Ethernetパケットヘッダー
+ */
 struct etherPkt
 {
     uchar dst[ETH_ADDR_LEN];    /* Destination Mac */

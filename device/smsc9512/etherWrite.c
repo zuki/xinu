@@ -10,8 +10,8 @@
 #include <string.h>
 #include <usb_core_driver.h>
 
-/* Implementation of etherWrite() for the SMSC LAN9512; see the documentation
- * for this function in ether.h.  */
+/* smsc LAN9512用の etherWrite() の実装; この関数のドキュメントはether.h
+ * を参照 */
 devcall etherWrite(device *devptr, const void *buf, uint len)
 {
     struct ether *ethptr;
@@ -26,13 +26,14 @@ devcall etherWrite(device *devptr, const void *buf, uint len)
         return SYSERR;
     }
 
-    /* Get a buffer for the packet.  (This may block.)  */
+    /* パケット用のバッファを取得する（ブロックされるかもしれない） */
     req = bufget(ethptr->outPool);
 
-    /* Copy the packet's data into the buffer, but also include two words at the
-     * beginning that contain device-specific flags.  These two fields are
-     * required, although we essentially just use them to tell the hardware we
-     * are transmitting one (1) packet with no extra bells and whistles.  */
+    /* パケットデータをバッファにコピーする。デバイス固有のフラグ用に
+     * 先頭に2ワード分あける。この2つのフィールドは必須であるが、
+     * 基本的には1つのパケットを送信することをハードウェアに伝える
+     * ためだけに使用するものであり余分な装飾はない。
+     */
     sendbuf = req->sendbuf;
     tx_cmd_a = len | TX_CMD_A_FIRST_SEG | TX_CMD_A_LAST_SEG;
     sendbuf[0] = (tx_cmd_a >> 0)  & 0xff;
@@ -47,17 +48,17 @@ devcall etherWrite(device *devptr, const void *buf, uint len)
     STATIC_ASSERT(SMSC9512_TX_OVERHEAD == 8);
     memcpy(sendbuf + SMSC9512_TX_OVERHEAD, buf, len);
 
-    /* Set total size of the data to send over the USB.  */
+    /* USB上で送信するデータの合計サイズをセットする*/
     req->size = len + SMSC9512_TX_OVERHEAD;
 
-    /* Submit the data as an asynchronous bulk USB transfer.  In other words,
-     * this tells the USB subsystem to send begin sending the data over the USB
-     * to the SMSC LAN9512 USB Ethernet Adapter.  At some later time when all
-     * the data has been transferred over the USB, smsc9512_tx_complete() will
-     * be called by the USB subsystem.  */
+    /* データを非同期バルクUSB転送として送信する。言い換えると、USBサブ
+     * システムにSMSC LAN9512 USB EthernetアダプタにUSB経由でデータの
+     * 送信を開始するよう指示する。その後、USB上ですべてのデータが転送
+     * されるとUSBサブシステムから smsc9512_tx_complete() がコールされる
+     */
     usb_submit_xfer_request(req);
 
-    /* Return the length of the packet written (not including the
-     * device-specific fields that were added). */
+    /* 書き出したパケットの長さを返す（追加したデバイス固有フィールドは
+     * 含まない） */
     return len;
 }
