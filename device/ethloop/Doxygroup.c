@@ -1,9 +1,10 @@
 /**
- * @defgroup ethloop Ethernet Loopback
+ * @defgroup ethloop Ethernetループバック
  * @ingroup devices
- * @brief Ethernet Loopback Device Driver
+ * @brief Ethernetループバックデバイスドライバ
  *
- * This is a driver for a device that presents itself as an @ref etherdriver
- * "Ethernet Driver" but actually just writes packets into a buffer and reads
- * them back from the same buffer.
+ * @ref etherdriver "Ethernet Driver" と自称している
+ * デバイスドライバであるが、実際は、パケットをバッファに
+ * 書き込み、その同じバッファからパケットを読み出して
+ * いるだけである。
  */

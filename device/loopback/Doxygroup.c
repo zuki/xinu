@@ -1,9 +1,9 @@
 /**
- * @defgroup loopback Loopback
+ * @defgroup loopback ループバック
  * @ingroup devices
- * @brief Loopback Device Driver
+ * @brief ループバックデバイスドライバ
  *
- * This module implements a loopback device.  Data written to a loopback device
- * is placed into an internal buffer and then provided to later reads from the
- * device.
+ * このモジュールはループバックデバイスを実装している。ループバック
+ * デバイスに書き出されたデータは内部バッファに格納され、後ほど
+ * デバイスからの読み込みに提供される。
  */

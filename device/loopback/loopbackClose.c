@@ -13,9 +13,9 @@
 /**
  * @ingroup loopback
  *
- * Close a loopback device.
- * @param devptr loopback device table entry
- * @return OK if loopback is closed properly, otherwise SYSERR
+ * ループバックデバイスをクローズする.
+ * @param devptr ループバック用デバイステーブルエントリ
+ * @return ループバックのクローズに成功した場合は OK、それ以外は SYSERR
  */
 devcall loopbackClose(device *devptr)
 {

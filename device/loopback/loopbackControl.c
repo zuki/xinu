@@ -11,12 +11,12 @@
 /**
  * @ingroup loopback
  *
- * Control function for loopback devices.
- * @param devptr device table entry
- * @param func control function to execute
- * @param arg1 first argument for the control function
- * @param arg2 second argument for the control function
- * @return the result of the control function
+ * ループバックデバイスの制御関数.
+ * @param devptr デバイステーブルエントリ
+ * @param func 実行する制御関数
+ * @param arg1 制御関数に渡す第1引数
+ * @param arg2 制御関数に渡す第2引数
+ * @return 制御関数の結果
  */
 devcall loopbackControl(device *devptr, int func, long arg1, long arg2)
 {

@@ -14,9 +14,9 @@ struct loopback looptab[NLOOPBACK];
 /**
  * @ingroup loopback
  *
- * Initialize loopback device
- * @param devptr 
- * @return OK on open
+ * ループバックデバイスを初期化する
+ * @param devptr
+ * @return OK
  */
 devcall loopbackInit(device *devptr)
 {

@@ -14,9 +14,9 @@ struct ethloop elooptab[NETHLOOP];
 /**
  * @ingroup ethloop
  *
- * Initialize ethloop device
- * @param devptr 
- * @return OK on open
+ * ethloopデバイスを初期化する
+ * @param devptr
+ * @return OK
  */
 devcall ethloopInit(device *devptr)
 {

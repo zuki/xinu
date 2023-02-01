@@ -13,21 +13,22 @@
 /**
  * @ingroup ethloop
  *
- * Read data from an Ethernet Loopback device.  This will block until data has
- * been made available by a call to ethloopWrite().
+ * Ethernetループバックデバイスからデータを読み込む.
+ * ethloopWrite() を呼び出すことによりデータが利用可能に
+ * なるまでブロックされる。
  *
  * @param devptr
- *      Pointer to the device table entry for the ethloop.
+ *      ethloop用のデバイステーブルエントリへのポインタ
  *
  * @param buf
- *      Buffer into which to place the read data.
+ *      読み込んだデータを置くバッファ
  *
  * @param len
- *      Maximum length of the data to read, in bytes.
+ *      読み込むデータの（バイト単位の）最大長
  *
  * @return
- *      On success, returns the number of bytes read, which will be less than or
- *      equal to @p len.  Otherwise returns SYSERR.
+ *      成功の場合、読み込んだバイト数を返す。これは @p len 以下である。
+ *      それ以外は SYSERR を返す。
  */
 devcall ethloopRead(device *devptr, void *buf, uint len)
 {
@@ -45,7 +46,7 @@ devcall ethloopRead(device *devptr, void *buf, uint len)
         return SYSERR;
     }
 
-    /* wait until the buffer has a packet */
+    /* バッファにパケットが置かれるまで待機する */
     wait(elpptr->sem);
 
     pkt = elpptr->buffer[elpptr->index];

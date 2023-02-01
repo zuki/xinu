@@ -16,12 +16,12 @@
 /**
  * @ingroup ethloop
  *
- * Control function for ethloop devices.
- * @param devptr ethloop device table entry
- * @param func control function to execute
- * @param arg1 first argument for the control function
- * @param arg2 second argument for the control function
- * @return the result of the control function
+ * ethloopデバイスの制御関数.
+ * @param devptr ethloop用のデバイステーブルエントリ
+ * @param func 実行する制御関数
+ * @param arg1 制御関数に渡す第1引数
+ * @param arg2 制御関数に渡す第2引数
+ * @return 生後関数の結果
  */
 devcall ethloopControl(device *devptr, int func, long arg1, long arg2)
 {

@@ -11,20 +11,20 @@
 /**
  * @ingroup loopback
  *
- * Write data to the loopbock device.
+ * ループバックデバイスにデータを書き出す.
  *
- * @param devptr 
- *      Pointer to the loopback device to write to.
+ * @param devptr
+ *      データを書き出すループバックデバイスへのポインタ
  * @param buf
- *      Buffer of data to write.
+ *      書き出すデータを格納したバッファ
  * @param len
- *      Number of bytes of data to write.
+ *      書き出すデータのバイト数
  *
  * @return
- *      On success, returns the number of bytes written, which may be less than
- *      @p len in the event of a write error.  Alternatively, @c SYSERR is
- *      returned if the loopback device is not open or if a write error occurred
- *      before any data at all was successfully written.
+ *      成功の場合、書き出したバイト数を返す。書き出しエラーが発生した
+ *      場合、これは @p len 未満になる場合がある。また、ループバック
+ *      デバイスがオープンされていない、または、データが1文字も書き出す
+ *      前にエラーが発生した場合は @c SYSERR を返す。
  */
 devcall loopbackWrite(device *devptr, const void *buf, uint len)
 {

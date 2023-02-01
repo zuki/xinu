@@ -22,42 +22,42 @@
 #define ELOOP_CTRL_SETFLAG  2
 #define ELOOP_CTRL_CLRFLAG	3
 
-#define ELOOP_FLAG_HOLDNXT	0x01  /**< place next written pkt in hold  */
-#define ELOOP_FLAG_DROPNXT	0x04  /**< drop next written pkt           */
-#define ELOOP_FLAG_DROPALL	0x08  /**< drop all written pkts           */
+#define ELOOP_FLAG_HOLDNXT	0x01  /**< 次に書き込まれたPKTを保留にする  */
+#define ELOOP_FLAG_DROPNXT	0x04  /**< 次に書かきもれたPKTを破棄する    */
+#define ELOOP_FLAG_DROPALL	0x08  /**< 書き込まれたすべてのPKTを破棄する */
 
 #define ELOOP_STATE_FREE        0
 #define ELOOP_STATE_ALLOC       1
 
 /**
- * Loopback device control block
+ * ループバックデバイスコントロールブロック
  */
 struct ethloop
 {
-    int state;                      /**< device state                       */
-    device *dev;                    /**< device table entry                 */
-    int poolid;                     /**< poolid for the buffer pool         */
-    uchar flags;                    /**< flags                              */
+    int state;                      /**< デバイスの状態                     */
+    device *dev;                    /**< デバイステーブルエントリ           */
+    int poolid;                     /**< バッファプールのID                 */
+    uchar flags;                    /**< フラグ                             */
 
-    /* Packet queue */
-    int index;                  /**< index of first packet in buffer    */
-    semaphore sem;              /**< number of packets in buffer        */
-    int count;                      /**< number of packets in buffer        */
-    char *buffer[ELOOP_NBUF];   /**< input buffer                       */
-    int pktlen[ELOOP_NBUF];         /**< length of packet in buffer         */
+    /* パケットキュー */
+    int index;                      /**< バッファ内の最初のパケットのindex  */
+    semaphore sem;                  /**< バッファ内のパケット数             */
+    int count;                      /**< バッファ内のパケット数             */
+    char *buffer[ELOOP_NBUF];       /**< 入力バッファ                       */
+    int pktlen[ELOOP_NBUF];         /**< バッファ二日パケット長             */
 
-    /* Hold packet */
-    semaphore hsem;                 /**< number of held packets             */
-    char *hold;                 /**< hold buffer                        */
-    int holdlen;                    /**< length of packet in hold buffer    */
+    /* 保持パケット */
+    semaphore hsem;                 /**< 保持パケット数                     */
+    char *hold;                     /**< 保持バッファ                       */
+    int holdlen;                    /**< 保持バッファ内のパケット長         */
 
-    /* Statistics */
-    uint nout;                      /**< number of packets written          */
+    /* 統計 */
+    uint nout;                      /**< 書き込まれたパケット数             */
 };
 
 extern struct ethloop elooptab[];
 
-/* Driver functions */
+/* ドライバ関数 */
 devcall ethloopInit(device *);
 devcall ethloopOpen(device *);
 devcall ethloopClose(device *);

@@ -12,16 +12,16 @@
 /**
  * @ingroup loopback
  *
- * Put a character onto the loopback buffer
+ * ループバックバッファに1文字置く
  *
  * @param devptr
- *      Loopback device
+ *      ループバックデバイス
  * @param ch
- *      character to output
+ *      出力する文字
  *
  * @return
- *      @p ch as an <code>unsigned char</code> cast to an @c int on success; @c
- *      SYSERR if there is no room in the buffer.
+ *      成功した場合は <code>char</code> の @p ch を
+ *      @c int にキャストして返す; バッファに空きがない場合は SYSERR を返す。
  */
 devcall loopbackPutc(device *devptr, char ch)
 {
@@ -41,12 +41,12 @@ devcall loopbackPutc(device *devptr, char ch)
     }
 
     i = (lbkptr->index + semcount(lbkptr->sem)) % LOOP_BUFFER;
-    lbkptr->buffer[i] = ch;
+    lbkptr->buffer[i] = (uchar)ch;
 
     /* signal that more data is on the buffer */
     signal(lbkptr->sem);
 
     restore(im);
 
-    return (uchar)ch;
+    return ch;
 }

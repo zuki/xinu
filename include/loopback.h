@@ -12,35 +12,35 @@
 #include <semaphore.h>
 
 #ifndef LOOP_BUFFER
-#define LOOP_BUFFER 1024        /**< loopback buffer length             */
+#define LOOP_BUFFER 1024        /**< ループバックバッファ長            */
 #endif
 
-/* LOOP device states */
+/* ループバックデバイスの状態定義 */
 #define LOOP_STATE_FREE     0
 #define LOOP_STATE_ALLOC    1
 
-/* loopbackControl() functions  */
-#define LOOP_CTRL_SET_FLAG  0x01 /**< set flags                         */
-#define LOOP_CTRL_CLR_FLAG  0x02 /**< clear flags                       */
+/* loopbackControl() 関数  */
+#define LOOP_CTRL_SET_FLAG  0x01 /**< フラグをセットする                */
+#define LOOP_CTRL_CLR_FLAG  0x02 /**< フラグをクリアする                */
 
-/* loopback flags */
-#define LOOP_NONBLOCK       0x01 /**< Reading and writing do not block  */
+/* ループバックフラグ */
+#define LOOP_NONBLOCK       0x01 /**< 読み書きでブロックしない          */
 
 /**
- * Loopback device control block
+ * ループバックデバイスコントロールブロック
  */
 struct loopback
 {
-    int state;                  /**< LOOP_STATE_*above                  */
-    int index;                  /**< index of first char in buffer      */
-    int flags;                      /**< loopback control flags             */
-    semaphore sem;              /**< number of characters in buffer     */
-    uchar buffer[LOOP_BUFFER];   /**< input buffer                       */
+    int state;                  /**< 状態: LOOP_STATE_*                 */
+    int index;                  /**< バッファ内の最初の文字のインデックス */
+    int flags;                  /**< ループバック制御フラグ             */
+    semaphore sem;              /**< バッファ荷の文字数                 */
+    uchar buffer[LOOP_BUFFER];  /**< 入力バッファ                       */
 };
 
 extern struct loopback looptab[];
 
-/* Driver functions */
+/* ドライバ関数 */
 devcall loopbackInit(device *);
 devcall loopbackOpen(device *);
 devcall loopbackClose(device *);

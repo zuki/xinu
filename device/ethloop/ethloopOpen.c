@@ -13,9 +13,9 @@
 /**
  * @ingroup ethloop
  *
- * Open an ethloop device. 
- * @param devptr ethloop device table entry
- * @return OK if ethloop is opened properly, otherwise SYSERR
+ * ethloopデバイスをオープンする.
+ * @param devptr ethloop用のデバイステーブルエントリ
+ * @return ethloopのオープンに成功したら OK、そうでなければ SYSERR
  */
 devcall ethloopOpen(device *devptr)
 {
@@ -26,17 +26,17 @@ devcall ethloopOpen(device *devptr)
     elpptr = &elooptab[devptr->minor];
     im = disable();
 
-    /* Make sure the ethloop is actually closed */
+    /* ethloopはオープン済みでないこと */
     if (ELOOP_STATE_FREE != elpptr->state)
     {
         goto out_restore;
     }
 
-    /* Clear flags and stats */
+    /* フラグと統計をクリアする */
     elpptr->flags = 0;
     elpptr->nout = 0;
 
-    /* Create semaphores */
+    /* セマフォを作成する */
     elpptr->sem = semcreate(0);
     if (SYSERR == (int)elpptr->sem)
     {
@@ -49,7 +49,7 @@ devcall ethloopOpen(device *devptr)
         goto out_free_sem;
     }
 
-    /* Initialize buffers */
+    /* バッファを初期化する */
     bzero(elpptr->buffer, sizeof(elpptr->buffer));
     bzero(elpptr->pktlen, sizeof(elpptr->pktlen));
     elpptr->index = 0;
@@ -57,18 +57,19 @@ devcall ethloopOpen(device *devptr)
     elpptr->holdlen = 0;
     elpptr->count = 0;
 
-    /* Allocate a buffer pool  */
+    /* バッファプールを割り当てる  */
     elpptr->poolid = bfpalloc(ELOOP_BUFSIZE, ELOOP_NBUF);
     if (SYSERR == elpptr->poolid)
     {
         goto out_free_hsem;
     }
 
-    /* Link ethloop record with device table entry and mark ethloop as open */
+    /* ethloopレコードをデバイステーブルエントリに結びつけ、
+     * オープン済みとマークする */
     elpptr->state = ELOOP_STATE_ALLOC;
     elpptr->dev = devptr;
 
-    /* Success */
+    /* 成功 */
     retval = OK;
     goto out_restore;
 

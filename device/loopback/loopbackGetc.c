@@ -14,15 +14,15 @@
 /**
  * @ingroup loopback
  *
- * Get a character from the loopback buffer, possibly blocking.
+ * ループバックバッファから1文字取得する、ブロックされる可能性がある.
  *
  * @param devptr
- *      Pointer to the loopback device.
+ *      ループバックデバイスへのポインタ
  *
  * @return
- *      The resulting @p ch as an <code>unsigned char</code> cast to an @c int
- *      on success; @c EOF if there is no data available and the device is in
- *      nonblocking mode.
+ *      成功した場合は、<code>unsigned char</code> として得られた @p ch を
+ *      @c int にキャストして返す。データがなく、デバイスがノンブロッキング
+ *      モードの場合は @c EOF を返す。
  */
 devcall loopbackGetc(device *devptr)
 {

@@ -11,19 +11,19 @@
 /**
  * @ingroup loopback
  *
- * Read up to the specified number of characters from a loopback.
+ * ループバックから指定した文字数だけ読み込む.
  *
- * @param devptr 
- *      Loopback device to read from.
+ * @param devptr
+ *      読み込むループバックデバイス
  * @param buf
- *      Buffer into which to place the read data.
+ *      読み込んだデータを置くバッファ
  * @param len
- *      Maximum number of characters to read.
+ *      読み込む最大文字数
  *
  * @return
- *      Returns the number of characters read, which may be less than @p len if
- *      @c EOF or a read error occurs.   Alternatively, if the loopback device
- *      is not open, returns @c SYSERR.
+ *      読み込んだ文字数を返す。 @c EOF または読み込みエラーが発生した
+ *      場合、これは @p len より小さくなる場合がある。また、ループバック
+ *      デバイスがオープンされていない場合は @c SYSERR を返す。
  */
 devcall loopbackRead(device *devptr, void *buf, uint len)
 {

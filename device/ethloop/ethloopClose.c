@@ -12,9 +12,9 @@
 /**
  * @ingroup ethloop
  *
- * Close a ethloop device.
- * @param devptr ethloop device table entry
- * @return OK if ethloop is closed properly, otherwise SYSERR
+ * ethloopデバイスをクローズする.
+ * @param devptr ethloop用のデバイステーブルエントリ
+ * @return ethloopのクローズに成功したら OK、そうでなければ SYSERR
  */
 devcall ethloopClose(device *devptr)
 {
@@ -24,21 +24,21 @@ devcall ethloopClose(device *devptr)
     elpptr = &elooptab[devptr->minor];
     im = disable();
 
-    /* Make sure the ethloop is actually open */
+    /* ethloopはオープン済みであること */
     if (ELOOP_STATE_ALLOC != elpptr->state)
     {
         restore(im);
         return SYSERR;
     }
 
-    /* free the semaphores */
+    /* セマフォを開放する */
     semfree(elpptr->sem);
     semfree(elpptr->hsem);
 
-    /* free the buffer pool */
+    /* バッファプールを開放する */
     bfpfree(elpptr->poolid);
 
-    /* mark as not open */
+    /* オープンされていないとマークする */
     elpptr->dev = NULL;
     elpptr->state = ELOOP_STATE_FREE;
     restore(im);

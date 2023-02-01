@@ -1,6 +1,6 @@
 /**
  * @file     loopbackOpen.c
- * 
+ *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
@@ -13,9 +13,9 @@
 /**
  * @ingroup loopback
  *
- * Open a loopback device. 
- * @param devptr loopback device table entry
- * @return OK if loopback is opened properly, otherwise SYSERR
+ * ループバックデバイスをオープンする.
+ * @param devptr ループバック用デバイステーブルエントリ
+ * @return ループバックのオープンに成功したら OK、それ以外は SYSERR
  */
 devcall loopbackOpen(device *devptr)
 {
@@ -25,14 +25,14 @@ devcall loopbackOpen(device *devptr)
     lbkptr = &looptab[devptr->minor];
 
     im = disable();
-    /* Check if loopback is already open */
+    /* ループバックがすでにお～っ分済みかチェックする */
     if (LOOP_STATE_FREE != lbkptr->state)
     {
         restore(im);
         return SYSERR;
     }
 
-    /* Create new semaphore */
+    /* 新たにセマフォを作成する */
     lbkptr->sem = semcreate(0);
 
     if (SYSERR == lbkptr->sem)
@@ -41,10 +41,10 @@ devcall loopbackOpen(device *devptr)
         return SYSERR;
     }
 
-    /* Zero out the buffer */
+    /* バッファを0クリア */
     bzero(lbkptr->buffer, LOOP_BUFFER);
 
-    /* Zero out flags */
+    /* フラグを0で初期化 */
     lbkptr->flags = 0;
 
     lbkptr->state = LOOP_STATE_ALLOC;
