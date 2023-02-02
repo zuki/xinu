@@ -1,19 +1,19 @@
 /**
  * @defgroup usb USB
  * @ingroup devices
- * @brief Universal Serial Bus 2.0 subsystem
+ * @brief USB 2.0サブシステム
  *
- * @section usb_support USB support
- * 
- * @defgroup usbcore USB Core Driver
- * @brief USB device model and API for USB device drivers
+ * @section usb_support USBサポート
+ *
+ * @defgroup usbcore USBコアドライバ
+ * @brief USBデバイスモデルとUSBデバイスドライバのためのAPI
  * @ingroup usb
  *
- * @defgroup usbhub USB Hub Driver
- * @brief Driver for USB hub devices
+ * @defgroup usbhub USBハブドライバ
+ * @brief USBハブデバイス用のドライバ
  * @ingroup usb
  *
- * @defgroup usbhcd USB Host Controller Driver
- * @brief Platform-dependent code to actually send and receive data over the USB
+ * @defgroup usbhcd USBホストコントローラドライバ
+ * @brief 実際にデータをUSB経由で送受信するためのプラットフォーム固有のコード
  * @ingroup usb
  */

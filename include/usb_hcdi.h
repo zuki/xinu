@@ -2,15 +2,15 @@
  * @file usb_hcdi.h
  * @ingroup usbhcd
  *
- * This file declares and documents the interface to the USB host controller
- * expected by the USB core driver.  In the USB 2.0 specification such an
- * interface is referred to as the HCDI (Host Controller Driver Interface).  The
- * purpose of this design is to isolate dependencies on the specific USB Host
- * Controller hardware, which (perhaps unfortunately) is not standardized by the
- * USB 2.0 specification itself.
+ * このファイルでは、USBコアドライバが期待するUSBホストコントローラへの
+ * インタフェースを宣言し、ドキュメント化する。USB 2.0仕様ではこのような
+ * インタフェースはHCDI (Host Controller Driver Interface)と呼ばれている。
+ * この設計の目的は、特定のUSBホストコントローラハードウェアへの依存を
+ * 分離することである。これは（おそらく残念なことに）USB 2.0仕様自体では
+ * 標準化されていない。
  *
- * The HCDI is only intended to be used by the USB core driver (not by USB
- * device drivers).
+ * HCDIはUSBコアドライバ（USBデバイスドライバではなく）だけに使用される
+ * ことを意図している。
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
@@ -24,44 +24,44 @@ struct usb_xfer_request;
 /**
  * @ingroup usbhcd
  *
- * Powers on, resets, and initializes the USB Host Controller, placing it in a
- * known state ready to be used.  This must be called after hcd_power_on() but
- * before calling any other Host Controller Driver Interface functions.
+ * USBホストコントローラの電源投入、リセット、初期化を行い、使用可能な
+ * 既知の状態にする. これは hcd_power_on() を呼び出した後で、かつ、他のホスト
+ * コントローラドライバインタフェース関数を呼び出す前に呼び出す必要がある。
  *
  * @return
- *      ::USB_STATUS_SUCCESS if successful; another ::usb_status_t error code
- *      otherwise.
+ *      成功した場合は ::USB_STATUS_SUCCESS; そうでない場合は、::usb_status_t の
+ *      エラーコード
  */
 usb_status_t hcd_start(void);
 
 /**
  * @ingroup usbhcd
  *
- * Stops the USB Host Controller, reversing any effects of a successful call to
- * hcd_start().  Intended to be used only if USB initialization fails at a later
- * stage.
+ * hcd_start() の呼び出しが成功した時とは逆の処理を行い、USBホスト
+ * コントローラを停止する.  後の段階でUSBの初期化に失敗した場合にのみ
+ * 使用することを意図しいる。
  */
 void hcd_stop(void);
 
 /**
  * @ingroup usbhcd
  *
- * Submits a transfer request to the USB Host Controller for completion.  As
- * described in the documentation for usb_submit_xfer_request(), this is
- * intended to be an asynchronous interface.  Also, the Host Controller Driver
- * is responsible for any intelligent scheduling of requests.
+ * 転送リクエストをUSBホストコントローラに送信して転送を実行する.
+ * usb_submit_xfer_request() のドキュメントにあるように、これは非同期の
+ * インタフェースを意図している。また、ホストコントローラドライバは
+ * リクエストのインテリジェントなスケジューリングを行う責任がある。
  *
  * @param req
- *      Pointer to the request to complete.  See the implementation of
- *      usb_submit_xfer_request() in the USB core driver for the sanity checks
- *      that are performed on the request before passing it to the Host
- *      Controller Driver.
+ *      実行するリクエストへのポインタ。ホストコントローラドライバに
+ *      渡す前にリクエストに対して行うサニティチェックについては
+ *      USBコアドライバの usb_submit_xfer_request() の実装を参照されたい。
  *
  * @return
- *      ::USB_STATUS_SUCCESS if the request was successfully queued (not
- *      necessarily completed or even started yet);
- *      ::USB_STATUS_INVALID_PARAMETER if the Host Controller Driver or Host
- *      Controller hardware itself does not support the request type or speed.
+ *      リクエストのエンキュー（必ずしも実行が化膿したわけではない、
+ *      まだ開始もしていないかもしれない）が成功した場合は ::USB_STATUS_SUCCESS;
+ *      ホストコントローラドライバまたはホストコントローラハードウェアが
+ *      指定されたリクエストのタイプまたはスピードをサポートしていない場合は
+ *      ::USB_STATUS_INVALID_PARAMETER
  */
 usb_status_t hcd_submit_xfer_request(struct usb_xfer_request *req);
 

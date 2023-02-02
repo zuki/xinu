@@ -2,7 +2,7 @@
  * @file usb_util.h
  * @ingroup usbcore
  *
- * Miscellaneous definitions used by the USB code.
+ * USBコアで使用される様々な定義.
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
@@ -17,27 +17,27 @@ struct usb_device;
 
 /**********************************************************************/
 
-/* Configuration variables (could be moved somewhere else).  */
+/* コンフィグレーション変数（他のファイルに移動したほうがよいかも） */
 
-/** Enable USB "embedded" mode: if set to TRUE, there will be no USB debugging,
- * info, or error messages, and the 'usbinfo' shell command will not be
- * available.  This will reduce the compiled code size significantly.  */
+/** USB "embedded" モードを有効にする: TRUE をセットすると、USB
+ * デバッグ、情報、エラーメッセージは表示されず、'usbinfo' シェル
+ * コマンドも使用できなくなる。コンパイル済のコードサイズを大幅に削減
+ * する  */
 #define USB_EMBEDDED                FALSE
 
-/** Minimum priority for USB messages.  Only messages with priority greater than
- * or equal to this will be printed.  */
+/** USBメッセージの最小優先度. これ以上の優先度を持つメッセージ
+ * だけが表示される */
 #define USB_MIN_LOG_PRIORITY        4
 
 /**********************************************************************/
 
-/** Priority for USB error messages.  */
+/** USBエラーメッセージの優先度.  */
 #define USB_LOG_PRIORITY_ERROR      3
 
-/** Priority for USB informational messages, such as a device being attached or
- * detached.  */
+/** USB情報メッセージ（デバイの着脱など）の優先度. */
 #define USB_LOG_PRIORITY_INFO       2
 
-/** Priority for USB debugging messages.  */
+/** USBデバッグメッセージの優先度.  */
 #define USB_LOG_PRIORITY_DEBUG      1
 
 #if USB_EMBEDDED && USB_MIN_LOG_PRIORITY <= USB_LOG_PRIORITY_ERROR
@@ -76,38 +76,38 @@ void usb_log(int priority, const char *func,
 #define usb_info(format, ...)  usb_dev_info (NULL, format, ##__VA_ARGS__)
 #define usb_debug(format, ...) usb_dev_debug(NULL, format, ##__VA_ARGS__)
 
-/** Status code returned by many functions in the USB subsystem.  The generic
- * Xinu SYSERR does not provide enough information in many cases.  */
+/** USBサブシステムの多くの関数が返すステータスコード. 汎用的なXinu SYSERRでは
+ * 十分な情報が得られない場合が数多くある。  */
 typedef enum usb_status {
 
-    /** Function successful.  */
+    /** 関数は成功した.  */
     USB_STATUS_SUCCESS                   =  0,
 
-    /** USB device was detached.  */
+    /** USBデバイスが取り外された.  */
     USB_STATUS_DEVICE_DETACHED           = -1,
 
-    /** USB device is unsupported by the driver.  */
+    /** このUSBデバイスはドライバでサポートされていない.  */
     USB_STATUS_DEVICE_UNSUPPORTED        = -2,
 
-    /** Hardware error of some form occurred.  */
+    /** 何らかのハードウェアエラーが発生した.  */
     USB_STATUS_HARDWARE_ERROR            = -3,
 
-    /** Invalid data was received.  */
+    /** 不正なデータを受信した.  */
     USB_STATUS_INVALID_DATA              = -4,
 
-    /** An invalid parameter was passed to the function.  */
+    /** 関数に不正な引数が渡された.  */
     USB_STATUS_INVALID_PARAMETER         = -5,
 
-    /** The USB transfer has not yet been processed.  */
+    /** USB転送はまだ処理されていない  */
     USB_STATUS_NOT_PROCESSED             = -6,
 
-    /** Failed to allocated needed memory.  */
+    /** 必要なメモリの割り当てに失敗した.  */
     USB_STATUS_OUT_OF_MEMORY             = -7,
 
-    /** The operation timed out.  */
+    /** 操作がタイム・アウトした.  */
     USB_STATUS_TIMEOUT                   = -8,
 
-    /** The request is unsupported.  */
+    /** このリクエストはサポートされていない.  */
     USB_STATUS_UNSUPPORTED_REQUEST       = -9,
 } usb_status_t;
 

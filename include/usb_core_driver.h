@@ -3,8 +3,7 @@
  * @ingroup usbcore
  *
  * コアUSBドライバへのインタフェース。これはUSBデバイスドライバと
- * ある程度はホストコントローラドライバにより仕様されることを意図
- * している。
+ * 一部ホストコントローラドライバが使用することを意図している。
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
@@ -25,7 +24,7 @@ struct usb_xfer_request;
  * @ingroup usbcore
  *
  * 非同期（割り込み駆動）USB転送が完了、または失敗したときに呼び出される
- * 関数の型。
+ * 関数の型.
  * これはIRQを無効にして呼び出される。一般に、このコールバックは受信した
  * データを何らかの方法で処理し（転送が入力で成功した場合）、その後、
  * struct usb_xfer_requestを解放、または再投入することが期待されている。
@@ -35,7 +34,7 @@ typedef void (*usb_xfer_completed_t)(struct usb_xfer_request *req);
 /**
  * @ingroup usbcore
  *
- * 非同期（割り込み駆動）USB 転送要求の仕様。
+ * 非同期（割り込み駆動）USB 転送要求の仕様.
  * コントロール、バルク、インターラプトのいずれかの転送要求である。
  * これらの構造体を取得するには usb_alloc_xfer_request() を呼び出すか、
  * 別の方法で手動でメモリを割り当てて usb_init_xfer_request() を呼び
@@ -55,7 +54,7 @@ struct usb_xfer_request
 {
 
     /*********************
-     * 入呂っく変数      *
+     * 入力変数      *
      *********************/
 
     /** 通信相手のUSBデバイス  */
@@ -144,11 +143,10 @@ struct usb_xfer_request
 /**
  * @ingroup usbcore
  *
- * Information about a USB device driver.  This should be declared staticly by
- * the driver, then registered with the USB core driver using
- * usb_register_device_driver().  The callback functions specified in the
- * structure will then be called automatically by the USB core driver at
- * appropriate times.
+ * USBデバイスドライバに関する情報.  これはドライバにより静的に宣言され、
+ * その後 usb_register_device_driver() を使用してUSBコアドライバに
+ * 登録する必要がある。この構造体で指定されているコールバック関数は
+ * USBコアドライバから適切なタイミングで自動的に呼び出される。
  */
 struct usb_device_driver
 {
@@ -236,7 +234,7 @@ struct usb_device_driver
 /**
  * @ingroup usbcore
  *
- * USBデバイスに関する情報。これは、USBコアからデバイスドライバの
+ * USBデバイスに関する情報. これは、USBコアからデバイスドライバの
  * @ref usb_device_driver::bind_device "bind_device" コールバックと
  * @ref usb_device_driver::unbind_device "unbind_device" コールバックに
  * 提供される。（ハブドライバを除く）デバイスドライバはこの構造体の

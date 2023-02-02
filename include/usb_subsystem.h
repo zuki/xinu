@@ -2,8 +2,8 @@
  * @file usb_subsystem.h
  * @ingroup usb
  *
- * Interface to the USB (Universal Serial Bus) subsystem from other operating
- * system code.
+ * オペレーティングシステムの他のコードからUSBサブシステムへの
+ * インタフェース.
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
