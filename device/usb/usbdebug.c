@@ -3,16 +3,17 @@
  * @ingroup  usbcore
  * @ingroup  usb
  *
- * This file contains USB core functions not strictly necessary for USB to
- * actually operate.  This includes:
+ * このファイルにはUSBが実際に動作するために厳密には必要でない
+ * USBのコア機能が含まれている。これには以下が含まれる。
  *
- * - Printing debugging, informational, and error messages
- * - Printing the state of the USB (through usbinfo()).
- * - Obtaining human-readable string descriptors from USB devices.
- * - Translating certain constants into strings describing them.
+ * - デバッグ、情報提供、エラーメッセージの表示する。
+ * - USBの状態を表示する（usbinfo()）。
+ * - USBデバイスから人間が読める文字列ディスクリプタを取得する。
+ * - 特定の定数をそれを説明する文字列に変換する。
  *
- * To disable all the above functionality, set USB_EMBEDDED to TRUE in
- * usb_util.h.  Obviously, only do this if you know what you're doing.
+ * 上記の機能をすべて無効にするには usb_util.h で USB_EMBEDDED に
+ * TRUE をセットする。もちろん、自分が何をしているか分かっている
+ * 場合のみ、この設定を行うこと。
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
@@ -28,10 +29,9 @@
 #if !USB_EMBEDDED
 
 #if USB_MIN_LOG_PRIORITY <= USB_LOG_PRIORITY_ERROR
-/*
- * Synchronously writes an error, informational, or debugging message to the
- * serial device.  Don't call this directly; use usb_debug(), usb_info(), or
- * usb_error() instead.
+/**
+ * エラー、情報、デバッグの各メッセージを同期的にシリアルデバイスに書き出す.
+ * この関数を直接呼び出さず、usb_debg(), usb_info(), usb_error() を使用する。
  */
 void usb_log(int priority, const char *func,
              struct usb_device *dev, const char *format, ...)
@@ -73,15 +73,13 @@ void usb_log(int priority, const char *func,
 /**
  * @ingroup usbcore
  *
- * Translates a ::usb_status_t into a string describing it.
+ * ::usb_status_t をそれを説明する文字列に変換する.
  *
  * @param status
- *      A ::usb_status_t error code returned by one of the functions in Xinu's
- *      USB subsystem.
+ *      XinuのUSBサブシステムの関数から返された ::usb_status_t エラーコード
  *
  * @return
- *      A constant string describing the error, or "unknown error" if the error
- *      code is not recognized.
+ *      エラーを説明する文字列。エラーコードが認識できない場合は "unknown error"
  */
 const char *
 usb_status_string(usb_status_t status)
@@ -115,13 +113,12 @@ usb_status_string(usb_status_t status)
 /**
  * @ingroup usbcore
  *
- * Translates a USB class code into a string describing it.
+ * USBクラスコードをそれを説明する文字列に変換する.
  *
  * @param class_code
- *      A USB class code constant.
+ *      USBクラスコード定数
  * @return
- *      A constant string describing the USB class, or "Unknown" if the class
- *      code was not recognized.
+ *      USBクラスコードを説明する文字列。クラスコードが認識できない場合は "Unknown"
  */
 const char *
 usb_class_code_to_string(enum usb_class_code class_code)
@@ -159,13 +156,13 @@ usb_class_code_to_string(enum usb_class_code class_code)
 /**
  * @ingroup usbcore
  *
- * Translates a USB speed constant into a string describing it.
+ * USB速度定数をそれを説明する文字列に変換する.
  *
  * @param speed
- *      A USB speed constant.
+ *      USB速度定数
  *
  * @return
- *      "high", "full", "low", or "unknown".
+ *      "high", "full", "low", "unknown"のいずれか。
  */
 const char *
 usb_speed_to_string(enum usb_speed speed)
@@ -185,13 +182,13 @@ usb_speed_to_string(enum usb_speed speed)
 /**
  * @ingroup usbcore
  *
- * Translates a USB transfer type constant into a string describing it.
+ * USB転送タイプ定数をそれを説明する文字列に変換する.
  *
  * @param type
- *      A USB transfer type constant.
+ *      USB転送タイプ定数
  *
  * @return
- *      "Control", "Isochronous", "Bulk", "Interrupt", or "Unknown".
+ *      "Control", "Isochronous", "Bulk", "Interrupt", "Unknown" のいずれか
  */
 const char *
 usb_transfer_type_to_string(enum usb_transfer_type type)
@@ -213,13 +210,13 @@ usb_transfer_type_to_string(enum usb_transfer_type type)
 /**
  * @ingroup usbcore
  *
- * Translates a USB direction constant into a string describing it.
+ * USB方向定数をそれを説明する文字列に変換する.
  *
  * @param dir
- *      A USB direction constant.
+ *      USB方向定数
  *
  * @return
- *      "OUT", "IN", or "Unknown".
+ *      "OUT", "IN", "Unknown" のいずれか
  */
 const char *
 usb_direction_to_string(enum usb_direction dir)
@@ -236,8 +233,8 @@ usb_direction_to_string(enum usb_direction dir)
 
 
 /**
- * Lazy conversion from UTF-16LE to ASCII that replaces non-ASCII UTF-16LE code
- * points with question marks.
+ * UTF-16LEからASCIIへの遅延変換で、ASCIIでないUTF-16LEのコードポイントを
+ * クエスチョンマークに置き換える.
  */
 static void
 utf16le_to_ascii(const uint16_t utf16le_str[], uint nchars, char *ascii_str)
@@ -260,26 +257,25 @@ utf16le_to_ascii(const uint16_t utf16le_str[], uint nchars, char *ascii_str)
 /**
  * @ingroup usbcore
  *
- * Reads a USB string descriptor from a device.
+ * デバイスからUSBストリングディスクリプタを読み込む.
  *
  * @param dev
- *      Pointer to the USB device structure for the device from which to read
- *      the string descriptor.
+ *      ストリングディスクリプタを読み込むデバイスのUSBデバイス構造体へのポインタ
  * @param index
- *      Index of the string descriptor to read.  For example, the iProduct
- *      member of the device descriptor specifies the index of the string
- *      descriptor that contains the product name.
+ *      読み込むストリングディスクリプタのインデックス. たとえば、製品名を含む
+ *      ストリングディスクリプタのインデックスを指定するデバイスディスクリプタの
+ *      iProductメンバー。
  * @param lang_id
- *      Language ID of the language to request.  Note: the available language
- *      IDs can be retrieved by requesting the string descriptor of index 0 with
- *      any language ID.
+ *      リクエストする言語の言語ID. 利用可能な言語IDは任意の言語IDについて
+ *      インデックス 0 のストリングディスクリプタをリクエストすることにより
+ *      取得できる。
  * @param buf
- *      Buffer in which to place the string descriptor.
+ *      ストリングディスクリプタを置くバッファ
  * @param buflen
- *      Maximum length in bytes to read.
+ *      読み込む最大バイト長
  *
  * @return
- *      See usb_get_descriptor().
+ *      usb_get_descriptor() を参照
  */
 usb_status_t
 usb_get_string_descriptor(struct usb_device *dev, uint8_t index, uint16_t lang_id,
@@ -297,25 +293,22 @@ usb_get_string_descriptor(struct usb_device *dev, uint8_t index, uint16_t lang_i
 /**
  * @ingroup usbcore
  *
- * Retrieves the English version (if any) of a USB string descriptor and
- * "translates" it from UTF-16LE to ASCII.  The resulting string is
- * null-terminated.  UTF-16LE codepoints outside the ASCII range are simply
- * replaced with question marks.
+ * USBストリングディスクリプタの英語版（もしあれば）を取得し、UTF-16LEから
+ * ASCIIに"変換"する. 変換後の文字列はヌル終端である。ASCIIの範囲外の
+ * UTF-16LEコードポイントはクエスチョンマークに置き換えられる。
  *
  * @param dev
- *      Pointer to the USB device structure for the device from which to read
- *      the string descriptor.
+ *      ストリングディスクリプタを読み込むデバイスのUSBデバイス構造体へのポインタ
  * @param iString
- *      Index of the string descriptor to read.
+ *      読み込むストリングディスクリプタのインデックス
  * @param strbuf
- *      Buffer in which to place the ASCII string.
+ *      ASCII文字列を置くバッファ
  * @param strbufsize
- *      Length of the @p strbuf buffer.
+ *      @p strbuf のバッファ長
  *
  * @return
- *      Any value that can be returned by usb_get_string_descriptor(), plus
- *      ::USB_STATUS_INVALID_DATA if the list of available language IDs is
- *      empty.
+ *      usb_get_string_descriptor()が返す任意の値, 利用可能な言語IDリストが
+ *      からの場合は ::USB_STATUS_INVALID_DATA
  */
 usb_status_t
 usb_get_ascii_string(struct usb_device *dev, uint32_t iString,
@@ -331,14 +324,14 @@ usb_get_ascii_string(struct usb_device *dev, uint32_t iString,
     uint num_languages;
     uint num_chars;
 
-    /* Get the list of available languages.  */
+    /* 利用可能な言語リストを取得する  */
     status = usb_get_string_descriptor(dev, 0, 0, &buf.desc, sizeof(buf));
     if (status != USB_STATUS_SUCCESS)
     {
         return status;
     }
 
-    /* Make sure the list of available languages is nonempty.  */
+    /* 利用可能な言語リストがから出ないことを確認する  */
     num_languages = (buf.desc.bLength - sizeof(struct usb_descriptor_header)) /
                         sizeof(uint16_t);
     if (num_languages == 0)
@@ -347,8 +340,8 @@ usb_get_ascii_string(struct usb_device *dev, uint32_t iString,
         return USB_STATUS_INVALID_DATA;
     }
 
-    /* Choose the first listed variant of English, or fall back to the first
-     * language listed if English is not found.  */
+    /* リストの最初にある英語バリアントを選択する。英語が見つからない場合は
+     * リストの最初にある言語にフォールバックする。 */
     lang_id = buf.desc.bString[0];
     for (i = 0; i < num_languages; i++)
     {
@@ -359,7 +352,7 @@ usb_get_ascii_string(struct usb_device *dev, uint32_t iString,
         }
     }
 
-    /* Get the actual string descriptor we wanted.  */
+    /* 実際に必要なストリングディスクリプタを取得する  */
     status = usb_get_string_descriptor(dev, iString, lang_id,
                                        &buf.desc, sizeof(buf));
     if (status != USB_STATUS_SUCCESS)
@@ -367,7 +360,7 @@ usb_get_ascii_string(struct usb_device *dev, uint32_t iString,
         return status;
     }
 
-    /* "Translate" the string from UTF-16LE to ASCII.  */
+    /* 文字列をUTF-16LEからASCIIに"変換"する */
     num_chars = min((buf.desc.bLength - sizeof(struct usb_descriptor_header)) /
                                 sizeof(uint16_t), strbufsize - 1);
     utf16le_to_ascii(buf.desc.bString, num_chars, strbuf);
@@ -376,15 +369,14 @@ usb_get_ascii_string(struct usb_device *dev, uint32_t iString,
 }
 
 /**
- * Translates a bcdUSB (binary-coded-decimal USB version) value into a
- * human-readable string.
+ * bcdUSB （bcd表記のUSBバージョン）を人間の読める文字列に変換する.
  *
  * @param bcdUSB
- *      The bcdUSB value (e.g. from a USB device descriptor) to translate.
+ *      変換するbcdUSB値（たとえば、USBデバイスディスクリプタから）
  *
  * @return
- *      A pointer to a staticly allocated string describing the USB version.  It
- *      will be changed on the next call to this function.
+ *      USBバージョンを表す静的に割当られた文字列へのポインタ. この関数を
+ *      次に呼び出した際にはこれは変化する。
  */
 static const char *
 usb_bcd_version_to_string(uint16_t bcdUSB)
@@ -405,14 +397,14 @@ usb_bcd_version_to_string(uint16_t bcdUSB)
 /**
  * @ingroup usbcore
  *
- * Returns a fairly detailed, human-readable description of a USB device.
+ * USBデバイスのかなり詳しい人間の読める記述.
  *
  * @param dev
- *      USB device to get a description of.
+ *      記述を取得するUSBデバイス
  *
  * @return
- *      A string describing the device.  The returned string is statically
- *      allocated and will be changed on the next call to this function.
+ *      デバイスを記述する文字列. 返される文字列は静的に割り当てら得たものであり、
+ *      この関数を次に呼び出した際には変化する。
  */
 const char *
 usb_device_description(const struct usb_device *dev)
@@ -586,7 +578,7 @@ usb_print_configuration(const struct usb_device *dev)
 }
 
 /**
- * Print information about a USB device.
+ * USBデバイスに関する情報を表示する.
  */
 static usb_status_t
 usbinfo_device_callback(struct usb_device *dev)
@@ -637,11 +629,12 @@ usbinfo_tree_callback(struct usb_device *dev)
 /**
  * @ingroup usb
  *
- * Print information about all devices attached to the USB.  This uses printf()
- * and therefore should be called with interrupts enabled (e.g. by the shell).
+ * USBに接続されているすべてのデバイスに関する情報を表示する.
+ * これは printf() を使用するので、（シェルなどから）割り込みを
+ * 有効にして呼び出す必要がある。
  *
  * @return
- *      ::SYSERR if USB subsystem is not initialized; ::OK otherwise.
+ *      USBサブシステムが初期化されていない場合は ::SYSERR; そうでなければ ::OK
  */
 syscall usbinfo(void)
 {
@@ -657,11 +650,10 @@ syscall usbinfo(void)
         return SYSERR;
     }
 
-    /* USB is a dynamic bus and devices may be attached/detached at any time.
-     * Therefore, we need to "lock" the bus to prevent devices from being
-     * attached or detached from the bus.  Otherwise we may not get a consistent
-     * snapshot of the bus, or a device could even be freed while we're printing
-     * it.  */
+    /* USBは動的なバスであり、デバイスはいつでも着脱される可能性がある。
+     * そのため、デバイスがバスから着脱されるのを防ぐために、バスを
+     * 「ロック」する必要がある。そうしないとバスの正しいスナップショットを
+     * 得られない可能性があり、表示中にデバイスが解放される可能性すらある */
     usb_lock_bus();
     usb_hub_for_device_in_tree(root_hub, usbinfo_device_callback);
 
@@ -671,4 +663,3 @@ syscall usbinfo(void)
     return OK;
 #endif /* !USB_EMBEDDED */
 }
-

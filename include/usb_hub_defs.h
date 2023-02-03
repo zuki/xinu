@@ -2,7 +2,7 @@
  * @file usb_hub_defs.h
  * @ingroup usbhub
  *
- * Standard USB hub structures and constants.
+ * 標準的なUSBハブ構造体と定数.
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
@@ -13,8 +13,7 @@
 
 #define USB_HUB_CHARACTERISTIC_IS_COMPOUND_DEVICE (1 << 2)
 
-/** Standard format of USB hub descriptors.  See Table 11-13 in Section 11.23 of
- * the USB 2.0 specification.  */
+/** USBハブディスクリプタの標準形式.  USB 2.0仕様のセクション11-13、表11-11を参照  */
 struct usb_hub_descriptor {
     uint8_t  bDescLength;
     uint8_t  bDescriptorType;
@@ -22,12 +21,10 @@ struct usb_hub_descriptor {
     uint16_t wHubCharacteristics;
     uint8_t  bPwrOn2PwrGood;
     uint8_t  bHubContrCurrent;
-    uint8_t  varData[]; /* Variable length field; 64 should be the maximum possible
-                      length (255 ports => 2 x 32 bytes of data) */
+    uint8_t  varData[]; /* 可変長フィールド; 64が想定最大超のはず (255ポート => 2 x 32 バイトのデータ) */
 } __packed;
 
-/** USB port status, defined in Section 11.24.2.7 of the USB 2.0 specification.
- * */
+/** USBポートステータス. USB 2.0仕様のセクション11-24.2.7で定義されている */
 struct usb_port_status {
     union {
         uint16_t wPortStatus;
@@ -59,8 +56,7 @@ struct usb_port_status {
     };
 } __packed;
 
-/** USB port features.  see Table 11-17 in Section 11.24.2 of the USB 2.0
- * specification.  */
+/** USBポート機能.  USB 2.0仕様のセクション11-24.2、表11-17を参照 */
 enum usb_port_feature {
     USB_PORT_CONNECTION     = 0,
     USB_PORT_ENABLE         = 1,
@@ -78,8 +74,7 @@ enum usb_port_feature {
     USB_PORT_INDICATOR      = 22,
 };
 
-/** USB hub status, defined in Section 11.24.2.6 of the USB 2.0 specification.
- * */
+/** USBハブsテータす.  USB 2.0仕様のセクション11-24.2.6で定義されている */
 struct usb_hub_status {
     union {
         uint16_t wHubStatus;
@@ -99,8 +94,7 @@ struct usb_hub_status {
     };
 } __packed;
 
-/** Standard USB hub requests.  See Table 11-16 in Section 11.24.2 of the USB
- * 2.0 specification.  */
+/** 標準USBハブリクエスト.  USB 2.0仕様のセクション11-24.2、表11-16を参照  */
 enum usb_hub_request {
     USB_HUB_REQUEST_GET_STATUS       = 0,
     USB_HUB_REQUEST_CLEAR_FEATURE    = 1,

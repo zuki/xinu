@@ -2,8 +2,8 @@
  * @file usb_hub_driver.h
  * @ingroup usbhub
  *
- * Interface to the USB hub driver.  This is intended to be used only by the USB
- * core driver.
+ * USBハブドライバへのインタフェース.  USBコアドライバの使用だけを
+ * 意図している。
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 

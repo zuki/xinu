@@ -3,54 +3,50 @@
  * @ingroup  usbhub
  * @ingroup  usb
  *
- * This file contains the USB (Universal Serial Bus) hub device driver.
+ * このファイルにはUSBハブデバイスドライバが含まれている.
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
 /**
  * @addtogroup usbhub
  *
- * This is the USB Hub driver. Hubs are one of the fundamental devices in USB
- * and are used to provide connection points (ports) for additional devices.
- * Note that even if no "external" hub is plugged in, the USB still will have at
- * least one logical hub (the root hub) and usually additional "internal" hubs.
- * That is, a USB is a tree of devices where the root node and all non-leaf
- * nodes are hubs.  A port on a USB hub may correspond to a port you can
- * physically plug a device into or may correspond to an internal port.
+ * USBハブドライバである。ハブはUSBの基本的なデバイスの1つであり、デバイスを追加
+ * するための接続ポイント（ポート）を提供するために使用される。たとえ、「外部」
+ * ハブが接続されていない場合でも、USBは少なくとも1つ論理ハブ（ルートハブ）を
+ * 持っており、通常は、さらに「内部」ハブが存在することに注意されたい。すわわち、
+ * USBはデバイスのツリーであり、ルートノードと非リーフのすべてのノードがハブである。
+ * USBハブのポートは、デバイスを物理的に差し込むことができるポートに相当する
+ * 場合もあれば、内部ポートに相当する場合もある。
  *
- * This hub driver is an example of a USB device driver, but it is somewhat
- * special as it mandatory to include this driver if USB is supported at all.
- * This is because it would be impossible to access any USB devices if a hub
- * driver were not available.  This hub driver also uses some interfaces in the
- * core driver, such as usb_attach_device(), that are not useful to any other
- * USB device driver.
+ * このハブドライバはUSBデバイスドライバの一例であるがやや特殊なドライバである。
+ * USBをサポートする場合はこのドライバの搭載が義務付けられているからである。
+ * これはハブドライバがないとあらゆるUSBデバイスにアクセスできないからである。
+ * また、このハブドライバは usb_attach_device() など、他のUSBデバイスドライバには
+ * 有用でないコアドライバのインタフェースを使用している。
  *
- * The initial entry point of this USB hub driver is hub_bind_device(), which is
- * called when the USB core has configured a newly attached USB device that may
- * be a hub.  hub_bind_device() is responsible for checking if the device is a
- * hub, and if so, then doing hub-specific setup, including one-time driver
- * initialization, reading the hub descriptor, powering on the ports, and
- * submitting an asynchronous USB interrupt transfer request to the hub's status
- * change endpoint.
+ * このUSBハブドライバの最初のエントリポイントは hub_bind_device() である。
+ * USBコアはハブだと思われる新しく接続されたUSBデバイスを構成した際にこの関数を
+ * 呼び出す。hub_bind_device() は、デバイスがハブであるかどうかをチェックし、
+ * そうである場合、ドライバの一回限りの初期化、ハブディスクリプタの読み込み、
+ * ポートへの電源投入、ハブのステータス変化エンドポイントへの非同期USBインターラプト
+ * 転送リクエストなどのハブ固有のセットアップを行う役割を担っている。
  *
- * Everything else this hub driver does happens asynchronously as a response to
- * a status change request being completed.  Every USB hub has exactly one IN
- * interrupt endpoint called the "status change endpoint".  The hub responds on
- * this endpoint whenever the status of the hub or one of the hub's ports has
- * changed--- for example, when a USB device has been connected or disconnected
- * from a port.
+ * このハブドライバが行う他のすべての処理はステータス変化リクエストの完了に対する
+ * 応答として非同期的に行われる。すべてのUSBハブは「ステータス変化エンド
+ * ポイント」と呼ばれるINインターラプトエンドポイントを1つだけ持っている。ハブの
+ * ステータスまたはハブのポートに変更があった時、たとえば、USBデバイスがポートに
+ * 着脱された時などは常に、ハブはこのエンドポイントに応答する。
  *
- * At the hardware level, when a hub has data to send on its status change
- * endpoint, an interrupt will come in from the USB host controller.  This
- * eventually will result in the status change transfer being completed and
- * hub_status_changed() being called.  Thus, the detection of status changes is
- * interrupt-driven and is not implemented by polling at the software level.
- * (At the hardware level, USB is still a polled bus, but the host controller
- * hardware handles that for us.)  Upon detecting a status change on one or more
- * ports on a hub, the hub driver then must submit one or more control messages
- * to the hub to determine exactly what changed on the affected ports.  However,
- * we defer this work by passing it to a separate thread in order to avoid doing
- * too much synchronous work in interrupt handlers.
+ * ハードウェアレベルでは、ハブにステータス変化エンドポイントに送信する
+ * データがある場合、USBホストコントローラから割り込みが入る。これにより、
+ * 最終的にはステータス変化転送が完了し、hub_status_changed() が呼び出される
+ * ことになる。このようにステータス変化の検出は割り込み駆動であり、ソフトウェア
+ * レベルのポーリングでは実装されていない。（ハードウェアレベルでは依然として、
+ * USBはポーリングバスであるが、ホストコントローラハードウェアがそれを処理して
+ * くれる）。ハブ上の1つ以上のポートでステータス変化を検出すると、ハブドライバは
+ * ハブに1つ以上のコントロールメッセージを送信し、影響を受けたポートがどのように
+ * 変化したのかを正確に判断する必要がある。しかし、割り込みハンドラで多くの同期
+ * 処理を行うのを避けるため、この作業は別のスレッドに渡すことで先送りしている。
  */
 
 #include <stdlib.h>
@@ -60,79 +56,79 @@
 #include <usb_hub_driver.h>
 #include <usb_std_defs.h>
 
-/** Maximum number of ports per hub supported by this driver.  (USB 2.0
- * theoretically allows up to 255 ports per hub.)  */
+/** このドライバがサポートするハブあたりの最大ポート数.
+ * （USB 2.0は理論的にはハブあたり255個までのポートを許容している） */
 #define HUB_MAX_PORTS 16
 
-/** This driver's representation of a USB port.  */
+/** USBポートのこのドライバでの表現  */
 struct usb_port
 {
-    /** Pointer to the USB hub this port is attached to.  */
+    /** このポートが接続しているUSBハブへのポインタ */
     struct usb_hub *hub;
 
-    /** Number of this port (1-based)  */
+    /** このポートの番号（1始まり） */
     uint8_t number;
 
-    /** Pointer to the USB device attached to this port, or NULL if there is
-     * none.  */
+    /** このポートに接続されているUSｂデバイスへのポインタ、
+     * 接続されていない場合は NULL */
     struct usb_device *child;
 
-    /** Status of this port.  */
+    /** このポートのステータス  */
     struct usb_port_status status;
 };
 
-/** This driver's representation of a USB hub.  */
+/** USBハブのこのドライバでの表現  */
 struct usb_hub
 {
-    /** TRUE if this hub structure is being used.  */
+    /** このハブ構造体が使用されている場合は TRUE */
     bool inuse;
 
-    /** Pointer to the USB device of this hub.  */
+    /** このハブのUSBデバイスへのポインタ  */
     struct usb_device *device;
 
-    /** Descriptor of this hub.  */
+    /** このハブのディスクリプタ  */
     struct usb_hub_descriptor descriptor;
 
-    /** Reserve space for the variable-length data at the end of the hub
-     * descriptor.  That is, 'descriptor' may overflow into this field.  */
+    /** ハブディスクリプタの末尾にある可変長データのための予約スペース.
+     * すなわち、'descrptor' はこのフィールドにオーバーフローする。  */
     uint8_t descriptor_varData[64];
 
-    /** Array of this hub's ports.  Only the first descriptor.bNbrPorts entries
-     * will actually be used.  */
+    /** このハブのポート配列. 実際には最初の descriptor.bNbrPorts 個の
+     * エントリだけが使用される */
     struct usb_port ports[HUB_MAX_PORTS];
 };
 
-/** Maximum number of USB hubs that can be attached to the USB at the same time.
+/** USBに同時に接続できるUSBハブの最大数
  */
 #define MAX_NUSBHUBS 16
 
-/** Hub status change data buffers.  */
+/** ハブステータス変化データバッファ  */
 static uint8_t                 hub_status_change_data[MAX_NUSBHUBS][8];
 
-/** Hub status change transfer requests.  */
+/** ハブステータス変化転送リクエスト  */
 static struct usb_xfer_request hub_status_change_requests[MAX_NUSBHUBS];
 
-/** Hub-specific data structures.  */
+/** ハブ固有のデータ構造体  */
 static struct usb_hub          hub_structs[MAX_NUSBHUBS];
 
-/** Bitmask of hubs that have status changes pending.  Note: this can be
- * modified from an interrupt handler in hub_status_changed().  */
+/** ステータス変化が保留されているハブのビットマスク. 注: hub_status_changed() の
+ * 割り込みハンドラで変更される可能性がある  */
 static uint32_t hub_status_change_pending;
 
-/** Semaphore for signaling hub thread when a status change has occurred.  */
+/** ステータス変化が発生した時にハブスレッドに通知するためのセマフォ  */
 static semaphore hub_status_change_sema;
 
-/** Thread ID of the hub thread (hub_thread()).  */
+/** フブスレッドのスレッドID (hub_thread())  */
 static tid_typ hub_thread_tid = BADTID;
 
-/* Allocate a hub structure and associated status change request.  */
+/** ハブ構造体と関連のステータス変化リクエストを割り当てる  */
 static int hub_alloc(void)
 {
     uint i;
     static uint nexthub;
 
-    /* We don't disable IRQs here since this is only called from the bind_device
-     * callback, which is serialized by the USB core.  */
+    /* 個々では割り込みを無効にしない。この関数はUSBコアによりシリアル化されている
+     * bind_device コールバックからしか呼び出されないからである。  */
 
     for (i = 0; i < MAX_NUSBHUBS; i++)
     {
@@ -147,27 +143,27 @@ static int hub_alloc(void)
     return SYSERR;
 }
 
-/* Marks a hub structure as free.  */
+/** ハブ構造体を空きだとマークする */
 static void hub_free(int hubid)
 {
     hub_structs[hubid].inuse = FALSE;
 }
 
-/** Stack size of USB hub thread.  This shouldn't need to be very large, but the
- * hub thread can call into USB device drivers' bind_device and
- * unbind_device callbacks.  */
+/** USBハブスレッドのスタックサイズ.  これはあまり大きくする必要はないが、
+ * ハブスレッドはUSBデバイスドライバのコールバック関数 bind_device と
+ * unbind_device を呼び出すことができる  */
 #define HUB_THREAD_STACK_SIZE 8192
 
-/** Priority of USB hub thread.  This should be fairly high so that changes in
- * USB connectivity can be responded to quickly.  */
+/** USBハブスレッドの優先度.  USB接続の変化に素早く応答できるようにこれは
+ * 非常に高くするべきである。  */
 #define HUB_THREAD_PRIORITY   60
 
-/** Name of USB hub thread.  */
+/** USBハブスレッドの名前  */
 #define HUB_THREAD_NAME "USB hub thread"
 
-/* Reads the hub descriptor and saves it in hub->descriptor.  Note: the hub
- * descriptor is a class-specific descriptor and is NOT the same as the generic
- * device descriptor.  */
+/** ハブディスクリプタを読み込んでhub->descriptorに保存する.  注: ハブ
+ * ディスクリプタはクラス固有のディスクリプであり、一般的なデバイス
+ * ディスクリプタと同じではない  */
 static usb_status_t
 hub_read_descriptor(struct usb_hub *hub)
 {
@@ -189,7 +185,7 @@ hub_read_descriptor(struct usb_hub *hub)
     return status;
 }
 
-/* Retrieves the status of a USB port and saves it in port->status.  */
+/** USBポートのステータスを取得して port->status に保存する.  */
 static usb_status_t
 port_get_status(struct usb_port *port)
 {
@@ -215,19 +211,18 @@ port_get_status(struct usb_port *port)
 }
 
 /**
- * Enables or disables a feature of a USB port.  This corresponds to making a
- * ClearPortFeature or SetPortFeature request as documented in section 11.24 of
- * the USB 2.0 specification.
+ * USBポートの機能を有効/無効にする.  これはUSB 2.0仕様のセクション11.24で
+ * 定義されている ClearPortFeature と SetPortFeature に対応する。
  *
  * @param port
- *      Pointer to the USB port structure.
+ *      USBポート構造体へのポインタ.
  * @param feature
- *      The feature to enable or disable.
+ *      有効/無効にする機能.
  * @param enable
- *      TRUE to enable the feature; FALSE to disable the feature.
+ *      機能を有効にする場合は TRUE; 無効にする場合は FALSE.
  *
  * @return
- *      See usb_control_msg().
+ *      usb_control_msg() を参照.
  */
 static usb_status_t
 port_change_feature(struct usb_port *port, enum usb_port_feature feature,
@@ -255,25 +250,23 @@ port_clear_feature(struct usb_port *port, enum usb_port_feature feature)
     return port_change_feature(port, feature, FALSE);
 }
 
-/** Maximum milliseconds to wait for a port to reset (800 is the same value that
- * Linux uses).  */
+/** ポートがリセットされるのを待つ最大ミリ秒数（800 はLinuxが仕様している値と同じ） */
 #define USB_PORT_RESET_TIMEOUT 800
 
-/** Milliseconds between each status check on the port while waiting for it to
- * finish being reset (Linux uses several values, but 10 in the default case).
- * */
+/** ポートのリセット完了を待つ際にステータスチェックを行う間隔のミリ秒数
+ * （Linuxはいくつかの値を使用しているが、デフォルトは10）
+ */
 #define USB_PORT_RESET_DELAY    10
 
 /**
- * Resets a USB port.
+ * USBポートをリセットする.
  *
  * @param port
- *      Pointer to the USB port structure.
+ *      USBポート構造体へのポインタ.
  *
  * @return
- *      Any value that can be returned by usb_control_msg(), as well as
- *      ::USB_STATUS_TIMEOUT if the hardware is taking too long to acknowledge
- *      that it has finished resetting.
+ *      usb_control_msg() が返す任意の値.  リセットの完了を確認する
+ *      のに非常に時間がかかる場合は ::USB_STATUS_TIMEOUT
  */
 static usb_status_t
 port_reset(struct usb_port *port)
@@ -283,16 +276,16 @@ port_reset(struct usb_port *port)
 
     usb_dev_debug(port->hub->device, "Resetting port %u\n", port->number);
 
-    /* Tell the hardware to reset.  */
+    /* ハードウェアにリセットする湯伝える */
     status = port_set_feature(port, USB_PORT_RESET);
     if (status != USB_STATUS_SUCCESS)
     {
         return status;
     }
 
-    /* Wait until the hardware clears the USB_PORT_RESET flag in the port
-     * status.  USB_STATUS_TIMEOUT is returned if this does not happen after a
-     * certain amount of time.  */
+    /* ハードウェアがポートステータスの USB_PORT_RESET フラグをクリアする
+     * まで待機する。規定の時間が立ってもこれが生じなかった場合は
+     * USB_STATUS_TIMEOUT を返す。 */
     for (i = 0; i < USB_PORT_RESET_TIMEOUT && port->status.reset;
          i += USB_PORT_RESET_DELAY)
     {
@@ -309,24 +302,25 @@ port_reset(struct usb_port *port)
         return USB_STATUS_TIMEOUT;
     }
 
-    /* From Section 9.2.6.2 of the USB 2.0 specification:
+    /* USB 2.0 仕様のセクション 9.2.6.2より:
      *
-     *   "After a port is reset or resumed, the USB System Software is expected
-     *   to provide a "recovery" interval of 10 ms before the device attached to
-     *   the port is expected to respond to data transfers. The device may
-     *   ignore any data transfers during the recovery interval."
+     *   「ポートがリセットまたは再開されたら、USB システムソフトウェアは
+     *   ポートに接続されたデバイスがデータ転送に応答する前に 10 ms の
+     *   『回復』間隔を設けることが期待されている。デバイスは回復間隔中の
+     *   データ転送を無視することができる。」
      *
-     * Apparently, some devices are even slower than this, so we provide even
-     * more recovery time than this.
+     * どうやら、これよりさらに遅いデバイスもあるようなのでこれより大きな
+     * 回復時間を設けている。
      */
     sleep(30);
 
     return USB_STATUS_SUCCESS;
 }
 
-/* This function is called when a new USB device has been connected to a USB
- * port.  It must reset the port, then call into the USB core driver to address
- * and configure the new device attached to the port.  */
+/** この関数は新しいUSBデバイスがUSBポートに接続された際に呼び出される.
+ * この関数はポートをリセットして、USBコアドライバを呼び出して、
+ * ポートに接続された新しいデバイスにアドレスを設定し、構成する必要が
+ * ある。  */
 static void
 port_attach_device(struct usb_port *port)
 {
@@ -358,8 +352,8 @@ port_attach_device(struct usb_port *port)
         return;
     }
 
-    /* Record the speed at which the device is attached.  The hardware knows
-     * what it is; we just need to get it from the port status structure. */
+    /* 接続されたデバイスのスピードを記録する。ハードウェアはそれが何かを
+     * 知っているので、ポートのステータス構造体からそれを取得するだけである。 */
     if (port->status.high_speed_attached)
     {
         new_device->speed = USB_SPEED_HIGH;
@@ -393,8 +387,8 @@ port_attach_device(struct usb_port *port)
     usb_unlock_bus();
 }
 
-/* Unbinds the driver from the USB device, if any, attached to a USB port and
- * frees the device structure.  */
+/** （もしあれば）USBポートに接続されていたUSBデバイスからドライバを
+ * アンバインドしてデバイス構造体を開放する */
 static void
 port_detach_device(struct usb_port *port)
 {
@@ -410,15 +404,16 @@ port_detach_device(struct usb_port *port)
     }
 }
 
-/* Respond to status change on a USB port.  */
+/** USBポートのステータス変化に応答する.  */
 static void
 port_status_changed(struct usb_port *port)
 {
     usb_status_t status;
 
-    /* Retrieve the port status by sending a USB control message.  (This is
-     * stored in port->status and is not the same as the 'status' value
-     * returned, which is the status of getting the port status...)  */
+    /* USBコントロールメッセージを送信してポートステータスを取得する。
+     * これはport->status に格納されており、返り値の `status` と
+     * 同じではない。後者はポートステータスを取得したことのステータスで
+     * あるからである）  */
     status = port_get_status(port);
     if (status != USB_STATUS_SUCCESS)
     {
@@ -431,25 +426,25 @@ port_status_changed(struct usb_port *port)
                   port->status.wPortStatus,
                   port->status.wPortChange);
 
-    /* Handle the various types of status changes.  */
+    /* 様々なタイプのステータス変化を処理する */
 
     if (port->status.connected_changed)
     {
-        /* Connection changed: a device was connected or disconnected.  */
+        /* 接続の変化: デバイスが接続、または切断された */
 
         usb_dev_debug(port->hub->device, "Port %u: device now %s\n",
                       port->number,
                       (port->status.connected ? "connected" : "disconnected"));
 
-        /* Clear/acknowledge connection changed flag.  */
+        /* 接続変化フラグをクリア/確認する */
         port_clear_feature(port, USB_C_PORT_CONNECTION);
 
-        /* Detach old device (if any).  */
+        /* （もしあれば）古いデバイスを取り外す */
         port_detach_device(port);
 
         if (port->status.connected)
         {
-            /* Attach new device.  */
+            /* 新しいデバイスを接続する */
             port_attach_device(port);
         }
     }
@@ -478,15 +473,16 @@ port_status_changed(struct usb_port *port)
 /**
  * @ingroup usbhub
  *
- * Call a function on each USB device in the tree.  This can be used to iterate
- * through every device on the USB.  The calling code is responsible for making
- * sure devices cannot be detached from the USB while this is executing (e.g. by
- * executing with interrupts disabled or by calling usb_lock_bus()).
+ * ツリー内の各USBデバイスに対して関数を呼び出す.  これはUSB上のすべての
+ * デバイスを繰り返し処理するために使用することができる。呼び出し側の
+ * コードはこの関数の実行中にデバイスがUSBから切り離されないようにする
+ * 責任がある（たとえば、割り込みを無効にして実行する、または、
+ * usb_lock_bus() を呼び出すなど）。
  *
  * @param dev
- *      Root of the USB device tree at which to do the iteration.
+ *      繰り返し処理を始めるUSBデバイスツリーのルートデバイス
  * @param callback
- *      Callback function to execute on each device.
+ *      各デバイスに対して実行するコールバック関数
  */
 void usb_hub_for_device_in_tree(struct usb_device *dev,
                                 usb_status_t (*callback)(struct usb_device *))
@@ -509,27 +505,27 @@ void usb_hub_for_device_in_tree(struct usb_device *dev,
 }
 
 /**
- * Routine executed by the hub thread, of which one instance exists no matter
- * how many hubs there are on the USB.  The hub thread is responsible for
- * repeatedly retrieving hub status change requests that have completed, then
- * processing them by retrieving more detailed information about the ports that
- * have had status changes and responsing to them.
+ * ハブスレッドが実行するルーチンであり、USB上にハブがいくつあっても
+ * インスタンスは１つだけ存在する. ハブスレッドは完了したハブのステータス
+ * 変化リクエストを繰り返し取得し、ステータス変化があったポートに関する、
+ * より詳細な情報を取得することによりそれを処理し、それに応答する責任が
+ * ある。
  *
- * Each status change requests is re-submitted after it has been processed.
+ * 各ステータス変化リクエストは処理された後。再発行される。
  *
- * This thread intentionally executes with IRQs enabled so that it can be
- * preempted.
+ * このスレッドは意図的に割り込みを有効にして実行することでプリエンプション
+ * を可能にしている。
  *
  * @return
- *      This thread does not return.
+ *      このスレッドは復帰しない
  */
 static thread
 hub_thread(void)
 {
     for (;;)
     {
-        /* Wait for one or more hub status change messages to arrive, then
-         * process them.  */
+        /* 1つ以上のハブステータス変化メッセージが到着するのを待機して、
+         * 処理する  */
         wait(hub_status_change_sema);
         while (hub_status_change_pending != 0)
         {
@@ -542,9 +538,10 @@ hub_thread(void)
             req = &hub_status_change_requests[hub_id];
             hub = &hub_structs[hub_id];
 
-            /* Clear the status change pending bit for this hub, but temporarily
-             * disable interrupts to avoid a race with hub_status_changed()
-             * modifying the same bitmask for a *different* hub.  */
+            /* このハブ用のステータス変化捕虫ビットをクリアする。
+             * ただし、hub_status_changed() が *別の* ハブの同じビット
+             * マスクを変更する競合を避けるために一時的に割り込みを
+             * 無効にする。 */
             im = disable();
             hub_status_change_pending &= ~(1 << hub_id);
             restore(im);
@@ -556,16 +553,16 @@ hub_thread(void)
 
                 usb_dev_debug(req->dev, "Processing hub status change\n");
 
-                /* The format of the message is a bitmap that indicates which ports have
-                 * had status changes.  We ignore bit 0, which indicates status change
-                 * of the hub device itself.  */
+                /* メッセージフォーマットは、どのポートのステータスに変化が
+                 * あったかを示すビットマップである。ハブデバイス自体の
+                 * ステータス変化を示すビット0 は無視する。 */
                 portmask = 0;
                 for (i = 0; i < req->actual_size; i++)
                 {
                     portmask |= (uint32_t)((uint8_t*)req->recvbuf)[i] << (i * 8);
                 }
 
-                /* Process ports on which a status change was detected.  */
+                /* ステータス変化が検知されたポートを処理する */
                 for (i = 0; i < hub->descriptor.bNbrPorts; i++)
                 {
                     if (portmask & (2 << i))
@@ -580,7 +577,7 @@ hub_thread(void)
                               usb_status_string(req->status));
             }
 
-            /* Re-submit the status change request.  */
+            /* ステータス変化リクエストを再発行する  */
             usb_dev_debug(req->dev, "Re-submitting status change request\n");
             usb_submit_xfer_request(req);
         }
@@ -589,16 +586,15 @@ hub_thread(void)
 }
 
 /**
- * Callback function that is called when a hub has received data on its status
- * change pipe (which is an IN interrupt endpoint).
+ * ハブがステータス変化パイプ（INインターラプトエンドポイント）でデータを
+ * 受信したときに呼び出されるコールバック関数である.
  *
- * Since this is called from an interrupt handler, we don't really want to
- * process the status change right in this function.  Instead, signal
- * hub_thread() that a status change has occurred.
+ * これは割り込みハンドラから呼ばれるのでこの関数の中でステータス変化を
+ * 処理したくはない。代わりに hub_thread() にステータ変化が発生したことを
+ * 通知する。
  *
  * @param req
- *      USB transfer request from the hub's status change endpoint that has
- *      completed.
+ *      完了したハブステータス変化エンドポイントからのUSB転送リクエスト
  */
 static void
 hub_status_changed(struct usb_xfer_request *req)
@@ -611,7 +607,7 @@ hub_status_changed(struct usb_xfer_request *req)
 }
 
 /**
- * Onetime initialization of the USB hub driver.
+ * USBハブドライバの一回限りの初期化.
  */
 static usb_status_t
 hub_onetime_init(void)
@@ -620,18 +616,18 @@ hub_onetime_init(void)
 
     if (BADTID != hub_thread_tid)
     {
-        /* Already initialized.  */
+        /* 初期化済み */
         return USB_STATUS_SUCCESS;
     }
 
-    /* Create semaphore for signaling hub thread.  */
+    /* ハブスレッドに通知するためのセマフォを作成する */
     hub_status_change_sema = semcreate(0);
     if (SYSERR == hub_status_change_sema)
     {
         return USB_STATUS_OUT_OF_MEMORY;
     }
 
-    /* Initialize available status change requests and hub structures.  */
+    /* 利用可能なステータス変化リクエストとハブ構造体を初期化する */
     hub_status_change_pending = 0;
     for (i = 0; i < MAX_NUSBHUBS; i++)
     {
@@ -642,7 +638,7 @@ hub_onetime_init(void)
         hub_structs[i].inuse = FALSE;
     }
 
-    /* Create hub thread.  */
+    /* ハブスレッドを作成する */
     hub_thread_tid = create(hub_thread, HUB_THREAD_STACK_SIZE, HUB_THREAD_PRIORITY,
                             HUB_THREAD_NAME, 0);
     if (SYSERR == ready(hub_thread_tid, RESCHED_NO))
@@ -656,8 +652,8 @@ hub_onetime_init(void)
 }
 
 /**
- * Initializes the port structures of a USB hub; also checks whether the hub has
- * more ports than are supported by this driver.
+ * USBハブのポート構造体を初期化する; また、ハブがこのドライバがサポートする
+ * より多くのポートを持ていないかチェックする。
  */
 static usb_status_t
 hub_init_ports(struct usb_hub *hub)
@@ -682,7 +678,7 @@ hub_init_ports(struct usb_hub *hub)
 }
 
 /**
- * Powers on all ports of a USB hub.
+ * PUSBハブのすべてのポートの電源を入れる.
  */
 static usb_status_t
 hub_power_on_ports(struct usb_hub *hub)
@@ -705,21 +701,21 @@ hub_power_on_ports(struct usb_hub *hub)
         }
     }
 
-    /* According to the section 11.11 of the USB 2.0 specification,
-     * bPwrOn2PwrGood of the hub descriptor is the "Time (in 2 ms intervals)
-     * from the time the power-on sequence begins on a port until power is good
-     * on that port."  Here we insert this required delay.  */
+    /* USB 2.0仕様のセクション11.11によると、ハブディクリプタの
+     * bPwrOn2PwrGoodは「あるポートでの電源投入シーケンスの開始から
+     * そのポートで電源が安定するまでの時間（2ms間隔）」である。
+     * ここでこの必要な遅延時間を挿入する。  */
     sleep(2 * hub->descriptor.bPwrOn2PwrGood);
 
     return USB_STATUS_SUCCESS;
 }
 
 /**
- * Attempts to bind a new USB device to the hub driver.  This the @ref
- * usb_device_driver::bind_device "bind_device" implementation for the hub
- * driver and therefore complies with its documented behavior.  However, an
- * important implementation detail is that the hub driver fully supports
- * multiple concurrent hubs (up to ::MAX_NUSBHUBS, to be exact).
+ * 新しいUSBデバイスのハブドライバへのバインドを試みる.  これはハブ
+ * ドライバ用の @ref usb_device_driver::bind_device "bind_device" の
+ * 実装であるのでその文書化されている動作に準拠している。ただし、
+ * 重要な実装の詳細として、ハブドライバは複数の同時接続ハブを完全に
+ * サポートしている（正確には ::MAX_NUSBHUBS 個まで）。
  */
 static usb_status_t
 hub_bind_device(struct usb_device *dev)
@@ -728,7 +724,7 @@ hub_bind_device(struct usb_device *dev)
     struct usb_hub *hub;
     int hub_id;
 
-    /* Check whether the new device a hub or not.  */
+    /* 新しいデバイス化ハブであるかチェックする  */
     if (dev->descriptor.bDeviceClass != USB_CLASS_CODE_HUB ||
         dev->config_descriptor->bNumInterfaces != 1 ||
         dev->interfaces[0]->bNumEndpoints != 1 ||
@@ -738,14 +734,14 @@ hub_bind_device(struct usb_device *dev)
         return USB_STATUS_DEVICE_UNSUPPORTED;
     }
 
-    /* Do one-time initialization of the hub driver.  */
+    /* ハブドライバの一回限りの初期化を行う */
     status = hub_onetime_init();
     if (status != USB_STATUS_SUCCESS)
     {
         return status;
     }
 
-    /* Allocate per-hub data.  */
+    /* ハブデータを割り当てる  */
     hub_id = hub_alloc();
     if (SYSERR == hub_id)
     {
@@ -756,7 +752,7 @@ hub_bind_device(struct usb_device *dev)
     hub = &hub_structs[hub_id];
     hub->device = dev;
 
-    /* Read the hub descriptor.  */
+    /* はブディクリプタを読み込む  */
     status = hub_read_descriptor(hub);
     if (status != USB_STATUS_SUCCESS)
     {
@@ -770,7 +766,7 @@ hub_bind_device(struct usb_device *dev)
                             "compound device " : "",
                   hub->descriptor.bNbrPorts);
 
-    /* Initialize the appropriate number of USB port structures.  */
+    /* 適切な数のUSBポート構造体を初期化する  */
     status = hub_init_ports(hub);
     if (status != USB_STATUS_SUCCESS)
     {
@@ -778,7 +774,7 @@ hub_bind_device(struct usb_device *dev)
         return status;
     }
 
-    /* Power on the ports attached to this hub.  */
+    /* このハブに接続されているポートの電源を入れる */
     status = hub_power_on_ports(hub);
     if (status != USB_STATUS_SUCCESS)
     {
@@ -786,7 +782,7 @@ hub_bind_device(struct usb_device *dev)
         return status;
     }
 
-    /* Submit status change request.  */
+    /* ステータス変化リクエストを発行する  */
     hub_status_change_requests[hub_id].dev = dev;
     hub_status_change_requests[hub_id].endpoint_desc = dev->endpoints[0][0];
     dev->driver_private = (void*)hub_id;
@@ -800,11 +796,10 @@ hub_bind_device(struct usb_device *dev)
 }
 
 /**
- * Unbinds the hub driver from a hub that has been detached.  This the @ref
- * usb_device_driver::unbind_device "unbind_device" implementation for the hub
- * driver and therefore complies with its documented behavior.  However, an
- * important detail that only the hub driver needs to deal with is recursively
- * detaching any child devices.
+ * デタッチされたハブからハブドライバをアンバインドする.  これはハブドライバ用の
+ * @ref usb_device_driver::unbind_device "unbind_device" の実装であるので
+ * その文書化されている動作に準じている。ただし、ハブドライバのみが対処する
+ * 必要がある重要な詳細は子デバイスを再帰的にデタッチすることである。
  */
 static void
 hub_unbind_device(struct usb_device *hub_device)
@@ -814,7 +809,7 @@ hub_unbind_device(struct usb_device *hub_device)
     irqmask im;
     uint i;
 
-    /* Detach any devices attached to this hub (a.k.a. "child" devices).  */
+    /* このハブに接続されているすべてのデバイス（「子」デバイス）を取り外す  */
     for (i = 0; i < hub->descriptor.bNbrPorts; i++)
     {
         if (hub->ports[i].child != NULL)
@@ -823,23 +818,23 @@ hub_unbind_device(struct usb_device *hub_device)
         }
     }
 
-    /* Remove the status change request for the detached hub from the mask of
-     * status change requests waiting to be processed by the hub thread.  To do
-     * this, we must clear the corresponding bit in hub_status_change_pending.
-     * Interrupts must be temporarily disabled to avoid racing with
-     * hub_status_changed() trying to set bit for a *different* hub in the same
-     * bitmask.  */
+    /* ハブスレッドで処理待ちのステータス変化リクエストのマスクから取り外された
+     * ハブのステータス変化リクエストを削除する.  これを行うには
+     * hub_status_change_pending の対応するビットをクリアする必要がある。
+     * 「別の」ハブの同じビットマスクのビットを設定しようとする
+     * hub_status_changed() と競合しないように割り込みを一時的に無効にする
+     * 必要がある。 */
     im = disable();
     hub_status_change_pending &= ~(1 << hub_id);
     restore(im);
 
-    /* Free the `struct usb_hub' for the detached hub.  */
+    /* 取り外されたハブ用のusb_hub構造体を開放する */
     hub_free(hub_id);
 }
 
 /**
  * @ingroup usbhub
- * Declaration of the USB hub device driver.
+ * USBハブデバイスドライバの宣言.
  */
 const struct usb_device_driver usb_hub_driver = {
     .name          = "USB Hub Driver",

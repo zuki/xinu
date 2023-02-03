@@ -498,7 +498,7 @@ usb_get_descriptor(struct usb_device *dev, uint8_t bRequest, uint8_t bmRequestTy
                            buf, len);
 }
 
-/* USBデバイスのデバイスディスクリプタ、またはそのプリフィックスを
+/** USBデバイスのデバイスディスクリプタ、またはそのプリフィックスを
  * dev->descriptorに読み込む */
 static usb_status_t
 usb_read_device_descriptor(struct usb_device *dev, uint16_t maxlen)
@@ -514,7 +514,7 @@ usb_read_device_descriptor(struct usb_device *dev, uint16_t maxlen)
                            &dev->descriptor, maxlen);
 }
 
-/* USBデバイスから指定したコンフィグレーションディスクリプタ、または、その
+/** USBデバイスから指定したコンフィグレーションディスクリプタ、または、その
  * プリフィックスをバッファ位に読み込む */
 static usb_status_t
 usb_get_configuration_descriptor(struct usb_device *dev, uint8_t configuration_idx,
@@ -671,7 +671,7 @@ out_invalid:
     return USB_STATUS_INVALID_DATA;
 }
 
-/* USBデバイスのバスアドレスをセットする */
+/** USBデバイスのバスアドレスをセットする */
 static usb_status_t
 usb_set_address(struct usb_device *dev, uint8_t address)
 {
@@ -690,7 +690,7 @@ usb_set_address(struct usb_device *dev, uint8_t address)
     return status;
 }
 
-/* USBデバイスをデバイスのコンフィグレーションディスクリプタの1つの
+/** USBデバイスをデバイスのコンフィグレーションディスクリプタの1つの
  * bConfigurationValueフィールドで指定されたコンフィグレーションで構成する
  */
 static usb_status_t
