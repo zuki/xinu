@@ -2,72 +2,71 @@
  * @file usb_dwc_hcd.c
  * @ingroup usbhcd
  *
- * This file contains a USB Host Controller Driver for the Synopsys DesignWare
- * Hi-Speed USB 2.0 On-The-Go Controller.
+ * このファイルにはSynopsys DesignWare Hi-Speed USB 2.0 On-The-Go
+ * Controller用のUSBホストコントローラデバイスが含まれている。
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
 /**
  * @addtogroup usbhcd
  *
- * This is a USB Host Controller Driver (HCD) that interfaces with the Synopsys
- * DesignWare Hi-Speed USB 2.0 On-The-Go Controller, henceforth abbreviated as
- * "DWC".  This is the USB Host Controller used on the BCM2835 SoC used on the
- * Raspberry Pi.
+ * これはRaspberry Piに搭載されているBCM2835 SoCで使用されているUSBホスト
+ * コントローラである。
  *
- * Please note that there is no publicly available official documentation for
- * this particular piece of hardware, and it uses its own custom host controller
- * interface rather than a standard one such as EHCI.  Therefore, this driver
- * was written on a best-effort basis using several sources to gleam the
- * necessary hardware details, including the extremely complicated and difficult
- * to understand vendor-provided Linux driver.
+ * このハードウェアに関する公的に利用できる正式なドキュメントが存在しない
+ * こと、また、EHCIのような標準的なインタフェースではなく独自のカスタム
+ * ホストコントローラインタフェースを使用していることに注意されたい。
+ * そのため、このドライバは、必要なハードウェアの詳細を得るために、ベンダーが
+ * 提供した非常に複雑で理解しにくいLinuxドライバなどのいくつかの情報源を
+ * 使用して、ベストエフォートベースで書かれている。
  *
- * This file implements the Host Controller Driver Interface defined in
- * usb_hcdi.h.  Most importantly, it implements a function to power on and start
- * the host controller (hcd_start()) and a function to send and receive messages
- * over the USB (hcd_submit_xfer_request()).
+ * このファイルでは usb_hcdi.h で定義されているホストコントローラドライバ
+ * インタフェースを実装している。最も重要なのは、ホストコントローラの電源
+ * 投入と起動を行う関数 (hcd_start()) と、USB上でメッセージを送受信する
+ * 関数 (hcd_submit_xfer_request()) を実装していることである。
  *
- * The DWC is controlled by reading and writing to/from memory-mapped registers.
- * The most important registers are the host channel registers.  On this
- * particular hardware, a "host channel", or simply "channel", is a set of
- * registers to which software can read and write to cause transactions to take
- * place on the USB.  A fixed number of host channels exist; on the Raspberry Pi
- * there are 8.  From the software's perspective, transactions using different
- * host channels can be executed at the same time.
+ * DWCはメモリマップドレジスタの読み書きにより制御される。最も重要な
+ * レジスタはホストチャネルレジスタである。このハードウェアにおいて
+ * 「ホストチャネル」または単に「チャネル」とは、ソフトウェアがUSB上で
+ * トランザクションを行えるようにするために読み書きができるレジスタの
+ * セットである。ホストチャネルの数は決まっており、Raspberry Piでは8つ
+ * である。ソフトウェアから見ると、異なるホストチャネルを使用した
+ * トランザクションを同時に実行することが可能である。
  *
- * Some of the host channel registers, as well as other registers, deal with
- * interrupts.  This driver makes use heavy of these and performs all USB
- * transfers in an interrupt-driven manner.  However, due to design flaws in
- * this hardware and in USB 2.0 itself, "interrupt" and "isochronous" transfers
- * still need to make use of software polling when checking for new data, even
- * though each individual transfer is itself interrupt-driven.  This means that,
- * for example, if your USB mouse specifies a polling rate of 100 times per
- * second, then it will, unfortunately, be polled 100 times per second in
- * software.  For more detail about how interrupts can be controlled on this
- * particular hardware, see the comment above dwc_setup_interrupts().
+ * ホストチャネルレジスタの中には割り込みをあつかつものがあります。
+ * このドライバはこれらを多用し、すべてのUSB転送を割り込み駆動で行っている。
+ * しかし、このハードウェアとUSB2.0自体の設計上の欠陥により「インターラプト」
+ * 転送と「アイソクロナス」転送では個々の転送が割り込み駆動であったとしても
+ * 依然として、新しいデータの確認にはソフトウェアポーリングを使用する必要が
+ * ある。これはたとえば、USBマウスのポーリングレートを100回/秒と指定した場合、
+ * 残念ながらソフトウェアでは100回/秒のポーリングが行われることを意味する。
+ * この特殊なハードウェアで割り込みがどのように制御されるかについての詳細は、
+ * dwc_setup_interrupts() のコメントを参照されたい。
  *
- * Another important concept is the idea of "packets", "transactions", and
- * "transfers".  A USB transfer, such as a single control message or bulk
- * request, may need to be split into multiple packets if it exceeds the
- * endpoint's maximum packet size.  Unfortunately, this has to be dealt with
- * explicitly in this code, as this hardware doesn't do it for us.  But at
- * least, from the viewpoint of this software, a "transaction" is essentially
- * the same as a "packet".
+ * もう1つ重要な概念は「パケット」、「トランザクション」、「転送」という
+ * アイデアである。コントロールメッセージ、またはバルクリクエストのような
+ * 1つのUSB転送はそれがエンドポイントの最大パケットサイズを超える場合、
+ * 複数のパケットに分割する必要がある場合がある。残念ながらこのハードウェアは
+ * それをやってくれないのでこのコードで明示的に対処する必要がある。ただし、
+ * 少なくともこのソフトウェアの観点からは、「トランザクション」と「パケット」は
+ * 本質的に同じものである。
  *
- * The "On-The-Go" in the name of this hardware means that it supports the USB
- * On-The-Go protocol, which allows it to act either as a host or a device.
- * However, we only are concerned with it acting as a host, which simplifies our
- * driver.
+ * このハードウェアの名前にある "On-The-Go" は、このハードウェアがUSB
+ * On-The-Goプロトコルをサポートしていることを意味しており、このハード
+ * ウェアはホストとしてもデバイスとしても動作することが可能である。ただし、
+ * ここではホストとして動作だけに関心があるのでドライバは簡潔にすることが
+ * できる。
  *
- * To simplify the USB core software, a useful design technique (as recommended
- * by the USB 2.0 standard and used in other implementations such as Linux's) is
- * to have the HCD present the root hub as a standard USB hub, even if the root
- * hub is integrated with the host controller and does not appear as a standard
- * hub at the hardware level.  This is the case with the DWC, and we implement
- * this design.  Therefore, some code in this file deals with faking requests
- * sent to the root hub.
+ * USBコアソフトウェアを簡潔にするために（USB 2.0使用で推奨されており、
+ * Linuxなどの他の実装で使用されている）有用な設計技法は、たとえルートハブが
+ * ホストコントローラと統合されており、ハードウェアレベルでは標準ハブとは
+ * 見えないとしても、HCDにルートハブを標準USBハブとして提示させるという
+ * ものです。これはDWCにも当てはまり、この設計を実装しています。したがって、
+ * このファイルのコードの一部はルートハブに送信するフェイクリクエストを
+ * 扱っている。
  */
 
+#include <compiler.h>
 #include <interrupt.h>
 #include <mailbox.h>
 #include <string.h>
@@ -79,58 +78,58 @@
 #include <usb_std_defs.h>
 #include "bcm2835.h"
 
-/** Round a number up to the next multiple of the word size.  */
+/** ワードサイズの次の倍数まで数値を丸めあげる  */
 #define WORD_ALIGN(n) (((n) + sizeof(ulong) - 1) & ~(sizeof(ulong) - 1))
 
-/** Determines whether a pointer is word-aligned or not.  */
+/** ポインタがワード境界にあるか判定する  */
 #define IS_WORD_ALIGNED(ptr) ((ulong)(ptr) % sizeof(ulong) == 0)
 
-/** Pointer to the memory-mapped registers of the Synopsys DesignWare Hi-Speed
- * USB 2.0 OTG Controller.  */
+/** Synopsys DesignWare Hi-Speed USB 2.0 OTG Controlleのメモリ
+ * マップドレジスタへのポインタ.  */
 static volatile struct dwc_regs * const regs = (void*)DWC_REGS_BASE;
 
 /**
- * Maximum packet size of any USB endpoint.  1024 is the maximum allowed by USB
- * 2.0.  Most endpoints will provide maximum packet sizes much smaller than
- * this.
+ * USBエンドポイントの最大パケットサイズ.  1024 はUSB 2.0で許された最大数。
+ * ほとんどのエンドポイントはこれより小さな最大パケットサイズを与えることになる。
  */
 #define USB_MAX_PACKET_SIZE 1024
 
 
 /**
- * Stack size of USB transfer request scheduler thread (can be fairly small).
+ * USB転送リクエストスケジューラスレッドのスタックサイズ
+ * （非常に小さくすることが可能）.
  */
 #define XFER_SCHEDULER_THREAD_STACK_SIZE 4096
 
 /**
- * Priority of USB transfer request scheduler thread (should be fairly high so
- * that USB transfers can be started as soon as possible).
+ * USB転送リクエストスケジューラスレッドの優先度（USB転送ができるだけ
+ * 早く開始できるように非常に高くするべきである）.
  */
 #define XFER_SCHEDULER_THREAD_PRIORITY 60
 
-/** Name of USB transfer request scheduler thread.  */
+/** USB転送リクエストスケジューラスレッドの名前 */
 #define XFER_SCHEDULER_THREAD_NAME "USB scheduler"
 
-/** Stack size of USB deferred transfer threads (can be fairly small).  */
+/** USB遅延転送スレッドのスタックサイズ（非常に小さくすることが可能） */
 #define DEFER_XFER_THREAD_STACK_SIZE 4096
 
 /**
- * Priority of USB deferred transfer threads (should be very high since these
- * threads are used for the necessary software polling of interrupt endpoints,
- * which are supposed to have guaranteed bandwidth).
+ * USB遅延転送スレッドの優先度（これらのスレッドは帯域幅が保証されている
+ * 割り込みエンドポイントで必要なソフトウェアポーリングに使用される
+ * ため、非常に高くするべきである）。
  */
 #define DEFER_XFER_THREAD_PRIORITY 100
 
 /**
- * Name of USB defer transfer threads.  Note: including the null-terminator this
- * should be at most TNMLEN, otherwise it will be truncated.
+ * USB遅延転送スレッド名前.  注: ヌル終端を含んでNMLEN以下で
+ * あること、そうでなければ切り詰められることになる。
  */
 #define DEFER_XFER_THREAD_NAME "USB defer xfer"
 
-/** TODO: remove this if appropriate */
+/** TODO: 適切であればこれを削除する */
 #define START_SPLIT_INTR_TRANSFERS_ON_SOF 1
 
-/** USB packet ID constants recognized by the DWC hardware.  */
+/** DWCハードウェアが認識するUSBパケットID定数  */
 enum dwc_usb_pid {
     DWC_USB_PID_DATA0 = 0,
     DWC_USB_PID_DATA1 = 2,
@@ -138,42 +137,42 @@ enum dwc_usb_pid {
     DWC_USB_PID_SETUP = 3,
 };
 
-/** Thread ID of USB transfer request scheduler thread.  */
+/** USB転送リクエストスケジューラスレッドのスレッドID  */
 static tid_typ dwc_xfer_scheduler_tid;
 
-/** Bitmap of channel free (1) or in-use (0) statuses.  */
+/** チャネルステータスを示すビットマップ: 1: 空き、0: 使用中  */
 static uint chfree;
 
 #if START_SPLIT_INTR_TRANSFERS_ON_SOF
-/** Bitmap of channels waiting for start-of-frame  */
+/** SOF (start-of-frame) を待機しているチャネルビットマップ */
 static uint sofwait;
 #endif
 
-/** Semaphore that tracks the number of free channels in chfree bitmask.  */
+/** chfreeビットマップ内の空きチャネルを追跡するセマフォ  */
 static semaphore chfree_sema;
 
 /**
- * Array that holds pointers to the USB transfer request (if any) currently
- * being completed on each hardware channel.
- */
+ * 各ハードウェアチャネルで現在完了しているUSB転送リクエスト
+ * （もしあれば）へのポインタを保持する配列.
+ */ root_hub_configuration
 static struct usb_xfer_request *channel_pending_xfers[DWC_NUM_CHANNELS];
 
-/** Aligned buffers for DMA.  */
+/** DMA用のアライメントされたバッファ. */
 static uint8_t aligned_bufs[DWC_NUM_CHANNELS][WORD_ALIGN(USB_MAX_PACKET_SIZE)]
-                                __aligned(4);
+                    __aligned(4);
 
-/* Find index of first set bit in a nonzero word.  */
+/** 非0のワード内で最初に1がセットされているビットの位置を探す.  */
 static inline ulong first_set_bit(ulong word)
 {
     return 31 - __builtin_clz(word);
 }
 
 /**
- * Finds and reserves an unused DWC USB host channel.  This is blocking and
- * waits until a channel is available.
+ * 未使用のDWC USBホストチャネルを見つけて予約する.
+ * これはブロッキングであり、チャネルが利用可能になるまで待機する。
  *
  * @return
- *      Index of the free channel.
+ *      空きチャネルのインデックス.
  */
 static uint
 dwc_get_free_channel(void)
@@ -190,11 +189,10 @@ dwc_get_free_channel(void)
 }
 
 /**
- * Marks a channel as free.  This signals any thread that may be waiting for a
- * free channel.
+ * チャネルに秋マークを付ける.  秋チャネルを待っているスレッドに通知する。
  *
  * @param chan
- *      Index of DWC USB host channel to release.
+ *      開放するDWC USBホストチャネルのインデックス.
  */
 static void
 dwc_release_channel(uint chan)
@@ -208,7 +206,7 @@ dwc_release_channel(uint chan)
 }
 
 /**
- * Powers on the DWC hardware.
+ * DWCハードウェアに電源を投入する.
  */
 static usb_status_t
 dwc_power_on(void)
@@ -230,17 +228,17 @@ dwc_power_off(void)
 }
 
 /**
- * Performs a software reset of the DWC hardware.  Note: the DWC seems to be in
- * a reset state after the initial power on, so this is only strictly necessary
- * when hcd_start() is entered with the DWC already powered on (e.g. when
- * starting a new kernel directly in software with kexec()).
+ * DWCハードウェアのソフトウェアリセットを実行する.  注: DWC は最初の電源
+ * 投入後はリセット状態にあるだ。したがって、これは厳密にはDWCがすでに電源
+ * 投入済みの状態で hcd_start() に入った場合にのみ必要である（たとえば、
+ * ソフトウェアから kexec() で直接新しいカーネルを起動する場合など)。
  */
 static void
 dwc_soft_reset(void)
 {
     usb_debug("Resetting USB controller\n");
 
-    /* Set soft reset flag, then wait until it's cleared.  */
+    /* ソフトリセットフラグをセットして、クリアされるまで待つ  */
     regs->core_reset = DWC_SOFT_RESET;
     while (regs->core_reset & DWC_SOFT_RESET)
     {
@@ -248,27 +246,28 @@ dwc_soft_reset(void)
 }
 
 /**
- * Set up the DWC OTG USB Host Controller for DMA (direct memory access).  This
- * makes it possible for the Host Controller to directly access in-memory
- * buffers when performing USB transfers.  Beware: all buffers accessed with DMA
- * must be 4-byte-aligned.  Furthermore, if the L1 data cache is enabled, then
- * it must be explicitly flushed to maintain cache coherency since it is
- * internal to the ARM processor.  (This is not currently handled by this driver
- * because Xinu does not enable the L1 data cache.)
+ * DWC OTG USBホストコントローラをDMAモードに設定する.  これによりホスト
+ * コントローラはUSB転送を行う際にインメモリッファに直接アクセスする
+ * ことが可能になる。DMAでアクセスするバッファはすべて4バイトアライ
+ * メントである必要があることに注意された。さらに、L1データキャッシュが
+ * 有効な場合は、キャッシュはARMプロセッサに内蔵されているため、キャッシュ
+ * コヒーレンシを維持するために明示的にフラッシュする必要がある。
+ * （XinuはL1データキャッシュを有効にしないので、現在、このドライバは
+ * これを行っていない。)
  */
 static void
 dwc_setup_dma_mode(void)
 {
-    const uint32_t rx_words = 1024;  /* Size of Rx FIFO in 4-byte words */
-    const uint32_t tx_words = 1024;  /* Size of Non-periodic Tx FIFO in 4-byte words */
-    const uint32_t ptx_words = 1024; /* Size of Periodic Tx FIFO in 4-byte words */
+    const uint32_t rx_words = 1024;  /* Rx FIFOの4バイトワード単位のサイズ */
+    const uint32_t tx_words = 1024;  /* 非周期的Tx FIFO in 4-bytの4バイトワード単位のサイズ */
+    const uint32_t ptx_words = 1024; /* 周期的Tx FIFO in 4-bytの4バイトワード単位のサイズ */
 
-    /* First configure the Host Controller's FIFO sizes.  This is _required_
-     * because the default values (at least in Broadcom's instantiation of the
-     * Synopsys USB block) do not work correctly.  If software fails to do this,
-     * receiving data will fail in virtually impossible to debug ways that cause
-     * memory corruption.  This is true even though we are using DMA and not
-     * otherwise interacting with the Host Controller's FIFOs in this driver. */
+    /* まず、ホストコントローラのFIFOサイズを設定する。これはデフォルト値
+     * （少なくともBroadcomのSynopsys USBブロックのインスタンス）では正しく
+     * 動作しないため必須である。ソフトウェアがこれを行わないと、データの
+     * 受信に失敗し、メモリ破壊が商事sて、事実上デバッグができない事態が
+     * 発生する。これはこのドライバでDMAを使用し、それ以外の方法ではホスト
+     * コントローラのFIFOと相互作用しない場合でも当てはまる。 */
     usb_debug("%u words of RAM available for dynamic FIFOs\n", regs->hwcfg3 >> 16);
     usb_debug("original FIFO sizes: rx 0x%08x,  tx 0x%08x, ptx 0x%08x\n",
               regs->rx_fifo_size, regs->nonperiodic_tx_fifo_size,
@@ -277,17 +276,16 @@ dwc_setup_dma_mode(void)
     regs->nonperiodic_tx_fifo_size = (tx_words << 16) | rx_words;
     regs->host_periodic_tx_fifo_size = (ptx_words << 16) | (rx_words + tx_words);
 
-    /* Actually enable DMA by setting the appropriate flag; also set an extra
-     * flag available only in Broadcom's instantiation of the Synopsys USB block
-     * that may or may not actually be needed.  */
+    /* 適切なフラグを設定することで実際にDMAを有効にする。同時に Synopsys USB
+     * ブロックのBroadcomインスタンスでのみ利用可能な追加フラグも設定する
+     * （実際に必要であるかどうかは不明）。  */
     regs->ahb_configuration |= DWC_AHB_DMA_ENABLE | BCM_DWC_AHB_AXI_WAIT;
 }
 
 /**
- * Read the Host Port Control and Status register with the intention of
- * modifying it.  Due to the inconsistent design of the bits in this register,
- * this requires zeroing the write-clear bits so they aren't unintentionally
- * cleared by writing back 1's to them.
+ * ホストポート制御およびステータスレジスタを変更を意図して読み込む.
+ * このレジスタのビット設計には一貫性がないため、意図しない1の書き戻しで
+ * クリアされないようにライトクリアビットをゼロにする必要がある。
  */
 static union dwc_host_port_ctrlstatus
 dwc_get_host_port_ctrlstatus(void)
@@ -302,8 +300,7 @@ dwc_get_host_port_ctrlstatus(void)
 }
 
 /**
- * Powers on the DWC host port; i.e. the USB port that is logically attached to
- * the root hub.
+ * DWCホストポート（ルートハブに論理的に接続されたUSBポート）に電源を投入する
  */
 static void
 dwc_power_on_host_port(void)
@@ -317,8 +314,7 @@ dwc_power_on_host_port(void)
 }
 
 /**
- * Resets the DWC host port; i.e. the USB port that is logically attached to the
- * root hub.
+ * DWCホストポートをリセットする.
  */
 static void
 dwc_reset_host_port(void)
@@ -327,8 +323,7 @@ dwc_reset_host_port(void)
 
     usb_debug("Resetting host port\n");
 
-    /* Set the reset flag on the port, then clear it after a certain amount of
-     * time.  */
+    /* ポートのリセットフラグをセットし、その後、一定時間待ってクリアする  */
     hw_status = dwc_get_host_port_ctrlstatus();
     hw_status.reset = 1;
     regs->host_port_ctrlstatus = hw_status;
@@ -337,7 +332,7 @@ dwc_reset_host_port(void)
     regs->host_port_ctrlstatus = hw_status;
 }
 
-/** Hard-coded device descriptor for the faked root hub.  */
+/** フェイクルートハブ用のハードコードされたデバイスディスクリプタ  */
 static const struct usb_device_descriptor root_hub_device_descriptor = {
     .bLength = sizeof(struct usb_device_descriptor),
     .bDescriptorType = USB_DESCRIPTOR_TYPE_DEVICE,
@@ -355,8 +350,9 @@ static const struct usb_device_descriptor root_hub_device_descriptor = {
     .bNumConfigurations = 1,
 };
 
-/** Hard-coded configuration descriptor, along with an associated interface
- * descriptor and endpoint descriptor, for the faked root hub.  */
+/** フェイクルート用のハードコードされたコンフィグレーション
+ * ディスクリプタと関連するインタフェースディスクリプタと
+ * エンドポイントディスクリプタ  */
 static const struct {
     struct usb_configuration_descriptor configuration;
     struct usb_interface_descriptor interface;
@@ -394,7 +390,7 @@ static const struct {
     },
 };
 
-/** Hard-coded list of language IDs for the faked root hub.  */
+/** フェイクルート用のハードコードされた言語IDリスト  */
 static const struct usb_string_descriptor root_hub_string_0 = {
     /* bLength is the base size plus the length of the bString */
     .bLength = sizeof(struct usb_string_descriptor) +
@@ -403,7 +399,7 @@ static const struct usb_string_descriptor root_hub_string_0 = {
     .bString = {USB_LANGID_US_ENGLISH},
 };
 
-/** Hard-coded product string for the faked root hub.  */
+/** フェイクルート用のハードコードされた製品文字列  */
 static const struct usb_string_descriptor root_hub_string_1 = {
     /* bLength is the base size plus the length of the bString */
     .bLength = sizeof(struct usb_string_descriptor) +
@@ -418,13 +414,13 @@ static const struct usb_string_descriptor root_hub_string_1 = {
                 'H', 'u', 'b'},
 };
 
-/** Hard-coded table of strings for the faked root hub.  */
+/** フェイクルート用のハードコードされた文字列テーブル.  */
 static const struct usb_string_descriptor * const root_hub_strings[] = {
     &root_hub_string_0,
     &root_hub_string_1,
 };
 
-/** Hard-coded hub descriptor for the faked root hub.  */
+/** フェイクルート用のハードコードされたハブディスクリプタ  */
 static const struct usb_hub_descriptor root_hub_hub_descriptor = {
     /* bDescLength is the base size plus the length of the varData */
     .bDescLength = sizeof(struct usb_hub_descriptor) +
@@ -438,28 +434,29 @@ static const struct usb_hub_descriptor root_hub_hub_descriptor = {
                  0xff, /* PortPwrCtrlMask */ },
 };
 
-/** Hard-coded hub status for the faked root hub.  */
+/** フェイクルート用のハードコードされたハブステータス */
 static const struct usb_device_status root_hub_device_status = {
     .wStatus = USB_DEVICE_STATUS_SELF_POWERED,
 };
 
 /**
- * Pending interrupt transfer (if any) to the root hub's status change endpoint.
+ * ルートハブのステータス変化エンドポイントへの（もしあれば）
+ * 保留中のインターラプト転送
  */
 static struct usb_xfer_request *root_hub_status_change_request = NULL;
 
 /**
- * Saved status of the host port.  This is modified when the host controller
- * issues an interrupt due to a host port status change.  The reason we need to
- * keep track of this status in a separate variable rather than using the
- * hardware register directly is that the changes in the hardware register need
- * to be cleared in order to clear the interrupt.
+ * ホストポートのステータス保存。これはホストポートのステータス変化により
+ * ホストコントローラが割り込みを発行したときに変更される。直接ハードウェア
+ * レジスタを使用せずに別の変数でこのステータスを追跡する必要があるのは、
+ * 割り込みをクリアするためにハードウェアレジスタの変更をクリアする必要が
+ * あるからである。
  */
 static struct usb_port_status host_port_status;
 
 /**
- * Called when host_port_status has been updated so that any status change
- * interrupt transfer that was sent to the root hub can be fulfilled.
+ * host_port_statusが更新された時に呼び出され、ルートハブに送信された
+ * ステータス変化インターラプト転送を処理することができる。
  */
 static void
 dwc_host_port_status_changed(void)
@@ -480,16 +477,15 @@ dwc_host_port_status_changed(void)
 
 
 /**
- * Fake a standard (i.e. not hub-specific) control message request to the root
- * hub.
+ * ルートハブへの標準（ハブ固有でない）コントロールメッセージを偽造する.
  *
  * @param req
- *      Standard request to the root hub to fake.
+ *      偽造するルートハブへの標準リクエスト.
  *
  * @return
- *      ::USB_STATUS_SUCCESS if request successfully processed; otherwise
- *      another ::usb_status_t error code, such as
- *      ::USB_STATUS_UNSUPPORTED_REQUEST.
+ *      リクエストの処理が成功した場合は ::USB_STATUS_SUCCESS;
+ *      そうでない場合は ::USB_STATUS_UNSUPPORTED_REQUEST などの
+ *      ::usb_status_t エラーコード
  */
 static usb_status_t
 dwc_root_hub_standard_request(struct usb_xfer_request *req)
@@ -555,11 +551,11 @@ dwc_root_hub_standard_request(struct usb_xfer_request *req)
 }
 
 /**
- * Fills in a <code>struct ::usb_hub_status</code> (which is in the USB standard
- * format) with the current status of the root hub.
+ * （USB標準形式の） <code>struct ::usb_hub_status</code> にルートハブの現在の
+ * ステータスを設定する.
  *
  * @param status
- *      The hub status structure to fill in.
+ *      設定するハブステータス構造体
  */
 static void
 dwc_get_root_hub_status(struct usb_hub_status *status)
@@ -570,7 +566,7 @@ dwc_get_root_hub_status(struct usb_hub_status *status)
 }
 
 /**
- * Handle a SetPortFeature request on the port attached to the root hub.
+ * ルートハブに接続されたポートへのSetPortFeatureリクエストを処理する.
  */
 static usb_status_t
 dwc_set_host_port_feature(enum usb_port_feature feature)
@@ -590,7 +586,7 @@ dwc_set_host_port_feature(enum usb_port_feature feature)
 }
 
 /**
- * Handle a ClearPortFeature request on the port attached to the root hub.
+ * ルートハブに接続されたポートへのClearPortFeatureリクエストを処理する.
  */
 static usb_status_t
 dwc_clear_host_port_feature(enum usb_port_feature feature)
@@ -619,15 +615,15 @@ dwc_clear_host_port_feature(enum usb_port_feature feature)
 }
 
 /**
- * Fake a hub-class-specific control message request to the root hub.
+ * ルートハブへのハブクラス固有のコントロールメッセージを偽造する.
  *
  * @param req
- *      Hub-class-specific request to the root hub to fake.
+ *      偽造するルートハブへのハブ固有リクエスト.
  *
  * @return
- *      ::USB_STATUS_SUCCESS if request successfully processed; otherwise
- *      another ::usb_status_t error code, such as
- *      ::USB_STATUS_UNSUPPORTED_REQUEST.
+ *      リクエストの処理が成功した場合は ::USB_STATUS_SUCCESS;
+ *      そうでない場合は ::USB_STATUS_UNSUPPORTED_REQUEST などの
+ *      ::usb_status_t エラーコード
  */
 static usb_status_t
 dwc_root_hub_class_request(struct usb_xfer_request *req)
@@ -705,7 +701,7 @@ dwc_root_hub_class_request(struct usb_xfer_request *req)
 }
 
 /**
- * Fake a control transfer to or from the root hub.
+ * ルートハブとの間のコントロール転送を偽造する.
  */
 static usb_status_t
 dwc_root_hub_control_msg(struct usb_xfer_request *req)
@@ -721,22 +717,22 @@ dwc_root_hub_control_msg(struct usb_xfer_request *req)
 }
 
 /**
- * Fake a request to the root hub.
+ * るーとはぶへのリクエストを偽装する.
  */
 static void
 dwc_process_root_hub_request(struct usb_xfer_request *req)
 {
     if (req->endpoint_desc == NULL)
     {
-        /* Control transfer request to/from default control endpoint.  */
+        /* デフォルトコントロールエンドポイントとの間のコントロール転送  */
         usb_debug("Simulating request to root hub's default endpoint\n");
         req->status = dwc_root_hub_control_msg(req);
         usb_complete_xfer(req);
     }
     else
     {
-        /* Interrupt transfer request from status change endpoint.  Assumes that
-         * only one request can be submitted at a time.  */
+        /* ステータス変化エンドポイントからのインターラプト転送リクエスト。
+         * 一度に1リクエストだけしか発行できないと仮定している */
         usb_debug("Posting status change request to root hub\n");
         root_hub_status_change_request = req;
         if (host_port_status.wPortChange != 0)
@@ -747,12 +743,12 @@ dwc_process_root_hub_request(struct usb_xfer_request *req)
 }
 
 /**
- * Starts a low-level transaction on the USB.
+ * USB上の低レベル転送を開始する.
  *
  * @param chan
- *      Index of the host channel to start the transaction on.
+ *      転送を開始するホストチャネルのインデックス
  * @param req
- *      USB request set up for the next transaction
+ *      次のトランザクション用のUSBリクエストセットアップ
  */
 static void
 dwc_channel_start_transaction(uint chan, struct usb_xfer_request *req)
@@ -766,17 +762,16 @@ dwc_channel_start_transaction(uint chan, struct usb_xfer_request *req)
 
     im = disable();
 
-    /* Clear pending interrupts.  */
+    /* 保留中の割り込みをクリアする  */
     chanptr->interrupt_mask.val = 0;
     chanptr->interrupts.val = 0xffffffff;
 
-    /* Set whether this transaction is the completion part of a split
-     * transaction or not.  */
+    /* このトランザクションがスプリットトランザクションの最後の部分であるか否かをセットする  */
     split_control = chanptr->split_control;
     split_control.complete_split = req->complete_split;
     chanptr->split_control = split_control;
 
-    /* Set odd_frame and enable the channel.  */
+    /* odd_frameをセットして、チャネルを有効にする  */
 
     next_frame = (regs->host_frame_number & 0xffff) + 1;
 
@@ -789,12 +784,15 @@ dwc_channel_start_transaction(uint chan, struct usb_xfer_request *req)
     characteristics.channel_enable = 1;
     chanptr->characteristics = characteristics;
 
-    /* Set the channel's interrupt mask to any interrupts we need to ensure that
-     * dwc_interrupt_handler() gets called when the software must take action on
-     * the transfer.  Furthermore, make sure interrupts from this channel are
-     * enabled in the Host All Channels Interrupt Mask Register.  Note: if you
-     * enable more channel interrupts here, dwc_interrupt_handler() needs to be
-     * changed to account for interrupts other than channel halted.  */
+    /* ソフトウェアが転送に対してアクションが必要なときに
+     * dwc_interrupt_handler() が呼び出されるようにチャネルの
+     * 割り込みマスクを必要な値にセットする。さらに、この
+     * チャネルからの割り込みがホスト全チャネル割り込みマスク
+     * レジスタで有効になっていることを確認する。注: ここで
+     * さらに多くのチャネルの割り込みを有効にした場合は、
+     * 停止されているチャネル以外の割り込みを考慮して
+     * dwc_interrupt_handler() を変更する必要がある。
+     */
     interrupt_mask.val = 0;
     interrupt_mask.channel_halted = 1;
     chanptr->interrupt_mask = interrupt_mask;
@@ -804,18 +802,18 @@ dwc_channel_start_transaction(uint chan, struct usb_xfer_request *req)
 }
 
 /**
- * Starts or restarts a USB transfer on a channel of the DesignWare Hi-Speed USB
- * 2.0 OTG Controller.
+ * DesignWare Hi-Speed USB 2.0 OTG ControllerのチャネルでUSB転送を
+ * 開始または再開する.
  *
- * To do this, software must give the parameters of a series of low-level
- * transactions on the USB to the DWC by writing to various registers.  Detailed
- * documentation about the registers used here can be found in the declaration
- * of dwc_regs::dwc_host_channel.
+ * これを行うためにソフトウェアはさまざまなレジスタに書き込むことに
+ * より、USB上の一連の低レベルトランザクションのパラメータをDWCに
+ * 与える必要がある。ここで使用するレジスタに関する詳細なドキュメントは
+ * dwc_regs::dwc_host_channel の宣言に記載されている。
  *
  * @param chan
- *      Index of the host channel to start the transfer on.
+ *      転送を開始するホストチャネルのインデックス
  * @param req
- *      USB transfer to start.
+ *      開始するUSB転送
  */
 static void
 dwc_channel_start_xfer(uint chan, struct usb_xfer_request *req)
@@ -832,12 +830,12 @@ dwc_channel_start_xfer(uint chan, struct usb_xfer_request *req)
     transfer.val = 0;
     req->short_attempt = 0;
 
-    /* Determine the endpoint number, endpoint type, maximum packet size, and
-     * packets per frame.  */
+    /* エンドポイント番号、エンドポイントタイプ、最大パケット長、
+     * フレームあたりのパケット数を決定する */
     if (req->endpoint_desc != NULL)
     {
-        /* Endpoint explicitly specified.  Get the needed information from the
-         * endpoint descriptor.  */
+        /* 円とポイントは明示的に指定されている。エンドポイント
+         * ディスクリプタから必要な情報を取得する */
         characteristics.endpoint_number =
                                     req->endpoint_desc->bEndpointAddress & 0xf;
         characteristics.endpoint_type =
@@ -853,23 +851,23 @@ dwc_channel_start_xfer(uint chan, struct usb_xfer_request *req)
     }
     else
     {
-        /* Default control endpoint.  The endpoint number, endpoint type, and
-         * packets per frame are pre-determined, while the maximum packet size
-         * can be found in the device descriptor.  */
+        /* デフォルトコントロールエンドポイント。エンドポイント番号、
+         * エンドポイントタイプ、フレームあたりのパケット数は事前に決定
+         * されているが、最大パケットサイズはデバイスディスクリプタにある。  */
         characteristics.endpoint_number = 0;
         characteristics.endpoint_type = USB_TRANSFER_TYPE_CONTROL;
         characteristics.max_packet_size = req->dev->descriptor.bMaxPacketSize0;
         characteristics.packets_per_frame = 1;
     }
 
-    /* Determine the endpoint direction, data pointer, data size, and initial
-     * packet ID.  For control transfers, the overall phase of the control
-     * transfer must be taken into account.  */
+    /* エンドポイントの方向、データポインタ、データサイズ、
+     * 初期パッケージIDを決定する。コントロール転送ではコントロール転送の
+     * フェーズを考慮する必要がある。  */
     if (characteristics.endpoint_type == USB_TRANSFER_TYPE_CONTROL)
     {
         switch (req->control_phase)
         {
-            case 0: /* SETUP phase of control transfer */
+            case 0: /* SETUPフェーズ */
                 usb_dev_debug(req->dev, "Starting SETUP transaction\n");
                 characteristics.endpoint_direction = USB_DIRECTION_OUT;
                 data = &req->setup_data;
@@ -877,33 +875,31 @@ dwc_channel_start_xfer(uint chan, struct usb_xfer_request *req)
                 transfer.packet_id = DWC_USB_PID_SETUP;
                 break;
 
-            case 1: /* DATA phase of control transfer */
+            case 1: /* DATAフェーズ */
                 usb_dev_debug(req->dev, "Starting DATA transactions\n");
                 characteristics.endpoint_direction =
                                         req->setup_data.bmRequestType >> 7;
-                /* We need to carefully take into account that we might be
-                 * re-starting a partially complete transfer.  */
+                /* 一部完了した転送の再開であるかを慎重に考慮する必要がある  */
                 data = req->recvbuf + req->actual_size;
                 transfer.size = req->size - req->actual_size;
                 if (req->actual_size == 0)
                 {
-                    /* First transaction in the DATA phase: use a DATA1 packet
-                     * ID.  */
+                    /* DATAフェースの最初のトランザクション: パケットIDにDATA1を使う  */
                     transfer.packet_id = DWC_USB_PID_DATA1;
                 }
                 else
                 {
-                    /* Later transaction in the DATA phase: restore the saved
-                     * packet ID (will be DATA0 or DATA1).  */
+                    /* DATAフェースのその後のトランザクション: 保存しておいたパケットIDを
+                     * 復元する（DATA0かDATA1）  */
                     transfer.packet_id = req->next_data_pid;
                 }
                 break;
 
-            default: /* STATUS phase of control transfer */
+            default: /* STATUSフェーズ */
                 usb_dev_debug(req->dev, "Starting STATUS transaction\n");
-                /* The direction of the STATUS transaction is opposite the
-                 * direction of the DATA transactions, or from device to host if
-                 * there were no DATA transactions.  */
+                /* STATUSトランザクションの方向はDATAトランザクションの方向の
+                 * 反対である。DATAトランザクションがなかった場合はデバイスから
+                 * ホストの方向である。 */
                 if ((req->setup_data.bmRequestType >> 7) == USB_DIRECTION_OUT ||
                     req->setup_data.wLength == 0)
                 {
@@ -913,28 +909,27 @@ dwc_channel_start_xfer(uint chan, struct usb_xfer_request *req)
                 {
                     characteristics.endpoint_direction = USB_DIRECTION_OUT;
                 }
-                /* The STATUS transaction has no data buffer, yet must use a
-                 * DATA1 packet ID.  */
+                /* STATUSトランザクションはデータバッファを持たない。
+                 * しかし、DATA1パケットIDを使用する必要がある。 */
                 data = NULL;
                 transfer.size = 0;
                 transfer.packet_id = DWC_USB_PID_DATA1;
                 break;
         }
     }
-    else /* Starting or re-starting a non-control transfer.  */
+    else /* コントロール転送以外の転送を開始、または再開する */
     {
         characteristics.endpoint_direction =
                     req->endpoint_desc->bEndpointAddress >> 7;
 
-        /* As is the case for the DATA phase of control transfers, we need to
-         * carefully take into account that we might be restarting a partially
-         * complete transfer.  */
+        /* コントロール転送のDATAフェーズの場合と同じように、一部完了した転送の
+         * 再開であるかを慎重に考慮する必要がある  */
         data = req->recvbuf + req->actual_size;
         transfer.size = req->size - req->actual_size;
-        /* This hardware does not accept interrupt transfers started with more
-         * data than fits in one (micro)frame--- that is, the maximum packets
-         * per frame allowed by the endpoint times the maximum packet size
-         * allowed by the endpoint.  */
+        /* このハードウェアは1（マイクロ）フレームにフィットするデータ
+         * （エンドポイントが許容するフレームあたりの最大パケット数に
+         * エンドポイントが許容する最大パケットサイズをかけたもの）以上の
+         * データを持つインターラプト転送の開始を受け入れない。 */
         if (characteristics.endpoint_type == USB_TRANSFER_TYPE_INTERRUPT &&
             transfer.size > characteristics.packets_per_frame *
                             characteristics.max_packet_size)
@@ -946,19 +941,18 @@ dwc_channel_start_xfer(uint chan, struct usb_xfer_request *req)
         transfer.packet_id = req->next_data_pid;
     }
 
-    /* Set device address.  */
+    /* デバイスアドレスをセットする  */
     characteristics.device_address = req->dev->address;
 
-    /* If communicating with a low or full-speed device, program the split
-     * control register.  Also cap the attempted transfer size to the maximum
-     * packet size, since the transfer will very likely have to be deferred to
-     * wait for the Complete Split portion (and then rescheduled on a possibly
-     * different channel later).  And finally, set the low_speed flag in the
-     * Channel Characteristics register if communicating with a low-speed
-     * device.  */
+    /* LSまたはFSのデバイスと通信する場合、スプリットコントロールレジスタを
+     * プログラムする。また、転送しようとするサイズを最大パケットサイズに制限する。
+     * 転送はスプリットの完了を待機するために延期される可能性が高い
+     * （そのため、後で別のチャネルで再スケジュールされる可能性がある）からである。
+     * 最後に、LSデバイスと通信する場合は、Channel Characteristicsレジスタに
+     * low_speed フラグをセットする。*/
     if (req->dev->speed != USB_SPEED_HIGH)
     {
-        /* Determine which hub is acting as the Transaction Translator.  */
+        /* どのハブがTransaction Translatorとして動作しているかを決定する */
         struct usb_device *tt_hub;
         uint tt_hub_port;
 
@@ -984,18 +978,19 @@ dwc_channel_start_xfer(uint chan, struct usb_xfer_request *req)
         }
     }
 
-    /* Set up DMA buffer.  */
+    /* DMAバッファを設定する  */
     if (IS_WORD_ALIGNED(data))
     {
-        /* Can DMA directly from source or to destination if word-aligned.  */
+        /* ワードアライメントされている場合はソースから、または
+         * ディスティネーションに直接DMAすることができる  */
         chanptr->dma_address = (uint32_t)data;
     }
     else
     {
-        /* Need to use alternate buffer for DMA, since the actual source or
-         * destination is not word-aligned.  If the attempted transfer size
-         * overflows this alternate buffer, cap it to the greatest number of
-         * whole packets that fit.  */
+        /* 実際のソースまたはディスティネーションがワードアラインされて
+         * いないため、DMA用に代替バッファを使用する必要がある。転送
+         * しようとしているサイズがこの代替バッファより大きい場合、
+         * 適合する最大のパケット数に制限する。 */
         chanptr->dma_address = (uint32_t)aligned_bufs[chan];
         if (transfer.size > sizeof(aligned_bufs[chan]))
         {
@@ -1004,36 +999,34 @@ dwc_channel_start_xfer(uint chan, struct usb_xfer_request *req)
                               characteristics.max_packet_size);
             req->short_attempt = 1;
         }
-        /* For OUT endpoints, copy the data to send into the DMA buffer.  */
+        /* OUTエンドポイントでは送信するデータをDMAバッファにコピーする */
         if (characteristics.endpoint_direction == USB_DIRECTION_OUT)
         {
             memcpy(aligned_bufs[chan], data, transfer.size);
         }
     }
 
-    /* Set pointer to start of next chunk of data to send/receive (may be
-     * different from the actual DMA address to be used by the hardware if an
-     * alternate buffer was selected above).  */
+    /* 送受信する次のデータチャンクの開始位置へのポインタをセットする
+     * （上で代替バッファが選択された場合、ハードウェアが使用する
+     * 実際のDMAアドレスとは異なる場合がある）。  */
     req->cur_data_ptr = data;
 
-    /* Calculate the number of packets being set up for this transfer.  */
+    /* この転送用に設定するパケット数を計算する  */
     transfer.packet_count = DIV_ROUND_UP(transfer.size,
                                          characteristics.max_packet_size);
     if (transfer.packet_count == 0)
     {
-        /* The hardware requires that at least one packet is specified, even for
-         * zero-length transfers.  */
+        /* ハードウェアはたとえゼロ長の転送であっても、少なくても1パケットを
+         * 指定することを要求する */
         transfer.packet_count = 1;
     }
 
-    /* Remember the actual size and number of packets we are attempting to
-     * transfer.  */
+    /* 転送を試みる実際のサイズとパケット数を記録する  */
     req->attempted_size = transfer.size;
     req->attempted_bytes_remaining = transfer.size;
     req->attempted_packets_remaining = transfer.packet_count;
 
-    /* Save this pending request in a location in which the interrupt handler
-     * can find it.  */
+    /* 割り込みハンドラが見つけることができる場所にこの保留リクエスを保存する  */
     channel_pending_xfers[chan] = req;
 
     usb_dev_debug(req->dev, "Setting up transactions on channel %u:\n"
@@ -1055,28 +1048,27 @@ dwc_channel_start_xfer(uint chan, struct usb_xfer_request *req)
                   split_control.split_enable,
                   req->complete_split);
 
-    /* Actually program the registers of the appropriate channel.  */
+    /* 適切なチャネルのレジスタを実施にプログラムする  */
     chanptr->characteristics = characteristics;
     chanptr->split_control   = split_control;
     chanptr->transfer        = transfer;
 
-    /* Enable the channel, thereby starting the USB transfer.  After doing this,
-     * the next code executed to process this transfer will be in
-     * dwc_handle_channel_halted_interrupt() after the Host Controller has
-     * issued an interrupt regarding this channel.  */
+    /* チャネルを有効にしてUSB転送を開始する。この後、この転送を処理するために
+     * 次に実行されるコードは、ホストコントローラがこのチャネルに関する割り込みを
+     ? 発行した後の dwc_handle_channel_halted_interrupt() にある。 */
     dwc_channel_start_transaction(chan, req);
 }
 
 /**
- * Thread procedure for the threads created in defer_xfer().
+ * defer_xfer() で作成されるスレッド用のスレッドプロシジャ.
  *
- * Instances of this thread are killed in usb_free_xfer_request().
+ * このスレッドのインスタンスは usb_free_xfer_request() でキルされる。
  *
  * @param req
- *      USB transfer request to defer.
+ *      遅延するUSB転送リクエスト
  *
  * @return
- *      This thread never returns.
+ *      今スレッドは復帰しない
  */
 static thread
 defer_xfer_thread(struct usb_xfer_request *req)
@@ -1138,35 +1130,35 @@ defer_xfer_thread(struct usb_xfer_request *req)
 }
 
 /**
- * Called when a USB transfer needs to be retried at a later time due to no data
- * being available from the endpoint.
+ * エンドポイントに利用可能なデータがないためUSB転送を後で再試行する
+ * 必要がある場合に呼び出される.
  *
- * For periodic transfers (e.g. polling an interrupt endpoint), the exact time
- * at which the transfer must be retried is specified by the bInterval member of
- * the endpoint descriptor.  For low and full-speed devices, bInterval specifies
- * the number of millisconds to wait before the next poll, while for high-speed
- * devices it specifies the exponent (plus one) of a power-of-two number of
- * milliseconds to wait before the next poll.
+ * 周期転送（インターラプトエンドポイントのポーリングなど）の場合、
+ * 転送を再試行しなければならない正確な時間はエンドポイントディス
+ * クリプタのbIntervalメンバで指定される。LS/HSデバイスでは
+ * bIntervalは次のポーリングまで待つミリ秒数を指定し、HSデバイスでは
+ * 次のポーリングまで待つミリ秒数の2のべき乗の指数（+ 1）を指定する。
  *
- * To actually implement delaying a transfer, we associate each transfer with a
- * thread created on-demand.  Each such thread simply enters a loop where it
- * calls sleep() for the appropriate number of milliseconds, then retries the
- * transfer.  A semaphore is needed to make the thread do nothing until the
- * request has actually been submitted and deferred.
+ * 実際に転送を遅延させるには、各転送をオンデマンドで作成される
+ * スレッドに関連付ける。そのようなスレッドは単にループに入り、
+ * 適切なミリ秒間 sleep() を呼び出し、その後、転送を再試行する。
+ * リクエストが実際に発行され、遅延されるまでスレッドが何もしない
+ * ようにするためにセマフォが必要である。
  *
- * Note: this code gets used to scheduling polling of IN interrupt endpoints,
- * including those on hubs and HID devices.  Thus, polling of these devices for
- * status changes (in the case of hubs) or new input (in the case of HID
- * devices) is done in software.  This wakes up the CPU a lot and wastes time
- * and energy.  But with USB 2.0, there is no way around this, other than by
- * suspending the USB device which we don't support.
+ * 注意: このコードはハブやHIDデバイスなどのINインタラプトエンド
+ * ポイントのスケジューリングポーリングに使用される。したがって、
+ * これらのデバイスのステータス変化（ハブの場合）や新しい入力
+ * （HIDデバイスの場合）のためのポーリングはソフトウェアで行われる。
+ * このため、CPUを何度も起床させ、時間とエネルギーを浪費する。しかし、
+ * USB2.0ではサポートしていないUSBデバイスをサスペンドする以外、
+ * これを回避する方法はない。
  *
  * @param req
- *      USB transfer to defer.
+ *      遅延させるUSB転送
  *
  * @return
- *      ::USB_STATUS_SUCCESS if deferral process successfully started; otherwise
- *      another ::usb_status_t error code.
+ *      遅延させたプロセスの開始に成功した場合は ::USB_STATUS_SUCCESS;
+ *      それ以外は ::usb_status_t エラーコード.
  */
 static usb_status_t
 defer_xfer(struct usb_xfer_request *req)
@@ -1200,7 +1192,7 @@ defer_xfer(struct usb_xfer_request *req)
     return USB_STATUS_SUCCESS;
 }
 
-/** Internal transfer status codes used to simplify interrupt handling.  */
+/** 割り込み処理に使用する内部転送ステータスコード  */
 enum dwc_intr_status {
     XFER_COMPLETE            = 0,
     XFER_FAILED              = 1,
@@ -1210,7 +1202,7 @@ enum dwc_intr_status {
 };
 
 /**
- * Handle a channel halting with no apparent error.
+ * 明らかなエラーなしに停止しているチャネルを処理する.
  */
 static enum dwc_intr_status
 dwc_handle_normal_channel_halted(struct usb_xfer_request *req, uint chan,
@@ -1218,9 +1210,9 @@ dwc_handle_normal_channel_halted(struct usb_xfer_request *req, uint chan,
 {
     volatile struct dwc_host_channel *chanptr = &regs->host_channels[chan];
 
-    /* The hardware seems to update transfer.packet_count as expected, so we can
-     * look at it before deciding whether to use transfer.size (which is not
-     * always updated as expected).  */
+    /* ハードウェアは期待通りに transfer.packet_count を更新して
+     * いると思われるのでそれを確認して transfer.size （これは期待通りに
+     * 更新されるとは限らない）を使うかどうか決める。 */
     uint packets_remaining   = chanptr->transfer.packet_count;
     uint packets_transferred = req->attempted_packets_remaining -
                                packets_remaining;
@@ -1237,17 +1229,18 @@ dwc_handle_normal_channel_halted(struct usb_xfer_request *req, uint chan,
         enum usb_direction dir = characteristics.endpoint_direction;
         enum usb_transfer_type type = characteristics.endpoint_type;
 
-        /* Calculate number of bytes transferred and copy data from DMA
-         * buffer if needed.  */
+        /* 転送済みのバイト数を計算して必要ならDMAバッファから
+         * データをコピーする  */
 
         if (dir == USB_DIRECTION_IN)
         {
-            /* The transfer.size field seems to be updated sanely for IN
-             * transfers.  (Good thing too, since otherwise it would be
-             * impossible to determine the length of short packets...)  */
+            /* IN転送の場合、transfer.sizeフィールドは正当に更新
+             * されていると思われる（そうでなければ、ショート
+              * パケットの長さを決定することができないので
+              * これも良いことである）。  */
             bytes_transferred = req->attempted_bytes_remaining -
                                 chanptr->transfer.size;
-            /* Copy data from DMA buffer if needed */
+            /* 必要ならDMAバッファからデータをコピーする */
             if (!IS_WORD_ALIGNED(req->cur_data_ptr))
             {
                 memcpy(req->cur_data_ptr,
@@ -1258,17 +1251,17 @@ dwc_handle_normal_channel_halted(struct usb_xfer_request *req, uint chan,
         }
         else
         {
-            /* Ignore transfer.size field for OUT transfers because it's not
-             * updated sanely.  */
+            /* OUT転送の transfer.size フィールドは正しく更新されて
+             * いないので無視する。 */
             if (packets_transferred > 1)
             {
-                /* More than one packet transferred: all except the last
-                 * must have been max_packet_size.  */
+                /* 1つ以上のパケットが転送済みである。最後のパケット
+                 * 以外は max_packet_size のはず  */
                 bytes_transferred += max_packet_size * (packets_transferred - 1);
             }
-            /* If the last packet in this transfer attempt was transmitted, its
-             * size is the remainder of the attempted transfer size.  Otherwise,
-             * it's another max_packet_size.  */
+            /* この転送試行で最後のパケットが送信された場合、その
+             * サイズは転送試行の残りのサイズである。それ以外の
+             * 場合はmax_packet_sizeである。  */
             if (packets_remaining == 0 &&
                 (req->attempted_size % max_packet_size != 0 ||
                  req->attempted_size == 0))
@@ -1284,22 +1277,22 @@ dwc_handle_normal_channel_halted(struct usb_xfer_request *req, uint chan,
         usb_dev_debug(req->dev, "Calculated %u bytes transferred\n",
                       bytes_transferred);
 
-        /* Account for packets and bytes transferred  */
+        /* 転送済みのパケットとバイトを記録する  */
         req->attempted_packets_remaining -= packets_transferred;
         req->attempted_bytes_remaining -= bytes_transferred;
         req->cur_data_ptr += bytes_transferred;
 
-        /* Check if transfer complete (at least to the extent that data was
-         * programmed into the channel).  */
+        /* （少なくともチャネルにプログラムされたデータまで）転送が
+         * 完了したかチェックする  */
         if (req->attempted_packets_remaining == 0 ||
             (dir == USB_DIRECTION_IN &&
              bytes_transferred < packets_transferred * max_packet_size))
         {
-            /* The transfer_completed flag should have been set by the hardware,
-             * although it's essentially meaningless because it gets set at
-             * other times as well.  (For example, it appears to be set when a
-             * split transaction has completed, even if there are still packets
-             * remaining to be transferred).  */
+            /* transfer_completed フラグはハードウェアによって
+             * 設定されるはずであるが、他のタイミングでも設定される
+             * ため本質的に意味がない（たとえば、スプリットトラン
+             * ザクションが完了すると、転送すべきパケットがまだ残って
+             * いても設定されるようだ）。  */
             if (!interrupts.transfer_completed)
             {
                 usb_dev_error(req->dev, "transfer_completed flag not "
@@ -1309,13 +1302,13 @@ dwc_handle_normal_channel_halted(struct usb_xfer_request *req, uint chan,
                 return XFER_FAILED;
             }
 
-            /* If we programmed less than the desired transfer size into the
-             * channels (for one of several reasons--- see
-             * dwc_channel_start_xfer()), continue to attempt the transfer,
-             * unless it was an interrupt transfer, in which case at most one
-             * attempt should be made, or if fewer bytes were transferred than
-             * attempted (for an IN transfer), indicating the transfer is
-             * already done.  */
+            /* 希望する転送サイズより小さい値をチャネルにプログラム
+             * した場合（いくつかの理由のうちの1つは
+             * dwc_channel_start_xfer() を参照）、それがインターラプト
+             * 転送でない限り、転送を試み続ける。インターラプト転送の
+             * 場合は、転送の試みは最大1回のはずであり、または（IN転送の
+             * 場合） 試行より少ないバイト数が転送された場合はすでに
+             * 転送が終了したことを示しているからである。  */
             if (req->short_attempt && req->attempted_bytes_remaining == 0 &&
                 type != USB_TRANSFER_TYPE_INTERRUPT)
             {
@@ -1332,27 +1325,26 @@ dwc_handle_normal_channel_halted(struct usb_xfer_request *req, uint chan,
                 return XFER_NEEDS_RESTART;
             }
 
-            /* Unlike other transfers, control transfers consist of multiple
-             * phases.  If we only just completed the SETUP or DATA phase of a
-             * control transfer, advance to the next phase and do not signal
-             * transfer completion.  */
+            /* 他の転送と異なり、コントロール転送は複数のフェーズで
+             * 構成されている。コントロール転送のSETUPまたはDATAフェーズが
+             * 完了しただけの場合は、次のフェーズに進み、転送完了の
+             * 信号は送らない。 */
             if (usb_is_control_request(req) && req->control_phase < 2)
             {
-                /* Reset the CSPLIT flag.  */
+                /* CSPLIT フラグをリセッそする  */
                 req->complete_split = 0;
 
-                /* Record bytes transferred if we just completed the
-                 * data phase.  */
+                /* データフェースの完了直後の場合は転送したバイトを
+                 * 記録する  */
                 if (req->control_phase == 1)
                 {
                     req->actual_size = req->cur_data_ptr - req->recvbuf;
                 }
 
-                /* Advance to the next phase. */
+                /* 次のフェースに進む */
                 req->control_phase++;
 
-                /* Skip DATA phase if there is no data to send/receive.
-                 * */
+                /* 送受信するデータがない場合はDATAフェースをスキップする */
                 if (req->control_phase == 1 && req->size == 0)
                 {
                     req->control_phase++;
@@ -1360,16 +1352,17 @@ dwc_handle_normal_channel_halted(struct usb_xfer_request *req, uint chan,
                 return XFER_NEEDS_RESTART;
             }
 
-            /* Transfer is actually complete (or at least, it was an IN transfer
-             * that completed with fewer bytes transferred than requested).  */
+            /* 実際に転送が完了した（または、少なともリクエストより
+             * 少ないバイト数で転送を完了したIN転送であった）。 */
             usb_dev_debug(req->dev, "Transfer completed on channel %u\n", chan);
             return XFER_COMPLETE;
         }
         else
         {
-            /* Transfer not complete, so start the next transaction.  */
+            /* 転送は完了していないので次のトランザクションを開始する  */
 
-            /* Flip the CSPLIT flag if doing split transactions.  */
+            /* スプリットとランざく書を行っている場合はCSPLITフラグを
+             * 反転する */
             if (chanptr->split_control.split_enable)
             {
                 req->complete_split ^= 1;
@@ -1382,15 +1375,16 @@ dwc_handle_normal_channel_halted(struct usb_xfer_request *req, uint chan,
     }
     else
     {
-        /* No packets transferred, but no error flag was set.  This is expected
-         * only if we just did a Start Split transaction, in which case we
-         * should continue on to the Complete Split transaction.  We also check
-         * for the ack_response_received flag, which should be set to indicate
-         * that the device acknowledged the Start Split transaction.  */
+        /* パケットは転送されなかったがエラーフラグもセットされていない。
+         * これはStart Splitトランザクションを実行した場合にのみ予想
+         * されることであり、その場合は Complete Splitトランザクションに
+         * 進む必要がある。さらに、ack_response_received フラグをチェック
+         * する。このフラグはデバイスがStart Splitトランザクションを
+         * 承認したことを示すためにセットされているはずだ。 */
         if (interrupts.ack_response_received &&
             chanptr->split_control.split_enable && !req->complete_split)
         {
-            /* Start CSPLIT */
+            /* CSPLITを開始する */
             req->complete_split = 1;
             usb_dev_debug(req->dev, "Continuing transfer (complete_split=%u)\n",
                           req->complete_split);
@@ -1405,13 +1399,13 @@ dwc_handle_normal_channel_halted(struct usb_xfer_request *req, uint chan,
 }
 
 /**
- * Handle a channel halted interrupt on the specified channel.  This can occur
- * anytime after dwc_channel_start_transaction() enabled the channel and the
- * corresponding channel halted interrupt.
+ * 指定されたチャネルのチャネル停止割り込みを処理する.  これは
+ * dwc_channel_start_transaction() でチャネルを有効にした後で、
+ * 対応するチャネルで停止割り込みがあった場合にいつでも発生する
+ * 可能性がある。
  *
  * @param chan
- *      Index of the DWC host channel on which the channel halted interrupt
- *      occurred.
+ *      チャネル停止割り込みが発生したDWCホストチャネルのインデックス
  */
 static void
 dwc_handle_channel_halted_interrupt(uint chan)
@@ -1427,7 +1421,7 @@ dwc_handle_channel_halted_interrupt(uint chan)
               chan, interrupts.val, chanptr->characteristics.val,
               chanptr->transfer.val);
 
-    /* Determine the cause of the interrupt.  */
+    /* 割り込みの原因を決定する  */
 
     if (interrupts.stall_response_received || interrupts.ahb_error ||
         interrupts.transaction_error || interrupts.babble_error ||
@@ -1436,8 +1430,8 @@ dwc_handle_channel_halted_interrupt(uint chan)
         (interrupts.data_toggle_error &&
          chanptr->characteristics.endpoint_direction == USB_DIRECTION_OUT))
     {
-        /* An error occurred.  Complete the transfer immediately with an error
-         * status.  */
+        /* エラーが発生した。エラーステータスを付けて転送を直ちに
+         * 完了させる  */
         usb_dev_error(req->dev, "Transfer error on channel %u "
                       "(interrupts pending: 0x%08x, packet_count=%u)\n",
                       chan, interrupts.val, chanptr->transfer.packet_count);
@@ -1445,19 +1439,21 @@ dwc_handle_channel_halted_interrupt(uint chan)
     }
     else if (interrupts.frame_overrun)
     {
-        /* Restart transactions that fail sporatically due to frame overruns.
-         * TODO: why does this happen?  */
+        /* フレームオーバーランで突発的に失敗したトランザクションは
+         * 再スタートする。
+         * TODO: これはなぜ起こるのか?  */
         usb_dev_debug(req->dev, "Frame overrun on channel %u; "
                       "restarting transaction\n", chan);
         intr_status = XFER_NEEDS_TRANS_RESTART;
     }
     else if (interrupts.nyet_response_received)
     {
-        /* Device sent NYET packet when completing a split transaction.  Try the
-         * CSPLIT again later.  As a special case, if too many NYETs are
-         * received, restart the entire split transaction.  (Apparently, because
-         * of frame overruns or some other reason it's possible for NYETs to be
-         * issued indefinitely until the transaction is retried.)  */
+        /* スプリットトランザクションを実行する際、デバイスがNYET
+         * パケットを送信した。後でCSPLITを再試行する。特殊なケースと
+         * して、NYETを何回も受信した場合は、スプリットトラン
+         * ザクション全体を再スタートする（明らかに、フレームオーバー
+         * ランやその他の理由で、トランザクションを再試行するまで
+         * 無限にNYETが発行されることがあるようだ）。  */
         usb_dev_debug(req->dev, "NYET response received on channel %u\n", chan);
         if (++req->csplit_retries >= 10)
         {
@@ -1469,17 +1465,17 @@ dwc_handle_channel_halted_interrupt(uint chan)
     }
     else if (interrupts.nak_response_received)
     {
-        /* Device sent NAK packet.  This happens when the device had no data to
-         * send at this time.  Try again later.  Special case: if the NAK was
-         * sent during a Complete Split transaction, restart with the Start
-         * Split, not the Complete Split.  */
+        /* デバイスがNAKパケットを送信した。これは、デバイスがこの時点で
+         * 送信するデータがなかった場合に起こる。後で再試行する。特殊な
+         * ケース: Complete Splitトランザクション中にNAKが送信された
+         * 場合は Complete SplitではなくStart Splitで再スタートする。  */
         usb_dev_debug(req->dev, "NAK response received on channel %u\n", chan);
         intr_status = XFER_NEEDS_DEFERRAL;
         req->complete_split = FALSE;
     }
     else
     {
-        /* No apparent error occurred.  */
+        /* 秋ならなエラーは発生していない */
         intr_status = dwc_handle_normal_channel_halted(req, chan, interrupts);
     }
 
@@ -1512,29 +1508,28 @@ dwc_handle_channel_halted_interrupt(uint chan)
             return;
     }
 
-    /* Transfer complete, transfer encountered an error, or transfer needs to be
-     * retried later.  */
+    /* 転送完了、転送中にエラー発生、後で転送を再試行する必要あり  */
 
-    /* Save the data packet ID.  */
+    /* データパケットIDを保存  */
     req->next_data_pid = chanptr->transfer.packet_id;
 
-    /* Clear and disable interrupts on this channel.  */
+    /* このチャネルの割り込みをっクリアして無効にする  */
     chanptr->interrupt_mask.val = 0;
     chanptr->interrupts.val = 0xffffffff;
 
-    /* Release the channel.  */
+    /* チャネルを解消する  */
     channel_pending_xfers[chan] = NULL;
     dwc_release_channel(chan);
 
-    /* Set the actual transferred size, unless we are doing a control transfer
-     * and aren't on the DATA phase.  */
+    /* コントロール転送のDATAフェース以外を実行中の場合を覗いて
+     * 実際の転送済みサイズをセットする  */
     if (!usb_is_control_request(req) || req->control_phase == 1)
     {
         req->actual_size = req->cur_data_ptr - req->recvbuf;
     }
 
-    /* If we got here because we received a NAK or NYET, defer the request for a
-     * later time.  */
+    /* NAKまたはNYETを受信したためここに来た場合はリクエストを
+     * 遅延させる。  */
     if (intr_status == XFER_NEEDS_DEFERRAL)
     {
         usb_status_t status = defer_xfer(req);
@@ -1548,23 +1543,24 @@ dwc_handle_channel_halted_interrupt(uint chan)
         }
     }
 
-    /* If we got here because the transfer successfully completed or an error
-     * occurred, call the device-driver-provided completion callback.  */
+    /* 転送が成功裏に完了した、あるいはエラーが発生したためにここに
+     * 来た場合は、デバイスドライバが提供する完了コールバックを
+     * 呼び出す */
     usb_complete_xfer(req);
 }
 
 /**
- * Interrupt handler function for the Synopsys DesignWare Hi-Speed USB 2.0
- * On-The-Go Controller (DWC).  This should only be called when an interrupt
- * this driver explicitly enabled is pending.  See the comment above
- * dwc_setup_interrupts() for an overview of interrupts on this hardware.
+ * Synopsys DesignWare Hi-Speed USB 2.0 On-The-Go Controller（DWC）用の
+ * 割り込みハンドラ関数である. この関数はこのドライバが明示的に有効にした
+ * 割り込みが保留されている場合にのみ呼び出される。このハードウェアの
+ * 割り込みの概要については dwc_setup_interrupts() のコメントを参照。
  */
 static interrupt
 dwc_interrupt_handler(void)
 {
-    /* Set 'resdefer' to prevent other threads from being scheduled before this
-     * interrupt handler finishes.  This prevents this interrupt handler from
-     * being executed re-entrantly.  */
+    /* この割り込みハンドラが終了する前に他のスレッドがスケジュール
+     * されるのを防ぐために 'resdefer' をセットする。これはこの
+     * 割り込みハンドラが繰り返し実行されるのを防ぐ。  */
     extern int resdefer;
     resdefer = 1;
 
@@ -1573,7 +1569,7 @@ dwc_interrupt_handler(void)
 #if START_SPLIT_INTR_TRANSFERS_ON_SOF
     if (interrupts.sof_intr)
     {
-        /* Start of frame (SOF) interrupt occurred.  */
+        /* Start of frame (SOF) 割り込みが発生した  */
 
         usb_debug("Received SOF intr (host_frame_number=0x%08x)\n",
                   regs->host_frame_number);
@@ -1585,14 +1581,14 @@ dwc_interrupt_handler(void)
             {
                 uint chan;
 
-                /* Wake up one channel waiting for SOF */
+                /* SOFを待っているチャネルを1つ起床させる */
 
                 chan = first_set_bit(sofwait);
                 send(channel_pending_xfers[chan]->deferer_thread_tid, 0);
                 sofwait &= ~(1 << chan);
             }
 
-            /* Disable SOF interrupt if no longer needed */
+            /* もはや不要であればSOF割り込みを無効にする */
             if (sofwait == 0)
             {
                 tmp = regs->core_interrupt_mask;
@@ -1600,7 +1596,7 @@ dwc_interrupt_handler(void)
                 regs->core_interrupt_mask = tmp;
             }
 
-            /* Clear SOF interrupt */
+            /* SOF割り込みをクリアする */
             tmp.val = 0;
             tmp.sof_intr = 1;
             regs->core_interrupts = tmp;
@@ -1610,14 +1606,14 @@ dwc_interrupt_handler(void)
 
     if (interrupts.host_channel_intr)
     {
-        /* One or more channels has an interrupt pending.  */
+        /* 1つ以上のチャネルに保留中の割り込みがある  */
 
         uint32_t chintr;
         uint chan;
 
-        /* A bit in the "Host All Channels Interrupt Register" is set if an
-         * interrupt has occurred on the corresponding host channel.  Process
-         * all set bits.  */
+        /* 対応するホストチャネルで割り込みが発生した場合、
+         * "Host All Channels Interrupt Register"のビットがセット
+         * される。設定されたビットをすべて処理する。 */
         chintr = regs->host_channels_interrupt;
         do
         {
@@ -1628,7 +1624,8 @@ dwc_interrupt_handler(void)
     }
     if (interrupts.port_intr)
     {
-        /* Status of the host port changed.  Update host_port_status.  */
+        /* ホストポートのステータスが変化した。host_port_statusを
+         * 更新する。 */
 
         union dwc_host_port_ctrlstatus hw_status = regs->host_port_ctrlstatus;
 
@@ -1648,21 +1645,21 @@ dwc_interrupt_handler(void)
         host_port_status.enabled_changed     = hw_status.enabled_changed;
         host_port_status.overcurrent_changed = hw_status.overcurrent_changed;
 
-        /* Clear the interrupt(s), which are "write-clear", by writing the Host
-         * Port Control and Status register back to itself.  But as a special
-         * case, 'enabled' must be written as 0; otherwise the port will
-         * apparently disable itself.  */
+        /* "Write-clear"なHost Port Control and Statusレジスタに
+         * 書き戻すことで割り込みをクリアする。ただし、特別なケースと
+         * して、'enabled' には0を書き込まなければならない。そうでないと
+         * ポートは自分自身を無効にしてしまうようだ。  */
         hw_status.enabled = 0;
         regs->host_port_ctrlstatus = hw_status;
 
-        /* Complete status change request to the root hub if one has been
-         * submitted.  */
+        /* ルートハブにステータス変化リクエストが発行されている場合は
+         * それを完了させる。  */
         dwc_host_port_status_changed();
     }
 
-    /* Reschedule the currently running thread if the interrupt handler
-     * attempted to wake up any threads (for example, threads that might be
-     * waiting for a USB transfer to complete).  */
+    /* 割り込みハンドラが何らかのスレッド（たとえば、USB転送の完了を
+     * 待っているスレッド）を起床しようとした場合、現在実行中の
+     * スレッドをリスケジュールする。 */
     if (--resdefer > 0)
     {
         resdefer = 0;
@@ -1671,85 +1668,83 @@ dwc_interrupt_handler(void)
 }
 
 /**
- * Performs initial setup of the Synopsys Designware USB 2.0 On-The-Go
- * Controller (DWC) interrupts.
+ * Synopsys Designware USB 2.0 On-The-Go Controller（DWC）の割り込みを
+ * 初期設定する。
  *
- * The DWC contains several levels of interrupt registers, detailed in the
- * following list.  Note that for each level, each bit of the "interrupt"
- * register contains the state of a pending interrupt (1 means interrupt
- * pending; write 1 to clear), while the "interrupt mask" register has the same
- * format but is used to turn the corresponding interrupt on or off (1 means on;
- * write 1 to turn on; write 0 to turn off).
+ * DWCには次のリストに示すようにいくつかのレベルの割り込みレジスタがある。
+ * 各レベルにおいて "interrupt" レジスタの各ビットは保留中の割り込みの
+ * 状態を示し（1は保留中を意味し、1を書き込むとクリアする）、"interrupt
+ * mask" レジスタは同じ形式だが対応する割り込みをオン/オフするために
+ * 使用する（1はオンで、1を書き込むとオン、0を書き込むとオフになる）。
  *
- * - The AHB configuration register contains a mask bit used to enable/disable
- *   all interrupts whatsoever from the DWC hardware.
- * - The "Core" interrupt and interrupt mask registers control top-level
- *   interrupts.  For example, a single bit in these registers corresponds to
- *   all channel interrupts.
- * - The "Host All Channels" interrupt and interrupt mask registers control all
- *   interrupts on each channel.
- * - The "Channel" interrupt and interrupt mask registers, of which one copy
- *   exists for each channel, control individual interrupt types on that
- *   channel.
+ *  - AHBコンフィギュレーションレジスタは、DWCハードウェアからのすべての
+ *    割り込みを有効/無効にするために使用されるマスクビットを含んでいる。
+ *  - "Core" 割り込みと割り込みマスクレジスタは、トップレベルの割り込みを
+ *    制御する。たとえば、これらのレジスタの1ビットが全チャネルの
+ *    割り込みに対応する。
+ *  - "Host All Channels" 割り込みと割り込みマスクレジスタは、各チャネルの
+ *    すべての割り込みを制御する。
+ *  - "Channel" 割り込みと割り込みマスクレジスタは、各チャネルに1つずつ
+ *    存在し、そのチャネルの個々の割り込みタイプを制御する。
  *
- * We can assume that an interrupt only occurs if it is enabled in all the
- * places listed above.  Furthermore, it only seems to work to clear interrupts
- * at the lowest level; for example, a channel interrupt must be cleared in its
- * individual channel interrupt register rather than in one of the higher level
- * interrupt registers.
+ * 割り込みはこれらのすべての場所で有効になっている場合にのみ発生すると
+ * みなすことができる。さらに、割り込みのクリアは最下位レベルでしか
+ * できないようである。たとえば、チャネル割り込みは上位レベルの
+ * いずれかの割り込みレジスタではなく、個々のチャネル割り込みレジスタで
+ * クリアする必要がある。
  *
- * The above just covers the DWC-specific interrupt registers.  In addition to
- * those, the system will have other ways to control interrupts.  For example,
- * on the BCM2835 (Raspberry Pi), the interrupt line going to the DWC is just
- * one of many dozen and can be enabled/disabled using the interrupt controller.
- * In the code below we enable this interrupt line and register a handler
- * function so that we can actually get interrupts from the DWC.
+ * 以上はDWC固有の割り込みレジスタしかカバーしていません。これらに加えて、
+ * システムは割り込みを制御する別の方法を持っている。たとえば、BCM2835
+ * (Raspberry Pi) では、DWCへの割り込み線は数10本あるうちの1つにすぎず、
+ * 割り込みコントローラを使って有効/無効を切り替えることができる。以下の
+ * コードでは、この割り込みラインを有効にし、ハンドラ関数を登録して、
+ * 実際にDWCから割り込みを受けることができるようにしている。
  *
- * And all that's in addition to the CPSR of the ARM processor itself, or the
- * equivalent on other CPUs.  So all in all, you literally have to enable
- * interrupts in 6 different places to get an interrupt when a USB transfer has
- * completed.
+ * さらに、ARMプロセッサのCPSR、または、他のCPUにおいてそれに相当する
+ * ものがある。つまり、USB転送が完了したときに割り込みを受けるには
+ * 文字通り6か所で割り込みを有効にする必要がある。
  */
 static void
 dwc_setup_interrupts(void)
 {
     union dwc_core_interrupts core_interrupt_mask;
 
-    /* Clear all pending core interrupts.  */
+    /* 保留中のコア割り込みをすべてクリアする  */
     regs->core_interrupt_mask.val = 0;
     regs->core_interrupts.val = 0xffffffff;
 
-    /* Enable core host channel and port interrupts.  */
+    /* コアホストチャネルとポート割り込みを有効にする  */
     core_interrupt_mask.val = 0;
     core_interrupt_mask.host_channel_intr = 1;
     core_interrupt_mask.port_intr = 1;
     regs->core_interrupt_mask = core_interrupt_mask;
 
-    /* Enable the interrupt line that goes to the USB controller and register
-     * the interrupt handler.  */
+    /* USBコントローラに通ずる割り込みラインを有効にし、
+     * 割り込みハンドラを登録する  */
     interruptVector[IRQ_USB] = dwc_interrupt_handler;
     enable_irq(IRQ_USB);
 
-    /* Enable interrupts for entire USB host controller.  (Yes that's what we
-     * just did, but this one is controlled by the host controller itself.)  */
+    /* USBホストコントローラ全体の割り込みを有効にする（そう、これは
+     * 今したことだ。しかし、これはホストコントローラ自身によって
+     * 制御されている）。*/
     regs->ahb_configuration |= DWC_AHB_INTERRUPT_ENABLE;
 }
 
 /**
- * Queue of USB transfer requests that have been submitted to the Host
- * Controller Driver but not yet started on a channel.
+ * ホストコントローラドライバに発行されたがまだチャネルで開始されて
+ * いないUSB転送リクエストのキュー
  */
 static mailbox hcd_xfer_mailbox;
 
 /**
- * USB transfer request scheduler thread:  This thread repeatedly waits for next
- * USB transfer request that needs to be scheduled, waits for a free channel,
- * then starts the transfer request on that channel.  This is obviously a very
- * simplistic scheduler as it does not take into account bandwidth requirements
- * or which endpoint a transfer is for.
+ * USB転送リクエストスケジューラスレッド: このスレッドはスケジュー
+ * リングが必要なUSB転送リクエストを繰り返し待ち、空きチャンネルを
+ * 待ち、そのチャンネルで転送リクエストを開始する。これは帯域幅の
+ * 要件やどのエンドポイントに対する転送であるかを考慮していないので
+ * 明らかに非常に単純なスケジューラである。
  *
  * @return
- *      This thread never returns.
+ *      このスレッドは復帰しない
  */
 static thread
 dwc_schedule_xfer_requests(void)
@@ -1759,16 +1754,16 @@ dwc_schedule_xfer_requests(void)
 
     for (;;)
     {
-        /* Get next transfer request.  */
+        /* 次の転送リクエストを取得する  */
         req = (struct usb_xfer_request*)mailboxReceive(hcd_xfer_mailbox);
         if (is_root_hub(req->dev))
         {
-            /* Special case: request is to the root hub.  Fake it. */
+            /* 特殊なケース: リクエストはルートハブ向け。偽装する */
             dwc_process_root_hub_request(req);
         }
         else
         {
-            /* Normal case: schedule the transfer on some channel.  */
+            /* 通常のケース: いずれかのチャネルで転送をスケジュールする */
             chan = dwc_get_free_channel();
             dwc_channel_start_xfer(chan, req);
         }
@@ -1777,9 +1772,9 @@ dwc_schedule_xfer_requests(void)
 }
 
 /**
- * Initialize a bitmask and semaphore that keep track of the free/inuse status
- * of the host channels and a queue in which to place submitted USB transfer
- * requests, then start the USB transfer request scheduler thread.
+ * ホストチャネルの空き/使用中状況を管理するビットマスクとセマフォ、および、
+ * 発行済のUSB転送リクエストを格納するキューを初期化し、USB転送リクエスト
+ * スケジューラスレッドを起動する。
  */
 static usb_status_t
 dwc_start_xfer_scheduler(void)
@@ -1812,9 +1807,9 @@ dwc_start_xfer_scheduler(void)
     return USB_STATUS_SUCCESS;
 }
 
-/* Implementation of hcd_start() for the DesignWare Hi-Speed USB 2.0 On-The-Go
- * Controller.  See usb_hcdi.h for the documentation of this interface of the
- * Host Controller Driver.  */
+/* DesignWare Hi-Speed USB 2.0 On-The-Go Controller用の
+ * hcd_start() の実装.  ホストコントローラドライバのこのインタフェースの
+ * ドキュメントについては usb_hcdi.h を参照されたい。  */
 usb_status_t
 hcd_start(void)
 {
@@ -1836,45 +1831,45 @@ hcd_start(void)
     return status;
 }
 
-/* Implementation of hcd_stop() for the DesignWare Hi-Speed USB 2.0 On-The-Go
- * Controller.  See usb_hcdi.h for the documentation of this interface of the
- * Host Controller Driver.  */
+/* DesignWare Hi-Speed USB 2.0 On-The-Go Controller用の
+ * hcd_stop() の実装.  ホストコントローラドライバのこのインタフェースの
+ * ドキュメントについては usb_hcdi.h を参照されたい。  */
 void
 hcd_stop(void)
 {
-    /* Disable IRQ line and handler.  */
+    /* IRQラインとハンドラを無効にする  */
     disable_irq(IRQ_USB);
     interruptVector[IRQ_USB] = NULL;
 
-    /* Stop transfer scheduler thread.  */
+    /* 転送スケジューラスレッドを停止する */
     kill(dwc_xfer_scheduler_tid);
 
-    /* Free USB transfer request mailbox.  */
+    /* USB転送リクエストメールボックスを開放する  */
     mailboxFree(hcd_xfer_mailbox);
 
-    /* Free unneeded semaphore.  */
+    /* 不要なセマフォを開放する  */
     semfree(chfree_sema);
 
-    /* Power off USB hardware.  */
+    /* USBハードウェアの電源を切る  */
     dwc_power_off();
 }
 
-/* Implementation of hcd_submit_xfer_request() for the DesignWare Hi-Speed USB
- * 2.0 On-The-Go Controller.  See usb_hcdi.h for the documentation of this
- * interface of the Host Controller Driver.  */
+/* DesignWare Hi-Speed USB 2.0 On-The-Go Controller用の
+ * hcd_submit_xfer_request() の実装.  ホストコントローラドライバのこのインタフェースの
+ * ドキュメントについては usb_hcdi.h を参照されたい。  */
 /**
  * @details
  *
- * This Host Controller Driver implements this interface asynchronously, as
- * intended.  Furthermore, it uses a simplistic scheduling algorithm where it
- * places transfer requests into a single queue and executes them in the order
- * they were submitted.  Transfers that need to be retried, including periodic
- * transfers that receive a NAK reply and split transactions that receive a NYET
- * reply when doing the Complete Split transaction, are scheduled to be retried
- * at an appropriate time by separate code that shortcuts the main queue when
- * the timer expires.
+ * このホストコントローラドライバは、このインタフェースを意図された
+ * とおり、非同期に実装している。さらに、単純化されたスケジューリング
+ * アルゴリズムを使用している。すなわち、転送リクエストは一つのキューに
+ * 入れ、発行された順に実行している。再試行が必要な転送、たとえば、
+ * NAK応答を受信した周期転送やComplete Splitトランザクションを行っている
+ * 際にNYET応答を受信したスプリットトランザクションなどは、タイマーが
+ * 切れたときにメインキューをショートカットする別のコードによって、
+ * 適切な時間に再試行するようスケジュールされる。
  *
- * Jump to dwc_schedule_xfer_requests() to see what happens next.
+ * 次に何が起こるかは dwc_schedule_xfer_requests() を参照のこと。
  */
 usb_status_t
 hcd_submit_xfer_request(struct usb_xfer_request *req)

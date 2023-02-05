@@ -1,7 +1,7 @@
 /**
  * @file usb_dwc_regs.h
  *
- * Registers of the DesignWare Hi-Speed USB 2.0 On-The-Go Controller.
+ * DesignWare Hi-Speed USB 2.0 On-The-Go Controllerのレジスタ.
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
@@ -260,7 +260,7 @@ struct dwc_regs {
     /* TODO */
     uint32_t stuff[191];
 
-    /** 
+    /**
      * @name Host registers
      *
      * The registers beginning at this point are considered to be the "Host"
