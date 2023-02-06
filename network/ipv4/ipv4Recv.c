@@ -1,6 +1,6 @@
-/* 
- * file ipv4Recv.c
- * 
+/**
+ * @file ipv4Recv.c
+ *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
@@ -17,9 +17,9 @@
 /**
  * @ingroup ipv4
  *
- * Process an incoming IPv4 packet.
- * @param pkt pointer to the incoming packet
- * @return OK if packet was processed succesfully, otherwise SYSERR
+ * 着信IPv4パケットを処理する.
+ * @param pkt 着信パケットへのポインタ
+ * @return パケットの処理に成功したら OK; それ以外は SYSERR
  */
 syscall ipv4Recv(struct packet *pkt)
 {
@@ -28,17 +28,17 @@ syscall ipv4Recv(struct packet *pkt)
     struct netaddr src;
     ushort iplen;
 
-    /* Error check pointers */
+    /* ポインタのエラーチェック */
     if (NULL == pkt)
     {
         return SYSERR;
     }
 
-    /* Setup pointer to IPv4 header */
+    /* ポインタをIPv4ヘッダーに設定する */
     pkt->nethdr = pkt->curr;
     ip = (struct ipv4Pkt *)pkt->curr;
 
-    /* Verify the IP packet is valid */
+    /* IPパケットが有効であることを確認する */
     if (FALSE == ipv4RecvValid(ip))
     {
         IPv4_TRACE("Invalid packet");
@@ -46,7 +46,7 @@ syscall ipv4Recv(struct packet *pkt)
         return SYSERR;
     }
 
-    /* Obtain destination and source IP addresses */
+    /* 宛先と発信元のIPアドレスを取得する */
     dst.type = NETADDR_IPv4;
     dst.len = IPv4_ADDR_LEN;
     memcpy(dst.addr, ip->dst, dst.len);
@@ -54,21 +54,22 @@ syscall ipv4Recv(struct packet *pkt)
     src.len = IPv4_ADDR_LEN;
     memcpy(src.addr, ip->src, src.len);
 
-    /* If packet is not destined for one of our network interfaces,
-     * then attempt to route the packet */
+    /* パケットがこのネットワークインタフェースに向けられたものでない
+     * 場合はパケットの転送を試みる */
     if (FALSE == ipv4RecvDemux(&dst))
     {
         IPv4_TRACE("Packet sent to routing subsystem");
 
 #if NETEMU
-        /* Run the packet through the network emulator if enabled */
+        /* 有効になっていればパケットをネットワークエミュレータ
+         * 経由で実行する */
         return netemu(pkt);
 #else
         return rtRecv(pkt);
 #endif
     }
 
-    /* Check if packet is fragmented */
+    /* パケットがフラグメント化されているかチェックする（未対応） */
     if ((IPv4_FLAG_MF & net2hs(ip->flags_froff))
         || (0 != (net2hs(ip->flags_froff) & IPv4_FROFF)))
     {
@@ -80,43 +81,43 @@ syscall ipv4Recv(struct packet *pkt)
         return SYSERR;
     }
 
-    /* The Ethernet driver pads packets less than 60 bytes in length.
-     * If the packet length returned from the Ethernet driver (pkt->len)
-     * does not agree with the packet headers, adjust the packet length 
-     * to remove padding. */
+    /* Ethernetドライバは60バイト未満のパケットをパディングする。
+     * Ethernetドライバから返されたパケット長（pkt->len）がパケット
+     * ヘッダと一致しない場合、パケット長を調節してパディングをサック所
+     * する。 */
     iplen = net2hs(ip->len);
     if ((pkt->len - pkt->nif->linkhdrlen) > iplen)
     {
         pkt->len = pkt->nif->linkhdrlen + iplen;
     }
 
-    /* Move current pointer to application level header */
+    /* カレントポインタをアプリケーションレベルヘッダに移動する */
     pkt->curr += ((ip->ver_ihl & IPv4_IHL) << 2);
 
     IPv4_TRACE("IPv4 proto %d", ip->proto);
-    /* Switch on packet protocol */
+    /* パケットプロトコルで切り分ける */
     switch (ip->proto)
     {
-        /* ICMP Packet */
+        /* ICMP パケット */
     case IPv4_PROTO_ICMP:
         icmpRecv(pkt);
         break;
 
 #if NUDP
-        /* UDP Packet */
+        /* UDP パケット */
     case IPv4_PROTO_UDP:
         udpRecv(pkt, &src, &dst);
         break;
 #endif
 
 #if NTCP
-        /* TCP Packet */
+        /* TCP パケット */
     case IPv4_PROTO_TCP:
         tcpRecv(pkt, &src, &dst);
         break;
 #endif
 
-        /* Unknown IP packet protocol */
+        /* 未知のIPパケットプロトコル */
     default:
 #if NRAW
         rawRecv(pkt, &src, &dst, ip->proto);

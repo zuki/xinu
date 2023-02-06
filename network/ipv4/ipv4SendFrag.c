@@ -1,6 +1,6 @@
-/**
+/*
  * file ipv4SendFrag.c
- * 
+ *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
@@ -13,23 +13,26 @@
 #include <ethernet.h>
 
 /**
- * Fragments packet into maximum transmission unit sized chunks.
- * @param pkt the packet to fragment
+ * @ingroup ipv4
+ *
+ * @brief パケットを最大転送ユニットサイズのチャンクにフラグメント化する.
+ *
+ * @param pkt フラグメント化するパケット
  * @return OK
  */
 syscall ipv4SendFrag(struct packet *pkt, struct netaddr *nxthop)
 {
     uint ihl;
     uchar *data;
-    uint dRem = 0;              // The amount of data remaining to be fragmented
+    uint dRem = 0;              // フラグメント化する残りのデータ量
     ushort froff;
     ushort lastFlag;
     ushort dLen;
 
-    // Incoming packet structures
+    // 着信パケット構造体
     struct ipv4Pkt *ip;
 
-    // Outgoing packet structures
+    // 発信パケット構造体
     struct ipv4Pkt *outip;
     struct packet *outpkt;
 
@@ -40,9 +43,10 @@ syscall ipv4SendFrag(struct packet *pkt, struct netaddr *nxthop)
         return SYSERR;
     }
 
-    // Setup incoming packet structures
+    // 着信パケット構造体を設定する
     ip = (struct ipv4Pkt *)pkt->curr;
 
+    // フラグメント化なし
     if (net2hs(ip->len) <= pkt->nif->mtu)
     {
         IPv4_TRACE("NetSend");
@@ -56,14 +60,16 @@ syscall ipv4SendFrag(struct packet *pkt, struct netaddr *nxthop)
         return netSend(pkt, NULL, nxthop, ETHER_TYPE_IPv4);
     }
 
-    // Verify header does not have DF
+    // ヘッダーがDFを持っていないことを確認する
     if (net2hs(ip->flags_froff) & IPv4_FLAG_DF)
     {
         IPv4_TRACE("net2hs of froff");
-        /* Send ICMP message */
+        /* ICMPメッセージを送信する */
         icmpDestUnreach(pkt, ICMP_FOFF_DFSET);
         return SYSERR;
     }
+
+    // フラグメント化あり
 
     ihl = (ip->ver_ihl & IPv4_IHL) * 4;
     data = ((uchar *)ip) + ihl;
@@ -71,14 +77,14 @@ syscall ipv4SendFrag(struct packet *pkt, struct netaddr *nxthop)
     froff = net2hs(ip->flags_froff) & IPv4_FROFF;
     lastFlag = net2hs(ip->flags_froff) & IPv4_FLAGS;
 
-    // Length of data in this packet will be MTU - header length,
-    //  rounded down to nearest multiple of 8 bytes.
+    // このパケットのデータ長は (MTU - ヘッダー長) を
+    //  8バイトの倍数にもっと近く丸め下げる
     dLen = (pkt->nif->mtu - ihl) & ~0x7;
 
     pkt->len = ihl + dLen;
     ip->len = hs2net(pkt->len);
 
-    // Set more fragments flag
+    // moreフラグメントフラグをセットする
     ip->flags_froff = IPv4_FLAG_MF & froff;
     ip->flags_froff = hs2net(ip->flags_froff);
 
@@ -90,7 +96,7 @@ syscall ipv4SendFrag(struct packet *pkt, struct netaddr *nxthop)
     data += dLen;
     froff += (dLen / 8);
 
-    // Get memory from stack for outgoing fragment
+    // 発信フラグメント用にスタックからメモリを取得する
     outpkt = netGetbuf();
 
     if (SYSERR == (int)outpkt)
@@ -99,14 +105,14 @@ syscall ipv4SendFrag(struct packet *pkt, struct netaddr *nxthop)
         return SYSERR;
     }
 
-    // Set up outgoing packet pointers and variables
+    // 発信パケットポインタと経数を設定する
     outpkt->curr -= pkt->nif->mtu;
     outip = (struct ipv4Pkt *)outpkt->curr;
     outpkt->nif = pkt->nif;
 
     memcpy(outip, ip, IPv4_HDR_LEN);
 
-    // While packet must be fragmented
+    // パケットがフラグメントできる限り繰り返す
     while (dRem > 0)
     {
         if (((dRem + 7) & ~0x7) > pkt->nif->mtu + IPv4_HDR_LEN)
@@ -117,10 +123,10 @@ syscall ipv4SendFrag(struct packet *pkt, struct netaddr *nxthop)
         {
             dLen = dRem;
         }
-        // Copy data segment
+        // データセグメントをコピーする
         memcpy(outip->opts, data, dLen);
 
-        // Set more fragments flag
+        // moreフラグメントフラグをセットする
         if (dLen == dRem)
         {
             outip->flags_froff = lastFlag & froff;
@@ -131,15 +137,15 @@ syscall ipv4SendFrag(struct packet *pkt, struct netaddr *nxthop)
         }
         outip->flags_froff = hs2net(outip->flags_froff);
 
-        // Update fields
+        // フィールドを更新する
         outip->len = hs2net(IPv4_HDR_LEN + dLen);
         outip->chksum = 0;
         outip->chksum = netChksum((uchar *)outip, IPv4_HDR_LEN);
 
-        // Update outgoing packet length
+        // 発信パケット長を更新する
         outpkt->len = net2hs(outip->len);
 
-        // Send fragment
+        // フラグメントを送信する
         netSend(outpkt, NULL, nxthop, ETHER_TYPE_IPv4);
 
         dRem -= dLen;

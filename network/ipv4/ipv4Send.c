@@ -1,6 +1,6 @@
-/**
+/*
  * file ipv4Send.c
- * 
+ *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
@@ -13,14 +13,14 @@
 /**
  * @ingroup ipv4
  *
- * Send an outgoing IPv4 packet.
- * @param packet packet being sent
- * @param src source IP address
- * @param dst destination IP address
- * @param proto the protocol of the ip pkt
- * @return OK if packet was sent, TIMEOUT if ARP request timed out,
- * IPv4_NO_INTERFACE if interface does not exist, IPv4_NO_HOP if next hop
- * is unknown, SYSERR otherwise.
+ * @brief IPv4発信パケットを送信する.
+ * @param packet 送信するパケット
+ * @param src 送信元IPアドレス
+ * @param dst 宛先IPアドレス
+ * @param proto ipパケットのプロトコル
+ * @return パケットが送信された OK; ARPリクエストがタイムアウトしたら TIMEOUT;
+ * インタフェースが存在しなかったら IPv4_NO_INTERFACE; 次の転送先がわからない場合は IPv4_NO_HOP;
+ * それ以外は SYSERR
  */
 syscall ipv4Send(struct packet *pkt, struct netaddr *src,
                  struct netaddr *dst, uchar proto)
@@ -29,7 +29,7 @@ syscall ipv4Send(struct packet *pkt, struct netaddr *src,
     struct ipv4Pkt *ip;
     struct netaddr *nxthop;
 
-    /* Error check pointers */
+    /* ポインタのエラーチェック */
     if ((NULL == pkt) || (NULL == dst))
     {
         IPv4_TRACE("Invalid args");
@@ -41,7 +41,7 @@ syscall ipv4Send(struct packet *pkt, struct netaddr *src,
         return SYSERR;
     }
 
-    /* Lookup destination in route table */
+    /* ルートテーブルで宛先を検索する */
     rtptr = rtLookup(dst);
     if (NULL == rtptr)
     {
@@ -49,7 +49,7 @@ syscall ipv4Send(struct packet *pkt, struct netaddr *src,
         return SYSERR;
     }
 
-    /* Packet has next hop in route table */
+    /* パケットにはルートテーブルに次の転送先がある */
     pkt->nif = rtptr->nif;
     if (NULL == rtptr->gateway.type)
     {
@@ -62,13 +62,13 @@ syscall ipv4Send(struct packet *pkt, struct netaddr *src,
         nxthop = &rtptr->gateway;
     }
 
-    /* Set up outgoing packet header */
+    /* 発信パケットのヘッダーを設定する */
     pkt->len += IPv4_HDR_LEN;
     pkt->curr -= IPv4_HDR_LEN;
 
     ip = (struct ipv4Pkt *)pkt->curr;
 
-    /* Set up the IP packet header */
+    /* IPパケットヘッダーを設定する */
     ip->ver_ihl = (uchar)(IPv4_VERSION << 4);
     ip->ver_ihl += IPv4_HDR_LEN / 4;
     ip->tos = IPv4_TOS_ROUTINE;
@@ -79,21 +79,21 @@ syscall ipv4Send(struct packet *pkt, struct netaddr *src,
     ip->proto = proto;
     if (NULL == src->type)
     {
-        /* No source was specified, use IP of outgoing network interface */
+        /* 送信元が指定されていない。発信ネットワークインタフェースのIPを使用する */
         memcpy(ip->src, pkt->nif->ip.addr, IPv4_ADDR_LEN);
     }
     else
     {
-        /* Use provided source IP */
+        /* 指定された送信元IPを使用する */
         memcpy(ip->src, src->addr, IPv4_ADDR_LEN);
     }
     memcpy(ip->dst, dst->addr, IPv4_ADDR_LEN);
 
-    /* Calculate checksum */
+    /* チェックsマウを計算する */
     ip->chksum = 0;
     ip->chksum = netChksum((uchar *)ip, IPv4_HDR_LEN);
     IPv4_TRACE("Setup IPv4 header");
 
-    /* Fragment and send packet */
+    /* フラグメント化してパケットを送信する */
     return ipv4SendFrag(pkt, nxthop);
 }

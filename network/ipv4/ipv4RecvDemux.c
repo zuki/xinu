@@ -1,6 +1,6 @@
-/* 
- * file ipv4RecvDemux.c
- * 
+/**
+ * @file ipv4RecvDemux.c
+ *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
@@ -9,9 +9,12 @@
 #include <network.h>
 
 /**
- *  Determines if an IP packet is destined for one of our network interfaces.
- *  @param dst destination IP address
- *  @return TRUE If destined for one of our netifs, otherwise FALSE
+ *  @ingroup ipv4
+ *
+ *  IPパケットがこのネットワークインタフェース向けのものであるか決定する.
+ *  @param dst 宛先IPアドレス
+ *  @return このネットワークインタフェース向けの場合は TRUE;
+ * そうでなければ FLASE
  */
 bool ipv4RecvDemux(struct netaddr *dst)
 {
@@ -19,18 +22,19 @@ bool ipv4RecvDemux(struct netaddr *dst)
     int i;
     struct netif *netptr;
 
-    /* Check every interface */
+    /*  すべてのインタフェースについてチェックする */
     for (i = 0; i < NNETIF; i++)
     {
         netptr = &netiftab[i];
 
-        /* Skip closed interfaces */
+        /* 未使用のインタフェースはスキップ */
         if (netptr->state != NET_ALLOC)
         {
             continue;
         }
 
-        /* Check if destination IP matches IP for interface */
+        /* 宛先IPアドレスがインタフェースのIPアドレスに一致するか
+         * チェックする */
         if (netaddrequal(dst, &netptr->ip)
             || netaddrequal(dst, &netptr->ipbrc))
         {

@@ -10,22 +10,22 @@
 /**
  * @ingroup ipv4
  *
- * Convert an IPv4 address in dotted-decimal notation into a netaddr.
+ * ドット付き10進記法のIPv4アドレスをnetaddrに変換する.
  *
  * @param str
- *      The dotted-decimal IPv4 address string to convert.
+ *      変換するドット付き10進記法のIPv4アドレス文字列
  * @param ip
- *      The netaddr structure for conversion result.
+ *      変換結果を収めるnetaddr構造体
  *
  * @return
- *      ::OK if conversion was successful, otherwise ::SYSERR.
+ *      変換が成功したら ::OK; それ以外は ::SYSERR.
  */
 syscall dot2ipv4(const char *str, struct netaddr *ip)
 {
     uint o0, o1, o2, o3;
     char tmp;
 
-    /* Error check pointers */
+    /* ポインタのエラーチェック */
     if ((NULL == str) || (NULL == ip))
     {
         return SYSERR;
