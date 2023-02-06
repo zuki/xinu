@@ -12,9 +12,9 @@
 /**
  * @ingroup arp
  *
- * Sends an ARP reply for an ARP request over a network interface. 
- * @param pkt ARP packet to reply to
- * @return OK if packet was sent, otherwise SYSERR
+ * ネットワークインタフェース上でARPリクエストに対するARP応答を送信する.
+ * @param pkt 応答するARPパケット
+ * @return パケットを送信したら OK; そうでなければ SYSERR
  */
 syscall arpSendReply(struct packet *pkt)
 {
@@ -22,7 +22,7 @@ syscall arpSendReply(struct packet *pkt)
     struct arpPkt *arp = NULL;
     struct netaddr dst;
 
-    /* Error check pointers */
+    /* ポインタのエラーチェック */
     if (NULL == pkt)
     {
         return SYSERR;
@@ -30,11 +30,11 @@ syscall arpSendReply(struct packet *pkt)
 
     ARP_TRACE("Sending ARP reply");
 
-    /* Setup pointers */
+    /* ぽいんたを設定する */
     netptr = pkt->nif;
     arp = (struct arpPkt *)pkt->curr;
 
-    /* Fill in ARP header */
+    /* ARPヘッダーを設定する */
     arp->op = hs2net(ARP_OP_REPLY);
     ARP_TRACE("Filled in op");
     memcpy(&arp->addrs[ARP_ADDR_DHA(arp)], &arp->addrs[ARP_ADDR_SHA(arp)],
@@ -50,6 +50,6 @@ syscall arpSendReply(struct packet *pkt)
     dst.len = arp->hwalen;
     memcpy(dst.addr, &arp->addrs[ARP_ADDR_DHA(arp)], dst.len);
 
-    /* Send packet */
+    /* パケットを宇信する */
     return netSend(pkt, &dst, NULL, ETHER_TYPE_ARP);
 }

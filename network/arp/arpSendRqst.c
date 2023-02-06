@@ -12,9 +12,9 @@
 /**
  * @ingroup arp
  *
- * Sends an ARP request for an ARP table entry over a network interface. 
- * @param entry ARP table entry
- * @return OK if packet was sent, otherwise SYSERR
+ * ネットワークインタフェース上でARPテーブルエントリに対するARPリクエストを送信する.
+ * @param entry ARPテーブルエントリ
+ * @return パケットが送信されたら OK; そうでなければ SYSERR
  */
 syscall arpSendRqst(struct arpEntry *entry)
 {
@@ -23,7 +23,7 @@ syscall arpSendRqst(struct arpEntry *entry)
     struct arpPkt *arp = NULL;
     int result;
 
-    /* Error check pointers */
+    /* ポインタのエラーチェック */
     if (NULL == entry)
     {
         return SYSERR;
@@ -31,10 +31,10 @@ syscall arpSendRqst(struct arpEntry *entry)
 
     ARP_TRACE("Sending ARP request");
 
-    /* Setup pointer to network interface */
+    /* ネットワークインタフェースへのポインタを設定する */
     netptr = entry->nif;
 
-    /* Obtain a buffer for the packet */
+    /* パケット用のバッファを取得する */
     pkt = netGetbuf();
     if (SYSERR == (int)pkt)
     {
@@ -42,14 +42,14 @@ syscall arpSendRqst(struct arpEntry *entry)
         return SYSERR;
     }
 
-    /* Place ARP header at end of packet buffer */
+    /* パケットバッファの末尾にARPヘッダーを置く */
     pkt->nif = netptr;
     pkt->len =
         ARP_CONST_HDR_LEN + netptr->hwaddr.len * 2 + netptr->ip.len * 2;
     pkt->curr -= pkt->len;
     arp = (struct arpPkt *)pkt->curr;
 
-    /* Fill in ARP header */
+    /* ARPヘッダーを設定する */
     arp->hwtype = hs2net(netptr->hwaddr.type);
     arp->prtype = hs2net(netptr->ip.type);
     arp->hwalen = netptr->hwaddr.len;
@@ -63,18 +63,18 @@ syscall arpSendRqst(struct arpEntry *entry)
            arp->pralen);
     ARP_TRACE("Filled in addrs");
 
-    /* Send packet */
+    /* パケットを送信する */
     result = netSend(pkt, &netptr->hwbrc, NULL, ETHER_TYPE_ARP);
 
     ARP_TRACE("Sent packet");
 
-    /* Free buffer for the packet */
+    /* パケット用のバッファを開放する */
     if (SYSERR == netFreebuf(pkt))
     {
         ARP_TRACE("Failed to free packet buffer");
         return SYSERR;
     }
 
-    /* Return result of netSend */
+    /* netSendの結果を返す */
     return result;
 }
