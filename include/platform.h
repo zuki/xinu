@@ -7,61 +7,84 @@
 #ifndef _PLATFORM_H_
 #define _PLATFORM_H_
 
-#include <stddef.h>
+#include <stdint.h>
 #include <stdarg.h>
 
-/** Maximum length of platform name and family strings, including the
- * null-terminator.  */
+/** プラットフォーム名とファミリ名の終端文字を含む最大文字列長.  */
 #define PLT_STRMAX 18
 
 /**
- * Various platform-specific parameters filled in at boot time by
- * platforminit().  When platforminit() is called this structure will initially
- * be all 0's.
+ * ブート時にplatforminit()関数で設定される種々のプラットフォーム固有のパラメタ.
+ * platforminit()が呼び出された際は、すべて0にセットされている。
  */
 struct platform
 {
-    /** Name of the platform as a null-terminated string.  It is
-     * platform-specific what is considered a "name" and what is considered a
-     * "family".  */
+    /**
+     * NULL終端されたプラットフォームの名前.
+     * 何を"名前"または"ファミリー"とみなすかはプラットフォーム次第である。
+     */
     char name[PLT_STRMAX];
 
-    /** Family of the platform as a null-terminated string.  It is
-     * platform-specific what is considered a "name" and what is considered a
-     * "family".  */
+    /**
+     * NULL終端されたプラットフォームのファミリー.
+     * 何を"名前"または"ファミリー"とみなすかはプラットフォーム次第である。
+     */
     char family[PLT_STRMAX];
 
-    /** Minimum physical address available to the CPU.  platforminit() can leave
-     * this value alone if available physical memory starts at 0.  */
+    /**
+     * CPUが利用可能な最小の物理アドレス.  利用可能な物理メモリが0から
+     * 始まる場合、platforminit()はこの値をそのままにしておくことができる。
+     */
     void *minaddr;
 
-    /** One byte past the last byte physically addressable by the CPU.  Must be
-     * set by platforminit().  */
+    /**
+     * CPUが利用可能な最小の物理アドレス+1.
+     * platforminit()で設定する必要がある。
+     */
     void *maxaddr;
 
-    /** Frequency of the system timer in cycles per second.  Must be set by
-     * platforminit() if RTCLOCK is enabled.  This is the frequency at which the
-     * values returned by clkcount() change.  */
-    ulong clkfreq;
+    /**
+     * システムタイマーの周波数（1秒あたりのサイクル数）.
+     * RTCLOCKを有効にした場合は、platforminit()で設定する必要がある。
+     * clkcount()が返す値が変化する頻度である。
+     */
+    unsigned long clkfreq;
 
-    /** UART Divisor Latch LS.  platforminit() only needs to set this if
-     * required by the UART driver.  */
-    uchar uart_dll;
+    /**
+     * UART除数ラッチLS. UARTドライバが必要とする場合だけ
+     * platforminit() は設定する必要がある。
+     */
+    uint8_t uart_dll;
 
-    /** Number of the UART IRQ line.  platforminit() only needs to set this if
-     * required by the UART driver.  */
-    uchar uart_irqnum;
+    /**
+     * UART IRQラインの番号.  UARTドライバが必要とする場合だけ 　* * * platforminit() は設定する必要がある。
+     */
+    uint8_t uart_irqnum;
 
-    /** Low word of the board's serial number.  Setting this is optional; it's
-     * currently only used by the SMSC LAN9512 driver.  */
-    uint serial_low;
+    /**
+     * ボードのシリアル番号の下位ワード. 設定はオプション。
+     * 現在のところ、SMSC LAN9512ドライバでしか仕様されていない。
+     */
+    unsigned int serial_low;
 
-    /** High word of the board's serial number.  Setting this is optional; it's
-     * currently only used by the SMSC LAN9512 driver.  */
-    uint serial_high;
+    /**
+     * ボードのシリアル番号の上位ワード. 設定はオプション。
+     * 現在のところ、SMSC LAN9512ドライバでしか仕様されていない。
+     */
+    unsigned int serial_high;
+
+    /**
+     * ボードのモデルコード (0xd = 3B+)
+    */
+    uint32_t model_id;
+
+    /**
+     * ネットワークテスト用
+    */
+	unsigned int ether_count;
 };
 
-extern struct platform platform;
+extern struct platform platform;    // initialize.cで定義
 
 /* Max RAM addresses */
 #define MAXADDR_DEFAULT  0x00800000 /**< default  8MB RAM */
@@ -85,7 +108,7 @@ extern struct platform platform;
 
 /* Used internally by create()  */
 void *setupStack(void *stackaddr, void *procaddr,
-                 void *retaddr, uint nargs, va_list ap);
+                 void *retaddr, unsigned int nargs, va_list ap);
 
 int platforminit(void);
 

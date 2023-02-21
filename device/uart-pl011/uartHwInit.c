@@ -8,7 +8,7 @@
 #include <clock.h>
 #include "pl011.h"
 
-#ifdef _XINU_PLATFORM_ARM_RPI_
+#if defined(_XINU_PLATFORM_ARM_RPI_) || defined(_XINU_PLATFORM_ARM_RPI_3_)
 
 /* GPIOレジスタの開始アドレスからのUARTレジスタのオフセット */
 #define UART_GPIO_OFFSET 0x1000
@@ -64,7 +64,7 @@ devcall uartHwInit(device *devptr)
     /* "制御レジスタ"に0を設定してUARTを無効にする  */
     regptr->cr = 0;
 
-#ifdef _XINU_PLATFORM_ARM_RPI_
+#if defined(_XINU_PLATFORM_ARM_RPI_) || defined(_XINU_PLATFORM_ARM_RPI_3_)
     /* Raspberry Pi のGPIO品を正しく構成する */
     setup_gpio_pins((void*)regptr);
 #endif

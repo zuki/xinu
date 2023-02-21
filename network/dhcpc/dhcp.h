@@ -1,5 +1,6 @@
 /**
  * @file dhcp.h
+ * @ingroup dhcpc
  *
  */
 /* Embedded Xinu, Copyright (C) 2008, 2013.  All rights reserved. */
@@ -59,9 +60,12 @@
 #define DHCP_OPT_SERVER         54
 #define DHCP_OPT_PARAMREQ		55
 
-/*
- * DHCP PACKET
+/**
+ * @ingroup dhcpc
  *
+ * DHCPパケット構造体.
+ *
+ * \code
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
  * | Ethernet Header (14 octets)                                   |
  * | ...                                                           |
@@ -99,8 +103,8 @@
  * | Each options has: Type (1 octet), Len (1 octet), and Value    |
  * | ...                                                           |
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * \endocode
  */
-
 struct dhcpPkt
 {
     uchar op;             /**< Operation (request or reply) */

@@ -54,13 +54,13 @@ irq_handler:
 	sub sp, sp, r4
 
 	/* Execute a data memory barrier, as per the BCM2835 documentation.  */
-	bl dmb
+	dmb
 
 	/* Call the C interrupt dispatching code. */
 	bl dispatch
 
 	/* Execute a data memory barrier, as per the BCM2835 documentation.  */
-	bl dmb
+	dmb
 
 	/* Restore the original stack alignment (see note about 8-byte alignment
 	 * above).  */
@@ -74,4 +74,3 @@ irq_handler:
 	 * mode stack.  */
 	rfeia sp!
 	.endfunc
-

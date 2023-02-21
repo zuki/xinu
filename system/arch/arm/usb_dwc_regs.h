@@ -1,110 +1,111 @@
 /**
  * @file usb_dwc_regs.h
+ * @ingroup usbhcd
  *
  * DesignWare Hi-Speed USB 2.0 On-The-Go Controllerのレジスタ.
+ *
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
-#ifndef _USB_DWC_REGS_H_
-#define _USB_DWC_REGS_H_
+#ifndef _ARM_USB_DWC_REGS_H_
+#define _ARM_USB_DWC_REGS_H_
 
 #include <usb_util.h>
 
 /**
- * Number of DWC host channels, each of which can be used for an independent
- * USB transfer.  On the BCM2835 (Raspberry Pi), 8 are available.  This is
- * documented on page 201 of the BCM2835 ARM Peripherals document.
+ * DWCホストのチャンネル数である. それぞれが独立のUSB転送に使用できる。
+ * BCM2835 (Raspberry Pi)では8チャンネル使用できる。これはドキュメント
+ * "BCM2835 ARM Peripherals" の201ページに記載されている。
  */
 #define DWC_NUM_CHANNELS 8
 
 /**
- * Layout of the registers of the DesignWare Hi-Speed USB 2.0 On-The-Go
- * Controller.  There is no official documentation for these; however, the
- * register locations (and to some extent the meanings) can be found in other
- * code, such as the Linux driver for this hardware that Synopsys contributed.
+ * DesignWare Hi-Speed USB 2.0 On-The-Goコントローラのレジスタレイアウト.
+ * これについての正式なドキュメントは存在しない。ただし、レジスタの位置
+ * （とそのある程度の意味）はSynopsys社が提供したこのハードウェアの
+ * Linuxドライバなど、他のコードで見つけることができる。
  *
- * We do not explicitly define every bit in the registers because the majority
- * are not used by our driver and would complicate this file.  For example, we
- * do not attempt to document any features that are specific to suspend,
- * hibernation, the OTG protocol, or to the core acting in device mode rather
- * than host mode.
+ * ここではレジスタのすべてのビットを明示的に定義してはいない。なぜなら、
+ * 大部分はドライバで使用されておらず、このファイルを複雑にするからである。
+ * たとえば、サスペンド、ハイバネーション、OTGプロトコル、ホストモードでは
+ * なくデバイスモードで動作するコアに特有の機能については記載していない。
  *
- * The bits and fields we do use in our driver we have tried to completely
- * document based on our understanding of what they do.  We cannot guarantee
- * that all the information is correct, as we do not have access to any official
- * documentation.
+ * ドライバで使用しているビットやフィールドについては、それらが何をする
+ * ものであるかを理解した上で、完全に文書化するように努めた。しかし、
+ * 公式の文書にアクセスできないので、すべての情報が正しいことを保証する
+ * ものではない。
  */
 struct dwc_regs {
 
-    /* 0x000 : OTG Control */
+    /* 0x000 : GOTGCTL: OTGコントロール/ステータスレジスタ. */
     uint32_t otg_control;
 
-    /* 0x004 : OTG Interrupt */
+    /* 0x004 : GOTGINT: OTG割り込みレジスタ. */
     uint32_t otg_interrupt;
 
     /**
-     * 0x008 : AHB Configuration Register.
+     * 0x008 : GAHBCFG: AHBコンフィグレーションレジスタ.
      *
-     * This register configures some of the interactions the DWC has with the
-     * rest of the system.  */
+     * このレジスタはDWCとシステムの他のペリフェラルとのインタフェースを
+     * 構成する  */
     uint32_t ahb_configuration;
 
-/** Enable interrupts from the USB controller.  Disabled by default.  */
+/** USBコントローラからの割り込みを有効にする（実際はアプリケーション全体の
+ * 割り込みを有効にする: アンマスク）. デフォルトは無効（マスク）になっている。 */
 #define DWC_AHB_INTERRUPT_ENABLE  (1 << 0)
 
 /**
- * Bits [4:1] of the AHB Configuration register were redefined by Broadcom for
- * the BCM2835; hence this flag is only valid on the BCM2835.
+ * AHBコンフィグレーションレジスタのビット [4:1] はBroadcomによりBCM2835ように
+ * 再定義されている。したがって、こののフラグはBCM2835でのみ妥当である。
  *
- * This bit is documented as:
+ * このビットは次のように定義されている。
  *
- *   1 = Wait for all outstanding AXI writes to complete before signalling
- *      (internally) that DMA is done.
- *   0 = don't wait.
+ *    1 = 未処理のAXI書き込みがすべて完了するのを待ってからDMAの完了を
+ *        （内部で）シグナリングする。
+ *    0 = 待たない
  *
- * We set this bit because the Linux driver does, although we did not observe a
- * difference in behavior.
+ * Linuxドライバがそうしているのでこのビットをセットしたが、動作に違いは
+ * 見られなかった。
  */
 #define BCM_DWC_AHB_AXI_WAIT      (1 << 4)
 
 /**
- * Writing 1 to this bit in the AHB Configuration Register allows the USB
- * controller to perform DMA (Direct Memory Access).  Disabled by default.
+ * AHBコンフィグレーションレジスタのこのビットに1を書き込むとUSBコントローラ
+ * （実際はコア）がDMAモードで実行するようになる。デフォルトは無効 (0)
  */
 #define DWC_AHB_DMA_ENABLE        (1 << 5)
 
-    /* 0x01c : Core USB configuration */
+    /* 0x00c : GUSBCFG: USBコンフィグレーションレジスタ. */
     uint32_t core_usb_configuration;
 
 
     /**
-     * 0x010 : Core Reset Register.
+     * 0x010 : GRSTCTL: コアリセットレジスタ.
      *
-     * Software can use this register to cause the DWC to reset itself.
+     * ソフトウェアはこのレジスタを使ってコア内部の様々なハードウェアを
+     * リセットすることができる。
      */
     uint32_t core_reset;
 
     /**
-     * TODO
+     * AHB Master Idle: AHBマスタステートマシンがIDLE条件にあることを示す
      */
 #define DWC_AHB_MASTER_IDLE (1 << 31)
 
     /**
-     * Write 1 to this location in the Core Reset Register to start a soft
-     * reset.  This bit will then be cleared by the hardware when the reset is
-     * complete.
+     * コアリセットレジスタのこのビットに1を書き込むとソフトウェアリセットが
+     * 開始される。このビットはリセットが完了すると自動的にクリアされる。
      */
 #define DWC_SOFT_RESET      (1 << 0)
 
     /**
-     * 0x014 : Core Interrupt Register.
+     * 0x014 : GINTSTS: コア割り込みレジスタ.
      *
-     * This register contains the state of pending top-level DWC interrupts.  1
-     * means interrupt pending while 0 means no interrupt pending.
+     * このレジスタは保留されているトップレベルのDWC割り込みの状態を含んでいる。
+     * 1は割り込みが保留されていることを、0は保留されていないことを意味する。
      *
-     * Note that at least for port_intr and host_channel_intr, software must
-     * clear the interrupt somewhere else rather than by writing to this
-     * register.
+     * 少なくともport_intrとhost_channel_intrについては、このレジスタに書き込む
+     * のではなく、他のどこかで割り込みをクリアしなければならないことに注意。
      */
     union dwc_core_interrupts {
         uint32_t val;
@@ -119,18 +120,16 @@ struct dwc_regs {
             uint32_t morestuff         : 20;
 
             /**
-             * Host port status changed.  Software must examine the Host Port
-             * Control and Status Register to determine the current status of
-             * the host port and clear any flags in it that indicate a status
-             * change.
+             * ホストポートの状態が変更された。ソフトウェアはHPRTでホスト
+             * ポートの現在の状態を調べて、変更のあったステータスのフラグを
+             * クリアする必要がある。
              */
             uint32_t port_intr         : 1;     /* Bit 24 */
 
             /**
-             * Channel interrupt occurred.  Software must examine the Host All
-             * Channels Interrupt Register to determine which channel(s) have
-             * pending interrupts, then handle and clear the interrupts for
-             * these channels.
+             * チャネル割り込みが発生した。ソフトウェアはHAINTでどのチャネルで
+             * 割り込みが保留されているか調べて、その割り込みを処理して、その
+             * チャネルの割り込みをクリアする必要がある。
              */
             uint32_t host_channel_intr : 1;     /* Bit 25 */
 
@@ -139,22 +138,21 @@ struct dwc_regs {
     } core_interrupts;
 
     /**
-     * 0x018 : Core Interrupt Mask Register.
+     * 0x018 : GINTMSK: コア割り込みマスクレジスタ.
      *
-     * This register has the same format as the Core Interrupt Register and
-     * configures whether the corresponding interrupt is enabled (1) or disabled
-     * (0).  Initial state after reset is all 0's.
+     * このレジスタはGINTSTSと同じ形式であり、対応する割り込みを有効 (1) または
+     * 無効 (0) にする。リセット後の初期状態はすべて 0
      */
     union dwc_core_interrupts core_interrupt_mask;
 
-    /* 0x01c : Receive Status Queue Read */
+    /* 0x01c : GRXSTSR: 受信ステータスキュー読み込み */
     uint32_t receive_status;
 
-    /* 0x020 : Receive Status Queue Read & Pop */
+    /* 0x020 : GRXSTSP: 受信ステータスキュー読み込みとポップアウト */
     uint32_t receive_status_pop;
 
     /**
-     * 0x024 : Receive FIFO Size Register.
+     * 0x024 : GRXFSIZ: 受信FIFOサイズレジスタ.
      *
      * This register contains the size of the Receive FIFO, in 4-byte words.
      *

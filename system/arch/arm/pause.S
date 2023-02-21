@@ -9,7 +9,7 @@
 .globl pause
 
 pause:
-	.func pause
-	wfi               /* ARMの "wait for interrupt" 命令 */
-	mov pc, lr
-	.endfunc
+    .func pause
+    wfi               /* ARMの "wait for interrupt" 命令 */
+    mov pc, lr
+    .endfunc

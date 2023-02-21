@@ -3,25 +3,26 @@
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
+#include <stdint.h>
 #include <platform.h>
 #include <arm.h>
 
-/* ワード単位のARMコンテキストレコード長（r0-r11, cpsr, lr, pcを含む) */
+/** ワード単位のARMコンテキストレコード数（r0-r11, cpsr, lr, pcを含む) */
 #define CONTEXT_WORDS 15
 
-/* 標準的なARM呼び出し規約では最初の4引数はr0-r3で渡し、
+/** 標準的なARM呼び出し規約では最初の4引数はr0-r3で渡し、
  * 残りはスタックで渡す  */
 #define MAX_REG_ARGS 4
 
 /** 新規スレッドのスタックにコンテキストレコードと引数をセットする
  * (ARM版)  */
 void *setupStack(void *stackaddr, void *procaddr,
-                 void *retaddr, uint nargs, va_list ap)
+                 void *retaddr, unsigned int nargs, va_list ap)
 {
-    uint spilled_nargs;     // スタック渡しの引数の数
-    uint reg_nargs;         // レジスタ渡しの引数の数
-    uint i;
-    ulong *saddr = stackaddr;
+    unsigned int spilled_nargs;     // スタック渡しの引数の数
+    unsigned int reg_nargs;         // レジスタ渡しの引数の数
+    unsigned int i;
+    uintptr_t *saddr = stackaddr;
 
     /* （コンテキストレコード以外に）スタックで渡す引数があるか判断する
      * もしあれば、そのためのスペースを予約する  */
@@ -37,7 +38,7 @@ void *setupStack(void *stackaddr, void *procaddr,
     /* 新しいスレッドがコンテキストレコードをポップオフした後、
      * スタックが8バイト境界にアラインされるように1ワード
      * スキップする可能性がある  */
-    if ((ulong)saddr & 0x4)
+    if ((unsigned long)saddr & 0x4)
     {
         --saddr;
     }
@@ -49,7 +50,7 @@ void *setupStack(void *stackaddr, void *procaddr,
     /* レジスタで渡される引数（コンテキストレコードの一部） */
     for (i = 0; i < reg_nargs; i++)
     {
-        saddr[i] = va_arg(ap, ulong);
+        saddr[i] = va_arg(ap, uintptr_t);
     }
 
     for (; i < CONTEXT_WORDS - 3; i++)
@@ -58,21 +59,21 @@ void *setupStack(void *stackaddr, void *procaddr,
     }
 
     /* プログラムステータスレジスタのコントロールビット
-     * (SYSモード, IRQは酒器には有効 */
+     * (SYSモード, IRQははじめから有効 */
     saddr[CONTEXT_WORDS - 3] = ARM_MODE_SYS | ARM_F_BIT;
 
     /* リターンアドレス  */
-    saddr[CONTEXT_WORDS - 2] = (ulong)retaddr;
+    saddr[CONTEXT_WORDS - 2] = (uintptr_t)retaddr;
 
     /* プログラムカウンタ  */
-    saddr[CONTEXT_WORDS - 1] = (ulong)procaddr;
+    saddr[CONTEXT_WORDS - 1] = (uintptr_t)procaddr;
 
     /* スタック渡しの引数（コンテキストレコードではない）  */
     for (i = 0; i < spilled_nargs; i++)
     {
-        saddr[CONTEXT_WORDS + i] = va_arg(ap, ulong);
+        saddr[CONTEXT_WORDS + i] = va_arg(ap, uintptr_t);
     }
 
-    /* スタックの「トップ」（最低位のアドレス）を返す  */
+    /* スタックの「トップ」（最下位のアドレス）を返す  */
     return saddr;
 }

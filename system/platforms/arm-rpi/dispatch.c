@@ -14,7 +14,7 @@
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
-#include <interrupt.h>
+#include "interrupt.h"
 #include <kernel.h>
 #include <stddef.h>
 #include "bcm2835.h"

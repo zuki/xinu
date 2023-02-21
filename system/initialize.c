@@ -58,11 +58,11 @@ struct platform platform;       /* プラットフォーム固有の構成      
 /**
  * @ingroup boot
  *
- * システムを初期化して、ヌルスレッドとなる.
+ * システムを初期化して、NULLスレッドとなる.
  *
  * C環境の確立後にシステムが開始する地点である。割り込みは初期状態では
  * "無効"になっており、最終的には明示的に有効にする必要がある。この関数は
- * 初期化後、自身をヌルスレッドにする。ヌルスレッドは常に実行可能な状態を
+ * 初期化後、自身をNULLスレッドにする。NULLスレッドは常に実行可能な状態を
  * 維持しなければならないので、サスペンド、セマフォ待ち、スリープ、終了などの
  * 原因となるコードを実行することはできない。特に、同期出力用の kprintf を
  * 使用しない限り、I/Oを行ってはならない。
@@ -81,7 +81,7 @@ void nulluser(void)
     /* メインスレッドを起動する  */
     ready(create(main, INITSTK, INITPRIO, "MAIN", 0), RESCHED_YES);
 
-    /* 塗るスレッドは他にすることはないが終了することはできない  */
+    /* NULLスレッドは他にすることはないが終了することはできない  */
     while (TRUE)
     {
 #ifndef DEBUG
@@ -121,7 +121,7 @@ static int sysinit(void)
         thrtab[i].state = THRFREE;
     }
 
-    /* ヌルスレッドエントリを初期化する*/
+    /* NULLスレッドエントリを初期化する*/
     thrptr = &thrtab[NULLTHREAD];
     thrptr->state = THRCURR;
     thrptr->prio = 0;

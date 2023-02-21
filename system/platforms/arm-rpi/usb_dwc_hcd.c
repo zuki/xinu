@@ -1,6 +1,5 @@
 /**
  * @file usb_dwc_hcd.c
- * @ingroup usbhcd
  *
  * このファイルにはSynopsys DesignWare Hi-Speed USB 2.0 On-The-Go
  * Controller用のUSBホストコントローラデバイスが含まれている。
@@ -8,7 +7,6 @@
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
 /**
- * @addtogroup usbhcd
  *
  * これはRaspberry Piに搭載されているBCM2835 SoCで使用されているUSBホスト
  * コントローラである。
@@ -72,7 +70,7 @@
 #include <string.h>
 #include <thread.h>
 #include <usb_core_driver.h>
-#include <usb_dwc_regs.h>
+#include <system/arch/arm/usb_dwc_regs.h>
 #include <usb_hcdi.h>
 #include <usb_hub_defs.h>
 #include <usb_std_defs.h>
@@ -154,7 +152,7 @@ static semaphore chfree_sema;
 /**
  * 各ハードウェアチャネルで現在完了しているUSB転送リクエスト
  * （もしあれば）へのポインタを保持する配列.
- */ root_hub_configuration
+ */
 static struct usb_xfer_request *channel_pending_xfers[DWC_NUM_CHANNELS];
 
 /** DMA用のアライメントされたバッファ. */

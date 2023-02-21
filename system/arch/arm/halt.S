@@ -10,18 +10,18 @@
 /**
  * @fn void halt(void)
  *
- * Halt the system by sending the processor into an infinite loop.
+ * プロセッサを無限ループに送り込むことによりシステムを停止する.
  */
 halt:
 	.func halt
 
 _loop:
-	/* Disable IRQs and FIQs.  */
+	/* IRQとFIQを無効にする  */
 	msr cpsr_c, #ARM_I_BIT | ARM_F_BIT
 
-	/* Wait for interrupt.  */
+	/* 割り込みを待機  */
 	wfi
 
-	/* Shouldn't be necessary, but repeat just in case.  */
+	/* 必要ないはずだが、念の為  */
 	b _loop
 	.endfunc

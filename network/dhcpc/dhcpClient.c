@@ -14,10 +14,9 @@
 /**
  * @ingroup dhcpc
  *
- * DHCP (Dynamic Host Configuration Protocol) client for IPv4 autoconfiguration.
+ * IPv4自動構造用のDHCP (Dynamic Host Configuration Protocol) クライアント.
  *
- * TODO: This function returns immediately once the IP address has been
- * assigned.  It does not handle renewing leases.
+ * TODO: この関数はIPアドレスが付与されると直ちに復帰する。更新問題を処理しない。
  *
  * @param[in] descrp
  *      Device descriptor for the network device on which to open the DHCP

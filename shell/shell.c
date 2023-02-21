@@ -37,7 +37,7 @@ const struct centry commandtab[] = {
     {"gpiostat", FALSE, xsh_gpiostat},
 #endif
     {"help", FALSE, xsh_help},
-#if defined(ETH0) || defined(_XINU_PLATFORM_ARM_RPI_)
+#if defined(ETH0) || defined(_XINU_PLATFORM_ARM_RPI_) || defined(_XINU_PLATFORM_ARM_RPI_3_)
     {"kexec", FALSE, xsh_kexec},
 #endif
     {"kill", TRUE, xsh_kill},

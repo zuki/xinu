@@ -1,6 +1,7 @@
 /**
  * @file ns16550.h
  *
+ * @brief miniUART
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
@@ -11,8 +12,8 @@
 #include <conf.h>
 
 /**
- * Control and status registers for the 16550 UART.  This structure is
- * mapped directly to the base address for the CSR.
+ * 16550 UART用のコントロール・テータスレジスタ。 この構造体は
+ * CSRのベースアドレスに直接マップされる。
  */
 struct ns16550_uart_csreg
 {
@@ -29,62 +30,65 @@ struct ns16550_uart_csreg
     volatile ulong scr;         /**< scratch                            */
 #else
 
-    volatile uchar buffer;      /**< receive buffer (read only)         */
-                                /**<  OR transmit hold (write only)     */
-    volatile uchar ier;         /**< interrupt enable                   */
-    volatile uchar iir;         /**< interrupt ident (read only)        */
-                                /**<  OR FIFO control (write only)      */
-    volatile uchar lcr;         /**< line control                       */
-    volatile uchar mcr;         /**< modem control                      */
-    volatile uchar lsr;         /**< line status                        */
-    volatile uchar msr;         /**< modem status                       */
-    volatile uchar scr;         /**< scratch                            */
+    volatile uchar buffer;      /**< 受信バッファ (RO)                  */
+                                /**<  または、送信データ格納 (WO)       */
+    volatile uchar ier;         /**< 割り込みイネーブル                 */
+    volatile uchar iir;         /**< 割り込み識別                  (RO) */
+                                /**<  または、FIFO制御 (RO)             */
+    volatile uchar lcr;         /**< ラインコントロール                 */
+    volatile uchar mcr;         /**< モデムコントロール                 */
+    volatile uchar lsr;         /**< ラインステータス                   */
+    volatile uchar msr;         /**< モデムステータス                   */
+    volatile uchar scr;         /**< スクラッチ                         */
 #endif
 };
 
-/* Alternative names for control and status registers                   */
-#define rbr buffer              /**< receive buffer (read only)         */
-#define thr buffer              /**< transmit hold (write only)         */
-#define fcr iir                 /**< FIFO control (write only)          */
-#define dll buffer              /**< divisor latch low byte             */
-#define dlm ier                 /**< divisor latch high byte            */
+/* コントロール・ステータスレジスタの別名                               */
+#define rbr buffer              /**< 受信バッファ (RO)                  */
+#define thr buffer              /**< 送信データ格納 (WO)                */
+#define fcr iir                 /**< FIFO制御 (WO)                      */
+#define dll buffer              /**< 除数ラッチ低位バイト               */
+#define dlm ier                 /**< 除数ラッチ高位バイト               */
 
-/* UART Bit flags for control and status registers                      */
-/* Interrupt enable bits                                                */
-#define UART_IER_ERBFI  0x01    /**< Received data interrupt mask       */
-#define UART_IER_ETBEI  0x02    /**< Transmitter buffer empty interrupt */
-#define UART_IER_ELSI   0x04    /**< Recv line status interrupt mask    */
-#define UART_IER_EMSI   0x08    /**< Modem status interrupt mask        */
+#define UART_FIFO_LEN  8
 
-/* Interrupt identification masks */
-#define UART_IIR_IRQ    0x01    /**< Interrupt pending bit              */
-#define UART_IIR_IDMASK 0x0E    /**< 3-bit field for interrupt ID       */
-#define UART_IIR_MSC    0x00    /**< Modem status change                */
-#define UART_IIR_THRE   0x02    /**< Transmitter holding register empty */
-#define UART_IIR_RDA    0x04    /**< Receiver data available            */
-#define UART_IIR_RLSI   0x06    /**< Receiver line status interrupt     */
-#define UART_IIR_RTO    0x0C    /**< Receiver timed out                 */
+/* コントロール・ステータスレジスタのUARTビットフラグ                   */
+/* 割り込みイネーブルビット                                             */
+#define UART_IER_ERBFI  0x01    /**< 受信データ割り込み                 */
+#define UART_IER_ETBEI  0x02    /**< 送信バッファエンプティ割り込み     */
+#define UART_IER_ELSI   0x04    /**< Recv line status (miniUARTはN/A） */
+#define UART_IER_EMSI   0x08    /**< Modem status (miniUARTはN/A）     */
 
-/* FIFO control bits */
-#define UART_FCR_EFIFO  0x01    /**< Enable in and out hardware FIFOs   */
-#define UART_FCR_RRESET 0x02    /**< Reset receiver FIFO                */
-#define UART_FCR_TRESET 0x04    /**< Reset transmit FIFO                */
+/* 割り込み識別マスク */
+#define UART_IIR_IRQ    0x01    /**< 割り込み保留ビット                 */
+#define UART_IIR_IDMASK 0x0E    /**< 割り込みID用の3ビットフィールド    */
+#define UART_IIR_MSC    0x00    /**< モデムステータス変更 (miniUARTはN/A) */
+#define UART_IIR_THRE   0x02    /**< 送信データ格納レジスタエンプティ   */
+#define UART_IIR_RDA    0x04    /**< 受信データあり                     */
+#define UART_IIR_RLSI   0x06    /**< レシーバのラインステータス割り込み  (miniUARTはN/A)*/
+#define UART_IIR_RTO    0x0C    /**< レシーバタイムアウト (miniUARTはN/A)               */
+
+/* FIFO制御ビット （UAR_IIR Write only) */
+#define UART_FCR_EFIFO  0x01    /**< ハードウェアFIFO in/outを有効化    */
+#define UART_FCR_RRESET 0x02    /**< 受信FIOをリセット                  */
+#define UART_FCR_TRESET 0x04    /**< 送信FIFOをリセット                 */
 #define UART_FCR_TRIG0  0x00    /**< RCVR FIFO trigger level one char   */
 #define UART_FCR_TRIG1  0x40    /**< RCVR FIFO trigger level 1/4        */
 #define UART_FCR_TRIG2  0x80    /**< RCVR FIFO trigger level 2/4        */
 #define UART_FCR_TRIG3  0xC0    /**< RCVR FIFO trigger level 3/4        */
 
-/* Line control bits */
-#define UART_LCR_DLAB   0x80    /**< Divisor latch access bit           */
+
+/* ラインコントロールビット */
+#define UART_LCR_DLAB   0x80    /**< 除数ラッチアクセスビット           */
 #define UART_LCR_8N1    0x03    /**< 8 bits, no parity, 1 stop          */
 
-/* Modem control bits */
-#define UART_MCR_OUT2   0x08    /**< User-defined OUT2.                 */
-#define UART_MCR_LOOP   0x10    /**< Enable loopback test mode          */
+/* モデムコントロールビット */
+#define UART_MCR_OUT2   0x08    /**< ユーザ定義のOUT2.                  */
+#define UART_MCR_LOOP   0x10    /**< ループバックテストモードを有効化   */
 
-/* Line status bits */
-#define UART_LSR_DR     0x01    /**< Data ready                         */
-#define UART_LSR_THRE   0x20    /**< Transmit-hold-register empty       */
-#define UART_LSR_TEMT   0x40    /**< Transmitter empty                  */
+/* ラインステータスビット */
+#define UART_LSR_DR     0x01    /**< 受信データあり                     */
+#define UART_LSR_THRE   0x20    /**< 送信データ格納レジスタエンプティ   */
+#define UART_LSR_TEMT   0x40    /**< トランスミッタエンプティ           */
 
 #endif                          /* _NS16550_H_ */

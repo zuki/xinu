@@ -36,4 +36,3 @@ void drawChar(char c, int x, int y, ulong color)
         y++;
     }
 }
-

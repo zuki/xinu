@@ -1,5 +1,5 @@
 /**
- * @defgroup dhcpc DHCP client
+ * @defgroup dhcpc DHCPクライアント
  * @ingroup network
- * @brief Client for Dynamic Host Configuration Protocol (IPv4 version)
+ * @brief DHCP (Dynamic Host Configuration Protocol)　のクライアント (IPv4版)
  */

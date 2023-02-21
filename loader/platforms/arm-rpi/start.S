@@ -13,35 +13,36 @@
 .section .init
 	.globl _start
 
-	/* _start:  Entry point of the Xinu kernel.  This will be the very first
-	 * byte of the kernel image and on the Raspberry Pi will be loaded by
-	 * the GPU at address 0x8000.  */
+	/* _start:  Xinuカーネルのエントリポイント。これはカーネルイメージの
+     * 先頭コードであり、Raspberry PiではGPUによりアドレス 0x8000 に
+     * ロードされる */
 	.func _start
 _start:
-	/* Save the pointer to the atags (ARM boot tags).  The bootloader should
-	 * pass this in r2, but override 0 with 0x100 to deal with old
-	 * bootloaders that assume Linux's default behavior.  (This is the case
-	 * with, for example, the bootloader on the BCM2835.)  */
-	ldr r3, =atags_ptr
-	cmp r2, #0
+	/* atgs (ARM boot tags) へのポインタを保存する。ブートローダは
+     * これをR2経由で渡すはずだが、Linuxのデフォルト動作を前提とした
+     * 古いブートローダに対処するため、この値が0だったら0x100で
+     * 上書きする。（これは、たとえばBCM2835のブートローダが
+     * 該当する）  */
+	ldr r3, =atags_ptr  /* atags_ptrはsystem/platforms/arm-rpi/platforminit.cで定義 */
+	cmp r2, #0          /* R2 = 0x100 if R2 == 0 */
 	moveq r2, #0x100
-	str r2, [r3]
+	str r2, [r3]        /* *R3 = R2 */
 
-	/* Continue execution at reset_handler.  */
+	/* 続きはreset_handlerで行う  */
 	b reset_handler
 	.endfunc
 
-/* ARM exception vector table.  This is copied to address 0.  See A2.6
- * "Exceptions" of the ARM Architecture Reference Manual.  */
+/* ARM例外ベクタテーブル。これはアドレス0にコピーされる。
+ * ARM Architecture Reference ManualのA2.6 "Exceptions" を参照 */
 _vectors:
-	ldr pc, reset_addr    /* Reset handler */
-	ldr pc, undef_addr	  /* Undefined instruction handler */
-	ldr pc, swi_addr	  /* Software interrupt handler */
-	ldr pc, prefetch_addr /* Prefetch abort handler */
-	ldr pc, abort_addr	  /* Data abort handler */
-	ldr pc, reserved_addr /* Reserved */
-	ldr pc, irq_addr	  /* IRQ (Interrupt request) handler */
-	ldr pc, fiq_addr	  /* FIQ (Fast interrupt request) handler */
+	ldr pc, reset_addr    /* リセットハンドラ */
+	ldr pc, undef_addr	  /* 未定義命令例外ハンドラ */
+	ldr pc, swi_addr	  /* ソフトウェア割り込み例外ハンドラ */
+	ldr pc, prefetch_addr /* プリフェッチアボート例外ハンドラ */
+	ldr pc, abort_addr	  /* データアボート例外ハンドラ */
+	ldr pc, reserved_addr /* 予約済 */
+	ldr pc, irq_addr	  /* IRQ (Interrupt request) 例外ハンドラ */
+	ldr pc, fiq_addr	  /* FIQ (Fast interrupt request) 例外ハンドラ */
 
 reset_addr:     .word reset_handler
 undef_addr:     .word reset_handler
@@ -56,19 +57,20 @@ _endvectors:
 
 .section .text
 
-	/* reset_handler: Reset handler routine executed to start up the kernel,
-	 * when the ARM processor is reset, or (currently) when an unhandled
-	 * exception occurs.  */
+	/* reset_handler: リセットハンドラ関数はARMプロセッサがリセットされた、
+     * または（現在）ハンドラのない例外が発生した際に実行され、カーネルを
+     * 起動する。 */
 	.func reset_handler
 reset_handler:
 
-	/* Enter SYS mode with all interrupts disabled so the ARM processor is
-	 * in a known state. */
+	/* ARMプロセッサが既知の状態になるようにすべての割り込みを無効に
+     * してSYSモードに入る。
+     * （実際は、IRQとFIQを無効してSYSモードに移行） */
 	cpsid if, #ARM_MODE_SYS
 
-	/* Copy the ARM exception table from .init section to address 0,
-	 * including the absolute address table.  Here we assume it is exactly
-	 * 16 words.  */
+	/* ARM例外テーブル（絶対アドレステーブルを含む）を.init
+     * セクションからアドレス0にコピーする。これでは全部で
+     * 16ワードであると仮定している  */
 	mov r0, #0
 	ldr r1, =_vectors
 	ldmia r1!, {r2-r9}
@@ -76,20 +78,20 @@ reset_handler:
 	ldmia r1!, {r2-r9}
 	stmia r0!, {r2-r9}
 
-	/* Enable the following features by modifying the ARM processor's
-	 * Control Register:
+	/* ARMプロセッサのコントロールレジスタを変更することにより
+     * 次の機能を有効にする。
 	 *
-	 * - unaligned memory accesses   (bit 22)
+	 * - 非整列メモリアクエス   (bit 22)
 	 *
-	 * Note: Xinu shouldn't do any unaligned memory accesses on purpose, but
-	 * we found that gcc can still generate unaligned memory accesses for
-	 * tasks such as copying character strings.  (An alternative would be to
-	 * pass -mno-unaligned-access to gcc to prevent it from doing so.)  */
+	 * 注意: Xinuは意図的に非整列メモリアクセスを行うことはないはずだが、
+     * gccが文字列のコピーなどで非整列メモリアクセスを生成することがある
+     * ことがわかった（代替案としてはそうしないように、gccに
+     * -mno-unaligned-accessを渡すことです）。 */
 	mrc p15, 0, r0, c1, c0, 0
 	orr r0, #1 << 22
 	mcr p15, 0, r0, c1, c0, 0
 
-	/* Clear the .bss section of the kernel.  */
+	/* .bssセクションを0クリアする  */
 	ldr r0, =_bss
 	ldr r1, =_end
 	mov r2, #0
@@ -103,19 +105,18 @@ bssloopa:
 	cmp r0, r1 	/* check that we still haven't hit the end of bss yet */
 	blo bssloopb	/* if still below, go backwards and loop */
 
-	/* Put the null thread's stack directly after the kernel image.  */
+	/* カーネルイメージの直後にNULLスレッド用のスタックを置く  */
 	add sp, r1, #NULLSTK
 
-	/* The remaining memory available to the ARM will be Xinu's "memheap"
-	 * region, which is used for dynamic memory allocation.  Set its
-	 * starting address.  */
+    /* ARMが使用できる残りのメモリはXinuの"memheap"領域となり
+     * 動的メモリ割り当てに使用される。その開始アドレスを設定する。 */
+
 	ldr r0, =memheap
 	str sp, [r0]
 
-	/* Initialize the Raspberry Pi graphics subsystem.  */
+	/* Raspberry Piのグラフィックサブシステムを初期化する  */
 	bl screenInit
 
-	/* Branch to the platform-independent C startup code, which takes no
-	 * parameters and never returns.  */
+    /* プラットフォーム固有のCのstartup関数に分岐する。この関数は引数を取らず、復帰しない  */
 	b nulluser
 	.endfunc

@@ -1,13 +1,9 @@
-# This Makefile contains rules to build this directory.
-
 # Name of this component (the directory this file is stored in)
-COMP = device/ethernet
+COMP = loader/platforms/arm-rpi3
 
 # Source files for this component
-C_FILES =                \
-        colon2mac.c
-
-S_FILES =
+C_FILES =
+S_FILES = start.S
 
 # Add the files to the compile source path
 DIR = ${TOPDIR}/${COMP}

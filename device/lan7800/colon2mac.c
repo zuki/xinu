@@ -11,14 +11,14 @@
 #include <ctype.h>
 
 /**
- * @ingroup ether
+ * @ingroup ether_lan7800
  *
- * コロン区切りの文字列表記のMACを相当するbyte配列に変換する
+ * コロン区切りの文字列表記のMACをバイト配列に変換する
  * @param src コロン区切りのMAC文字列へのポインタ
  * @param dst バイト配列へのポインタ
  * @return 変換したオクテットの数
  */
-int colon2mac(char *src, uchar *dst)
+int colon2mac(char *src, unsigned char *dst)
 {
     uchar count = 0, digit = 0, c = 0;
 

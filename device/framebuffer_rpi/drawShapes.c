@@ -8,7 +8,11 @@
 #include <stddef.h>
 #include <string.h>
 #include <framebuffer.h>
-#include <bcm2835.h>
+#if defined(_XINU_PLATFORM_ARM_RPI_)
+    #include <bcm2835.h>
+#elif defined(_XINU_PLATFORM_ARM_RPI_3_)
+    #include <bcm2837.h>
+#endif
 
 /* Draws a colored pixel at given (x, y) coordinates. */
 
@@ -17,7 +21,7 @@ void drawPixel(int x, int y, ulong color)
 
 	//check if somebody tried to draw something out of range.
 	if ( (y < DEFAULT_HEIGHT) && (x < DEFAULT_WIDTH) && (y >= 0) && (x >= 0) ) {
-	    pre_peripheral_write_mb();
+	    pre_peripheral_write_mb;
 
 	    // compute address of pixel to write.
 	    // framebuffer address + (y*pitch)+(x*(depth/8))
@@ -26,7 +30,7 @@ void drawPixel(int x, int y, ulong color)
                                                      (x * (BIT_DEPTH/8)));
         *address = color;
 
-	    post_peripheral_write_mb();
+	    post_peripheral_write_mb;
     }
 }
 
@@ -216,5 +220,3 @@ void fillBody (int x0, int y0, int radius, ulong color, bool gradient) {
 		if (gradient) color++;
 	}
 }
-
-

@@ -261,7 +261,7 @@ void etherThroughput(ushort minor);
 
 interrupt etherInterrupt(void);
 
-int colon2mac(char *, uchar *);
+int colon2mac(char *, unsigned char *);
 int allocRxBuffer(struct ether *, int);
 int waitOnBit(volatile uint *, uint, const int, int);
 

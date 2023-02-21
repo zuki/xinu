@@ -1,9 +1,9 @@
 /**
  * @file intutils.S
  *
- * Functions to enable, disable, or restore global interrupts on the ARM.
+ * ARM上のグルーバル割り込みを有効化/無効化/復元する関数.
  *
- * See http://xinu-os.org/Interrupt_handling_(ARM) for more information.
+ * 詳細は https://xinu.cs.mu.edu/index.php/Interrupt_handling_(ARM) を参照.
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
@@ -14,37 +14,37 @@
 /**
  * @fn void enable(void)
  *
- * Enable interrupts globally.
+ * 割り込みをグローバルに有効化する.
  */
 enable:
-	.func enable
-	cpsie i
-	mov pc, lr
-	.endfunc
+    .func enable
+    cpsie i
+    mov pc, lr
+    .endfunc
 
 /**
  * @fn irqmask disable(void)
  *
- * Disable interrupts globally and returns the old state.
- * @return state of interrupts before they were disabled
+ * 割り込みをグローバルに無効化して古い状態を返す.
+ * @return 無効にする前の割り込みの状態
  */
 disable:
-	.func disable
-	mrs r0, cpsr
-	cpsid i
-	mov pc, lr
-	.endfunc
+    .func disable
+    mrs r0, cpsr
+    cpsid i
+    mov pc, lr
+    .endfunc
 
 /**
  * @fn irqmask restore(irqmask)
  *
- * Restores the global interrupt mask to a previous state.
+ * グローバル割り込みマスクを以前の状態に復元する.
  * @param im
- *     irqmask of interrupt state to restore
- * @return state of interrupts when called
+ *     復元する割り込み状態の割り込みマスク
+ * @return 呼び出された際の割り込みの状態
  */
 restore:
-	.func restore
-	msr cpsr_c, r0
-	mov pc, lr
-	.endfunc
+    .func restore
+    msr cpsr_c, r0
+    mov pc, lr
+    .endfunc

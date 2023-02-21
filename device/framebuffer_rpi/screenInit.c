@@ -10,7 +10,13 @@
 #include <stdlib.h>
 #include <shell.h> /* for banner */
 #include <kernel.h>
-#include <bcm2835.h>
+#include <system/arch/arm/rpi-mailbox.h>
+
+#if defined(_XINU_PLATFORM_ARM_RPI_)
+    #include <bcm2835.h>
+#elif defined(_XINU_PLATFORM_ARM_RPI_3_)
+    #include <bcm2837.h>
+#endif
 
 int rows;
 int cols;
@@ -26,15 +32,15 @@ bool screen_initialized;
 
 /* screenInit(): Calls framebufferInit() several times to ensure we successfully initialize, just in case. */
 void screenInit() {
-	int i = 0;
+    int i = 0;
     while (framebufferInit() == SYSERR) {
         if ( (i++) == MAXRETRIES) {
             screen_initialized = FALSE;
             return;
         }
     }
-	// clear the screen to the background color.
-	screenClear(background);
+    // clear the screen to the background color.
+    screenClear(background);
     initlinemap();
     screen_initialized = TRUE;
 }
@@ -44,28 +50,26 @@ int framebufferInit() {
     //GPU expects this struct to be 16 byte aligned
     struct framebuffer frame __attribute__((aligned (16)));
 
-	frame.width_p = DEFAULT_WIDTH; //must be less than 4096
-	frame.height_p = DEFAULT_HEIGHT; //must be less than 4096
-	frame.width_v = DEFAULT_WIDTH; //must be less than 4096
-	frame.height_v = DEFAULT_HEIGHT; //must be less than 4096
-	frame.pitch = 0; //no space between rows
-	frame.depth = BIT_DEPTH; //must be equal to or less than 32
-	frame.x = 0; //no x offset
-	frame.y = 0; //no y offset
-	frame.address = 0; //always initializes to 0x48006000
-	frame.size = 0;
+    frame.width_p = DEFAULT_WIDTH; //must be less than 4096
+    frame.height_p = DEFAULT_HEIGHT; //must be less than 4096
+    frame.width_v = DEFAULT_WIDTH; //must be less than 4096
+    frame.height_v = DEFAULT_HEIGHT; //must be less than 4096
+    frame.pitch = 0; //no space between rows
+    frame.depth = BIT_DEPTH; //must be equal to or less than 32
+    frame.x = 0; //no x offset
+    frame.y = 0; //no y offset
+    frame.address = 0; //always initializes to 0x48006000
+    frame.size = 0;
 
-    mailboxWrite((ulong)&frame);
+    int result = rpi_MailBoxAccess(MB_CHANNEL_FB, (uint32_t)&frame);
 
-	ulong result = mailboxRead();
-
-	/* Error checking */
-	if (result) { //if anything but zero
-		return SYSERR;
-	}
+    /* Error checking */
+    if (result != OK) { //if anything but zero
+        return SYSERR;
+    }
     if (!frame.address) { //if address remains zero
-		return SYSERR;
-	}
+        return SYSERR;
+    }
 
     /* Initialize global variables */
     framebufferAddress = frame.address;
@@ -77,15 +81,15 @@ int framebufferInit() {
     background = BLACK;
     foreground = WHITE;
     minishell = FALSE;
-	return OK;
+    return OK;
 }
 
 /* Very heavy handed clearing of the screen to a single color. */
 void screenClear(ulong color) {
-	ulong *address = (ulong *)(framebufferAddress);
+    ulong *address = (ulong *)(framebufferAddress);
     ulong *maxaddress = (ulong *)(framebufferAddress + (DEFAULT_HEIGHT * pitch) + (DEFAULT_WIDTH * (BIT_DEPTH / 8)));
     while (address != maxaddress) {
-	    *address = color;
+        *address = color;
         address++;
     }
 }
@@ -95,7 +99,7 @@ void minishellClear(ulong color) {
     ulong *address = (ulong *)(framebufferAddress + (pitch * (DEFAULT_HEIGHT - (MINISHELLMINROW * CHAR_HEIGHT))) +  (DEFAULT_WIDTH * (BIT_DEPTH / 8)));
     ulong *maxaddress = (ulong *)(framebufferAddress + (DEFAULT_HEIGHT * pitch) + (DEFAULT_WIDTH * (BIT_DEPTH / 8)));
     while (address != maxaddress) {
-	    *address = color;
+        *address = color;
         address++;
     }
 }

@@ -13,6 +13,9 @@
         "string_view": "cpp",
         "vector": "cpp",
         "locale": "c",
-        "system_error": "c"
+        "system_error": "c",
+        "__availability": "c",
+        "new": "c",
+        "typeinfo": "c"
     }
 }

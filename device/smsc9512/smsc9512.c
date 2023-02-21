@@ -79,7 +79,7 @@ smsc9512_read_reg(struct usb_device *udev, uint32_t index, uint32_t *data)
  *      レジスタにセットするためのビットのマスク
  *
  * @return
- *      成功した場合は ::USB_STATUS_SUCCES; それ以外あh ::usb_status_t
+ *      成功した場合は ::USB_STATUS_SUCCES; それ以外は ::usb_status_t
  *      エラーコード
  */
 usb_status_t

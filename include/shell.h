@@ -25,7 +25,7 @@
 
 #define SHELL_BANNER_PI_NONVT100 "-----------------------------------------------------\n      ____  ___.__                 .___   .__\n      \\   \\/  /|__| ____  __ __    |  _ \\ |__|\n       \\     / |  |/    \\|  |  \\   | |_| ||  |\n       /     \\ |  |   |  \\  |  /   |  __/ |  |\n      /___/\\  \\|__|___|  /____/    | |    |__|\n            \\_/        \\/          |/          v3.14\n-----------------------------------------------------\n\n"
 
-#ifdef _XINU_PLATFORM_ARM_RPI_
+#if defined(_XINU_PLATFORM_ARM_RPI_) || defined(_XINU_PLATFORM_ARM_RPI_3_)
 #  define SHELL_BANNER            SHELL_BANNER_PI
 #  define SHELL_BANNER_NONVT100   SHELL_BANNER_PI_NONVT100
 #else

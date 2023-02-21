@@ -101,7 +101,7 @@ static void usage(const char *command)
 "\t               address and information about the TFTP server hosting\n"
 "\t               the boot file.  The boot file (new kernel) will then be\n"
 "\t               downloaded using TFTP and executed.\n"
-#ifdef _XINU_PLATFORM_ARM_RPI_
+#if defined(_XINU_PLATFORM_ARM_RPI_) || defined(_XINU_PLATFORM_ARM_RPI_3_)
 "\t-u <UARTDEV>   Load the new kernel over the specified UART device.\n"
 "\t               This is currently a Raspberry-Pi specific feature\n"
 "\t               and is designed to be used with \"raspbootcom\"\n"
@@ -202,7 +202,7 @@ static void kexec_from_network(int netdev)
 
 static void kexec_from_uart(int uartdev)
 {
-#ifdef _XINU_PLATFORM_ARM_RPI_
+#if defined(_XINU_PLATFORM_ARM_RPI_) || defined(_XINU_PLATFORM_ARM_RPI_3_)
     irqmask im;
     device *uart;
     ulong size;

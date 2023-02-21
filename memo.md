@@ -166,7 +166,7 @@ make: *** [config/config] Error 2
 $ cd compile/config
 $ make clean
 rm -f config *.o y.tab.h parse.c
-dspace@mini:~/raspi_os/xinu/compile/config$ make
+$ make
 bison -y     -d parse.y
 mv -f y.tab.c parse.c
 gcc    -c -o parse.o parse.c
@@ -752,4 +752,369 @@ In file included from ../test/test_arp.c:16:
 $ ls compile/
 Doxyfile    Makefile  config  mkvers.sh  scripts  vn         xinu.elf
 Doxymain.c  arch      data    platforms  version  xinu.boot
+```
+
+# arm-rpi3を作成
+
+
+## コンパイル
+
+```
+$ cd compile
+$ make clean
+$ cd config
+$ ls
+Makefile  config  config.c  parse.c  parse.y  scan.l  y.tab.h
+$ make clean
+rm -f config *.o y.tab.h parse.c
+$ make
+bison -y     -d parse.y
+mv -f y.tab.c parse.c
+gcc    -c -o parse.o parse.c
+parse.y:13:22: warning: declaration of 'struct dev_ent' will not be visible outside of this function [-Wvisibility]
+void initattr(struct dev_ent *fstr, int tnum, int deviceid);
+                     ^
+1 warning generated.
+gcc    -c -o config.o config.c
+flex  -t scan.l > scan.c
+gcc    -c -o scan.o scan.c
+gcc   config.o scan.o parse.o   -o config
+rm scan.c
+$ ls
+Makefile  config.c  parse.c  parse.y  scan.o
+config    config.o  parse.o  scan.l   y.tab.h
+$ cd ..
+$ make
+```
+
+# https://github.com/7043mcgeep/xinu
+
+`parse.y`を修正し、`xinu.boot`を`kernel7.img`に解明して/bootにコピーして実行した。
+
+```
+***********************************************************
+******************** Hello Xinu World! ********************
+***********************************************************
+(Embedded Xinu) (arm-rpi3) #0 (dspace@mini.local) 2023年 2月21日 火曜日 09時51分40秒 JST
+
+Detected platform as: BCM2837B0, Raspberry Pi 3 B+
+
+1056964600 bytes physical memory.
+           [0x00000000 to 0x3EFFFFF7]
+        32 kilobytes L1 data cache.
+     32768 bytes reserved system area.
+           [0x00000000 to 0x00007FFF]
+   7703232 bytes Xinu code.
+           [0x00008000 to 0x00760ABF]
+     32768 bytes stack space.
+           [0x00760AC0 to 0x00768ABF]
+1049195832 bytes heap space.
+           [0x00768AC0 to 0x3EFFFFF7]
+
+
+[    OK    ] Successfully opened ETH0
+
+                                                 _______.
+------------------------------------------------/_____./|------
+    ____  ___.__                 .___   .__    | ____ | |
+    \   \/  /|__| ____  __ __    |  _ \ |__|   |/ /_| | |
+     \     / |  |/    \|  |  \   | |_| ||  |     |__  | |
+     /     \ |  |   |  \  |  /   |  __/ |  |    /___| | .
+    /___/\  \|__|___|  /____/    | |    |__|   | ______/
+          \_/        \/          |/            |/
+    2019                                            v3.0
+---------------------------------------------------------------
+Welcome to the wonderful world of Xinu!
+xsh$ help
+Shell Commands:
+        arp
+        clear
+        date
+        ethstat
+        exit
+        help
+        kexec
+        kill
+        memstat
+        memdump
+        nc
+        netdown
+        netstat
+        netup
+        ps
+        ping
+        pktgen
+        random
+        rdate
+        reset
+        route
+        sleep
+        snoop
+        tcpstat
+        telnet
+        telnetserver
+        test
+        testsuite
+        timeserver
+        uartstat
+        usbinfo
+        udpstat
+        vlanstat
+        voip
+        xweb
+        ?
+        ?
+xsh$ ps
+TID NAME             STATE PRIO PPID STACK BASE STACK PTR   STACK LEN CPUID
+--- ---------------- ----- ---- ---- ---------- ----------  --------- -----
+  0 prnull           ready    0    0 0x00760AC0 0x00762A04       8192     0
+  1 prnull01         curr     0    0 0x00768AC0 0x00000000       8192     1
+  2 prnull02         curr     0    0 0x00770AC0 0x00000000       8192     2
+  3 prnull03         curr     0    0 0x00778AC0 0x00000000       8192     3
+  4 USB scheduler    wait    60    0 0x3EFFFFF4 0x3EFFFF44       4096     0
+  5 USB hub thread   wait    60    0 0x3EFFEFF4 0x3EFFEF3C       8192     0
+  6 arpDaemon        wait    30    0 0x3EFFCFF4 0x3EFFCF4C       4096     0
+  7 rtDaemon         wait    30    0 0x3EFFBFF4 0x3EFFBF4C       4096     0
+  8 icmpDaemon       wait    30    0 0x3EFFAFF4 0x3EFFAF4C       4096     0
+  9 tcpTimer         sleep   20    0 0x3EFF9FF4 0x3EFF9F4C      65536     0
+ 11 USB defer xfer   sleep  100    5 0x3EFD9FF4 0x3EFD9F5C       4096     0
+ 12 USB defer xfer   sleep  100    0 0x3EFD8FF4 0x3EFD8F5C       4096     0
+ 13 SHELL0           recv    20   10 0x3EFD7FF4 0x3EFD7D4C      65536     0
+ 14 SHELL1           wait    20   10 0x3EFC7FF4 0x3EFC7CFC      65536     0
+ 16 ps               curr    20   13 0x3EFE9FF4 0x3EFE9E5C       8192     0
+xsh$ exit
+Shell closed.
+
+xsh$ usbinfo
+[USB Device 001]
+    [Device Descriptor]
+    bLength:             18
+    bDescriptorType:     0x01 (Device)
+    bcdUSB:              0x200 (USB 2.0 compliant)
+    bDeviceClass:        0x09 (Hub)
+    bDeviceSubClass:     0x00
+    bDeviceProtocol:     0x00
+    bMaxPacketSize0:     64
+    idVendor:            0x0000
+    idProduct:           0x0000
+    iManufacturer:       0
+    iProduct:            1
+    iSerialNumber:       0
+    bNumConfigurations:  1
+
+        [Configuration Descriptor]
+        bLength:             9
+        bDescriptorType:     0x02 (Configuration)
+        wTotalLength:        25
+        bNumInterfaces:      1
+        bConfigurationValue: 1
+        iConfiguration:      0
+        bmAttributes:        0xc0
+            (Self powered)
+        bMaxPower:           0 (0 mA)
+
+            [Interface Descriptor]
+            bLength:             9
+            bDescriptorType:     0x04 (Interface)
+            bInterfaceNumber:    0
+            bAlternateSetting:   0
+            bNumEndpoints:       1
+            bInterfaceClass:     0x09 (Hub)
+            bInterfaceSubClass:  0x00
+            bInterfaceProtocol:  0x00
+            iInterface:          0
+
+                [Endpoint Descriptor]
+                bLength:             7
+                bDescriptorType:     0x05 (Endpoint)
+                bEndpointAddress:    0x81 (Number 1, IN)
+                bmAttributes:        0x03 (interrupt endpoint)
+                wMaxPacketSize:      0x40 (max packet size 64 bytes)
+                bInterval:           255
+
+
+[USB Device 002]
+    [Device Descriptor]
+    bLength:             18
+    bDescriptorType:     0x01 (Device)
+    bcdUSB:              0x200 (USB 2.0 compliant)
+    bDeviceClass:        0x09 (Hub)
+    bDeviceSubClass:     0x00
+    bDeviceProtocol:     0x02
+    bMaxPacketSize0:     64
+    idVendor:            0x0424
+    idProduct:           0x2514
+    iManufacturer:       0
+    iProduct:            0
+    iSerialNumber:       0
+    bNumConfigurations:  1
+
+        [Configuration Descriptor]
+        bLength:             9
+        bDescriptorType:     0x02 (Configuration)
+        wTotalLength:        41
+        bNumInterfaces:      1
+        bConfigurationValue: 1
+        iConfiguration:      0
+        bmAttributes:        0xe0
+            (Self powered)
+            (Remote wakeup)
+        bMaxPower:           1 (2 mA)
+
+            [Interface Descriptor]
+            bLength:             9
+            bDescriptorType:     0x04 (Interface)
+            bInterfaceNumber:    0
+            bAlternateSetting:   0
+            bNumEndpoints:       1
+            bInterfaceClass:     0x09 (Hub)
+            bInterfaceSubClass:  0x00
+            bInterfaceProtocol:  0x01
+            iInterface:          0
+
+                [Endpoint Descriptor]
+                bLength:             7
+                bDescriptorType:     0x05 (Endpoint)
+                bEndpointAddress:    0x81 (Number 1, IN)
+                bmAttributes:        0x03 (interrupt endpoint)
+                wMaxPacketSize:      0x01 (max packet size 1 bytes)
+                bInterval:           12
+
+
+[USB Device 003]
+    [Device Descriptor]
+    bLength:             18
+    bDescriptorType:     0x01 (Device)
+    bcdUSB:              0x200 (USB 2.0 compliant)
+    bDeviceClass:        0x09 (Hub)
+    bDeviceSubClass:     0x00
+    bDeviceProtocol:     0x02
+    bMaxPacketSize0:     64
+    idVendor:            0x0424
+    idProduct:           0x2514
+    iManufacturer:       0
+    iProduct:            0
+    iSerialNumber:       0
+    bNumConfigurations:  1
+
+        [Configuration Descriptor]
+        bLength:             9
+        bDescriptorType:     0x02 (Configuration)
+        wTotalLength:        41
+        bNumInterfaces:      1
+        bConfigurationValue: 1
+        iConfiguration:      0
+        bmAttributes:        0xe0
+            (Self powered)
+            (Remote wakeup)
+        bMaxPower:           1 (2 mA)
+
+            [Interface Descriptor]
+            bLength:             9
+            bDescriptorType:     0x04 (Interface)
+            bInterfaceNumber:    0
+            bAlternateSetting:   0
+            bNumEndpoints:       1
+            bInterfaceClass:     0x09 (Hub)
+            bInterfaceSubClass:  0x00
+            bInterfaceProtocol:  0x01
+            iInterface:          0
+
+                [Endpoint Descriptor]
+                bLength:             7
+                bDescriptorType:     0x05 (Endpoint)
+                bEndpointAddress:    0x81 (Number 1, IN)
+                bmAttributes:        0x03 (interrupt endpoint)
+                wMaxPacketSize:      0x01 (max packet size 1 bytes)
+                bInterval:           12
+
+
+[USB Device 004]
+    [Device Descriptor]
+    bLength:             18
+    bDescriptorType:     0x01 (Device)
+    bcdUSB:              0x210 (USB 2.1 compliant)
+    bDeviceClass:        0xff (Vendor Specific)
+    bDeviceSubClass:     0x00
+    bDeviceProtocol:     0xff
+    bMaxPacketSize0:     64
+    idVendor:            0x0424
+    idProduct:           0x7800
+    iManufacturer:       0
+    iProduct:            0
+    iSerialNumber:       0
+    bNumConfigurations:  1
+
+        [Configuration Descriptor]
+        bLength:             9
+        bDescriptorType:     0x02 (Configuration)
+        wTotalLength:        39
+        bNumInterfaces:      1
+        bConfigurationValue: 1
+        iConfiguration:      0
+        bmAttributes:        0xe0
+            (Self powered)
+            (Remote wakeup)
+        bMaxPower:           1 (2 mA)
+
+            [Interface Descriptor]
+            bLength:             9
+            bDescriptorType:     0x04 (Interface)
+            bInterfaceNumber:    0
+            bAlternateSetting:   0
+            bNumEndpoints:       3
+            bInterfaceClass:     0xff (Vendor Specific)
+            bInterfaceSubClass:  0x00
+            bInterfaceProtocol:  0xff
+            iInterface:          0
+
+                [Endpoint Descriptor]
+                bLength:             7
+                bDescriptorType:     0x05 (Endpoint)
+                bEndpointAddress:    0x81 (Number 1, IN)
+                bmAttributes:        0x02 (bulk endpoint)
+                wMaxPacketSize:      0x200 (max packet size 512 bytes)
+                bInterval:           0
+
+                [Endpoint Descriptor]
+                bLength:             7
+                bDescriptorType:     0x05 (Endpoint)
+                bEndpointAddress:    0x02 (Number 2, OUT)
+                bmAttributes:        0x02 (bulk endpoint)
+                wMaxPacketSize:      0x200 (max packet size 512 bytes)
+                bInterval:           0
+
+                [Endpoint Descriptor]
+                bLength:             7
+                bDescriptorType:     0x05 (Endpoint)
+                bEndpointAddress:    0x83 (Number 3, IN)
+                bmAttributes:        0x03 (interrupt endpoint)
+                wMaxPacketSize:      0x10 (max packet size 16 bytes)
+                bInterval:           4
+
+
+
+Diagram of USB:
+
+001 [high-speed USB 2.0 Hub class device (idVendor=0x0000, idProduct=0x0000)]
+|
+|
+------002 [high-speed USB 2.0 Hub class device (idVendor=0x0424, idProduct=0x25]
+      |
+      |
+      ------003 [high-speed USB 2.0 Hub class device (idVendor=0x0424, idProduc]
+            |
+            |
+            ------004 [high-speed USB 2.1 device (idVendor=0x0424, idProduct=0x]
+xsh$ netstat
+xsh$ ethstat
+eth0:
+  MAC Address           B8:27:EB:AB:E8:48
+  MTU                   1500
+  Device state          UP
+  Rx packets in queue   7
+  Rx errors             0
+  Rx overruns           0
+  Rx USB transfers done 7
+  Tx USB transfers done 0
 ```
