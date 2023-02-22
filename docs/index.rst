@@ -16,3 +16,4 @@ Embedded Xinuドキュメント: 目次
    projects/index
    development/index
    README_ldb
+   Install_memo
