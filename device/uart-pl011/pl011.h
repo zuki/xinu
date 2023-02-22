@@ -143,7 +143,14 @@ struct pl011_uart_csreg
 
 #define PL011_FIFO_LEN   8       /**< Raspberry Piでのテストでは、8しか送れなかった */
 
-#define PL011_BAUD_INT(x) (3000000 / (16 * (x)))
-#define PL011_BAUD_FRAC(x) (int)((((3000000.0 / (16.0 * (x)))-PL011_BAUD_INT(x))*64.0)+0.5) // この計算では9600ボーでは若干ずれるかもしれない
+/* UARTクロック周波数はPiのバージョンにより異なる */
+#ifdef _XINU_PLATFORM_ARM_RPI_3_
+#define UARTCLK 48000000
+#elif defined _XINU_PLATFORM_ARM_RPI_
+#define UARTCLK 3000000
+#endif
+
+#define PL011_BAUD_INT(x) (UARTCLK / (16 * (x)))
+#define PL011_BAUD_FRAC(x) (int)((((UARTCLK / (16.0 * (x)))-PL011_BAUD_INT(x))*64.0)+0.5)   // この計算では9600ボーでは若干ずれるかもしれない
 
 #endif                          /* _PL011_H_ */

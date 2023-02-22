@@ -8,7 +8,7 @@
 #include <clock.h>
 #include "pl011.h"
 
-#if defined(_XINU_PLATFORM_ARM_RPI_) || defined(_XINU_PLATFORM_ARM_RPI_3_)
+#ifdef _XINU_PLATFORM_ARM_RPI_
 
 /* GPIOレジスタの開始アドレスからのUARTレジスタのオフセット */
 #define UART_GPIO_OFFSET 0x1000
@@ -54,19 +54,43 @@ static void setup_gpio_pins(void *uart_regs)
 }
 #endif /* _XINU_PLATFORM_ARM_RPI_ */
 
+#ifdef _XINU_PLATFORM_ARM_RPI_3_
+
+#include <rpi_gpio.h>
+#include <bcm2837.h>
+
+static void setup_gpio_pins(void)
+{
+    volatile struct rpi_gpio_regs *regptr =
+        (volatile struct rpi_gpio_regs *)(GPIO_REGS_BASE);
+
+    /* set up pins 14 & 15 to use alt0, for uart Rx and Tx */
+    regptr->gpfsel[1] &= ~((7 << 12) | (7 << 15));
+    regptr->gpfsel[1] |= (4 << 12) | (4 << 15);
+
+    /* Disable pull-up/down on pins 14 & 15 */
+    regptr->gppud = 0;
+    udelay(2);
+    regptr->gppudclk[0] = (1 << 14) | (1 << 15);
+    udelay(2);
+    regptr->gppudclk[0] = 0;
+}
+#endif /* _XINU_PLATFORM_ARM_RPI_3_ */
+
 devcall uartHwInit(device *devptr)
 {
     volatile struct pl011_uart_csreg *regptr = devptr->csr;
 
-    /* TODO:  この遅延がないと動かない。なぜ? */
-    udelay(1500);
-
     /* "制御レジスタ"に0を設定してUARTを無効にする  */
     regptr->cr = 0;
 
-#if defined(_XINU_PLATFORM_ARM_RPI_) || defined(_XINU_PLATFORM_ARM_RPI_3_)
+#ifdef _XINU_PLATFORM_ARM_RPI_
     /* Raspberry Pi のGPIO品を正しく構成する */
     setup_gpio_pins((void*)regptr);
+#endif
+
+#ifdef _XINU_PLATFORM_ARM_RPI_3_
+    setup_gpio_pins();
 #endif
 
     /* 「フラグレジスタ」をポーリングして、UARTの送受信停止を待つ */

@@ -30,6 +30,9 @@
 /** 電源管理 / ウォッチドッグタイマー  */
 #define PM_REGS_BASE           (PERIPHERALS_BASE + 0x100000)
 
+/* GPIO */
+#define GPIO_REGS_BASE         (PERIPHERALS_BASE + 0x200000)
+
 /** PL011 UART  */
 #define PL011_REGS_BASE        (PERIPHERALS_BASE + 0x201000)
 
