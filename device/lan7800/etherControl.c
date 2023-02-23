@@ -32,6 +32,7 @@ devcall etherControl(device *devptr, int req, long arg1, long arg2)
     usb_status_t status;
     struct netaddr *addr;
     struct ether *ethptr;
+    uint32_t buf;
 
     ethptr = &ethertab[devptr->minor];
     udev = ethptr->csr;
@@ -56,7 +57,20 @@ devcall etherControl(device *devptr, int req, long arg1, long arg2)
 
     /* ループバックモードを有効/無効にする */
     case ETH_CTRL_SET_LOOPBK:
+
+        lan7800_read_reg(udev, MAC_RX, &buf);
+        buf &= ~(MAC_RX_RXEN_);
+        lan7800_write_reg(udev, MAC_RX, buf);
+        lan7800_read_reg(udev, MAC_TX, &buf);
+        buf &= ~(MAC_TX_TXEN_);
+        lan7800_write_reg(udev, MAC_TX, buf);
         status = lan7800_set_loopback_mode(udev, (unsigned int)arg1);
+        lan7800_read_reg(udev, MAC_RX, &buf);
+        buf |= (MAC_RX_RXEN_);
+        lan7800_write_reg(udev, MAC_RX, buf);
+        lan7800_read_reg(udev, MAC_TX, &buf);
+        buf |= (MAC_TX_TXEN_);
+        lan7800_write_reg(udev, MAC_TX, buf);
         break;
 
     /* リンクヘッダー長を取得する */

@@ -6,31 +6,13 @@
  */
 /* Embedded Xinu, Copyright (C) 2009, 2013.  All rights reserved. */
 
-#include <kernel.h>
-#include <backplane.h>
-#include <clock.h>
-#include <device.h>
-#include <gpio.h>
-#include <memory.h>
-#include <bufpool.h>
-#include <mips.h>
-#include <thread.h>
-#include <tlb.h>
-#include <queue.h>
-#include <semaphore.h>
-#include <monitor.h>
-#include <mailbox.h>
-#include <network.h>
-#include <nvram.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <string.h>
-#include <syscall.h>
-#include <safemem.h>
-#include <platform.h>
+#include <xinu.h>
+#include <stdint.h>
 
 #ifdef WITH_USB
-#  include <usb_subsystem.h>
+#include <usb_subsystem.h>
+#include <usb_core_driver.h>
+#include "../device/lan7800/lan7800.h"
 #endif
 
 /* 関数プロトタイプ */
@@ -52,7 +34,6 @@ tid_typ thrcurrent;             /* 現在実行中のスレッドのID       */
 /* startup.S でセットされるパラメタ */
 void *memheap;                  /* ヒープの底（O/Sスタックのトップ） */
 ulong cpuid;                    /* プロセッサID                      */
-
 struct platform platform;       /* プラットフォーム固有の構成        */
 
 /**
@@ -74,6 +55,11 @@ void nulluser(void)
 
     /* 一般的な初期化を行う  */
     sysinit();
+
+	kprintf("\r\n***********************************************************\r\n");
+	kprintf("******************** Hello Xinu World! ********************\r\n");
+	kprintf("***********************************************************\r\n");
+
 
     /* 割り込みを有効にする  */
     enable();
@@ -127,7 +113,8 @@ static int sysinit(void)
     thrptr->prio = 0;
     strlcpy(thrptr->name, "prnull", TNMLEN);
     thrptr->stkbase = (void *)&_end;
-    thrptr->stklen = (ulong)memheap - (ulong)&_end;
+    //thrptr->stklen = (ulong)memheap - (ulong)&_end;
+    thrptr->stklen = 8192;  /* NULLSTK */
     thrptr->stkptr = 0;
     thrptr->memlist.next = NULL;
     thrptr->memlist.length = 0;

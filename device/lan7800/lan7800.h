@@ -8,6 +8,7 @@
 #ifndef _LAN7800_H_
 #define _LAN7800_H_
 
+#include <stddef.h>
 #include <stdint.h>
 #include <usb_core_driver.h>
 #include <system/arch/arm/rpi-mailbox.h>
@@ -31,13 +32,23 @@
 
 #define MAX_RX_FIFO_SIZE        (12 * 1024)
 #define MAX_TX_FIFO_SIZE        (12 * 1024)
-#define DEFAULT_BURST_CAP_SIZE  (16 * 1024 + 5 * HS_USB_PKT_SIZE)
+#define DEFAULT_BURST_CAP_SIZE  MAX_TX_FIFO_SIZE
+#define BULK_IN_DELAY           0x094
 #define DEFAULT_BULK_IN_DELAY   0x800
 
-
-/* ループバック制御 */
+/* MAC制御 */
 #define MAC_CR                  (0x100)         ///< MAC CONTROL REGISTER
-#define MAC_CR_LOOPBACK_        (0x00000400)    ///< [10] 1 = 内部ループバックを有効化
+#define MAC_CR_AUTO_DUPLEX_         (0x00001000)
+#define MAC_CR_AUTO_SPEED_          (0x00000800)
+#define MAC_CR_LOOPBACK_            (0x00000400)    ///< [10] 1 = 内部ループバックを有効化
+
+/* MII_ACC */
+#define MII_ACC                 (0x120)
+#define MII_ACC_MII_READ_           (0x0)
+#define MII_ACC_MII_WRITE_          (0x2)
+#define MII_ACC_MII_BUSY_           (1 << 0)
+
+#define MII_DATA                (0x124)
 
 /* USBベンダー固有リクエスト */
 #define USB_VENDOR_REQUEST_WRITE_REGISTER   (0xA0)
@@ -60,6 +71,8 @@
 #define MAF_LO(index)           (MAF_BASE + (8 * (index)) + (MAF_LOX))
 #define MAF_HI_VALID_           (0x80000000)    /// [31] :  アドレスはvalid
 
+/* DMA buffer size */
+#define ETH_ALEN                (6)
 
 /* OTPの読み込み */
 #define OTP_INDICATOR_1         (0xF3)
@@ -99,14 +112,14 @@
 #define HW_CFG_LED1_EN_             (0x00200000)
 #define HW_CFG_LED0_EN_             (0x00100000)
 #define HW_CFG_MEF_                 (0x00000010)
-
 #define HW_CFG_LRST_                (0x00000002)
+
 #define USB_CFG0                (0x080)
 #define USB_CFG_BIR_                (0x00000040)
+#define USB_CFG_BCE_                (0x00000020)
 
 #define USB_CFG1                (0x084)
 #define USB_CFG1_LTM_ENABLE_        (0x00000100)
-#define USB_CFG_BCE_                (0x00000020)
 
 #define LTM_BELT_IDLE0          (0x0E0)
 #define LTM_BELT_IDLE1          (0x0E4)
@@ -125,14 +138,16 @@
 #define FCT_FLOW                (0x0D0)
 #define RFE_CTL                 (0x0B0)
 #define RFE_CTL_BCAST_EN_           (0x00000400)
+#define RFE_CTL_MCAST_EN_       	(0x00000200)
+#define RFE_CTL_UCAST_EN_           (0x00000100)
+#define RFE_CTL_MCAST_HASH_	        (0x00000008)
 #define RFE_CTL_DA_PERFECT_         (0x00000002)
 
 #define PMT_CTL                 (0x014)
 #define PMT_CTL_PHY_RST_            (0x00000010)
 #define PMT_CTL_READY_              (0x00000080)
-#define MAC_CR_AUTO_DUPLEX_         (0x00001000)
-#define MAC_CR_AUTO_SPEED_          (0x00000800)
 #define MAC_TX                  (0x108)
+#define MAC_TX_TXEN_                (0x00000001)
 #define FCT_TX_CTL              (0x0C4)
 #define FCT_TX_CTL_EN_              (0x80000000)
 #define MAC_RX                  (0x104)
@@ -141,7 +156,6 @@
 #define MAC_RX_MAX_SIZE_SHIFT_      (16)
 #define FCT_RX_CTL              (0x0C0)
 #define FCT_RX_CTL_EN_              (0x80000000)
-#define MAC_TX_TXEN_                (0x00000001)
 #define RFE_CTL                 (0x0B0)
 #define RFE_CTL_IGMP_COE_           (0x00004000)
 #define RFE_CTL_ICMP_COE_           (0x00002000)
@@ -222,6 +236,8 @@
 /* The 5 basic operations on flags */
 usb_status_t lan7800_write_reg(struct usb_device *udev, uint32_t index, uint32_t data);
 usb_status_t lan7800_read_reg(struct usb_device *udev, uint32_t index, uint32_t *data);
+usb_status_t lan7800_modify_reg(struct usb_device *udev, uint32_t index, uint32_t mask, uint32_t set);
+usb_status_t lan7800_set_reg_bits(struct usb_device *udev, uint32_t index, uint32_t set);
 
 usb_status_t lan7800_set_mac_address(struct usb_device *udev, const uint8_t *macaddr);
 usb_status_t lan7800_get_mac_address(struct usb_device *udev, uint8_t *macaddr);
@@ -233,4 +249,41 @@ usb_status_t lan7800_set_loopback_mode(struct usb_device *udev, unsigned int on_
 void lan7800_tx_complete(struct usb_xfer_request *req);
 void lan7800_rx_complete(struct usb_xfer_request *req);
 
+static inline void
+__lan7800_dump_reg(struct usb_device *udev, uint32_t index, const char *name)
+{
+    uint32_t val = 0;
+    lan7800_read_reg(udev, index, &val);
+    kprintf("LAN7800: %s = 0x%08X\r\n", name, val);
+}
+
+#define lan7800_dump_reg(udev, index) __lan7800_dump_reg(udev, index, #index)
+
+/* lan7800_mdio関数 */
+usb_status_t  lan7800_mdio_read (struct usb_device *udev, int phy_id, int idx);
+void lan7800_mdio_write(struct usb_device *udev, int phy_id, int idx, int regval);
+
+/* LAN7800関数定義 (lan7800.cで定義)  */
+usb_status_t lan7800_read_raw_otp(struct usb_device *udev,
+        uint32_t offset, uint32_t length, uint8_t *data);
+int lan7800_read_otp_mac(unsigned char *enetaddr, struct usb_device *udev);
+usb_status_t lan7800_eeprom_confirm_not_busy(struct usb_device *udev);
+usb_status_t lan7800_wait_eeprom(struct usb_device *udev);
+usb_status_t lan7800_read_raw_eeprom(struct usb_device *dev,
+        uint32_t offset, uint32_t length, uint8_t *data);
+usb_status_t lan7800_read_eeprom(struct usb_device *dev, uint32_t offset,
+        uint32_t length, uint8_t *data);
+usb_status_t lan7800_set_rx_max_frame_length(struct usb_device *dev, int size);
+
+#define NETIF_F_RXCSUM                  4
+#define NETIF_F_HW_VLAN_CTAG_RX         2
+#define NETIF_F_HW_VLAN_CTAG_FILTER     1
+usb_status_t lan7800_set_features(struct usb_device *dev,
+        uint32_t features);
+usb_status_t lan7800_init(struct usb_device *dev, uint8_t* macaddress);
+
+usb_status_t lan7800_mdio_wait_for_bit(struct usb_device *udev,
+        const uint32_t reg, const uint32_t mask, const bool set);
+
+#define lan7800_wait_for_bit    lan7800_mdio_wait_for_bit
 #endif                          /* _LAN7800_H_ */

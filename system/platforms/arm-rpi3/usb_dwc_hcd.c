@@ -76,6 +76,7 @@
 #include <usb_hcdi.h>
 #include <usb_hub_defs.h>
 #include <usb_std_defs.h>
+#include <usb_util.h>
 #include "bcm2837.h"
 
 /** ワードサイズの次の倍数まで数値を丸めあげる  */
@@ -1475,7 +1476,7 @@ dwc_handle_channel_halted_interrupt(uint chan)
     }
     else
     {
-        /* 秋ならなエラーは発生していない */
+        /* 明らかなエラーは発生していない */
         intr_status = dwc_handle_normal_channel_halted(req, chan, interrupts);
     }
 
@@ -1818,6 +1819,7 @@ hcd_start(void)
     status = dwc_power_on();
     if (status != USB_STATUS_SUCCESS)
     {
+        usb_info("dwc_power_on error: %d\n\r", status);
         return status;
     }
     dwc_soft_reset();
@@ -1826,6 +1828,7 @@ hcd_start(void)
     status = dwc_start_xfer_scheduler();
     if (status != USB_STATUS_SUCCESS)
     {
+        usb_info("dwc_start_xfer_scheduler error: %d\n\r", status);
         dwc_power_off();
     }
     return status;

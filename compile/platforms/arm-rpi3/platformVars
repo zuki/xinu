@@ -14,6 +14,18 @@ PLATFORM_NAME := Raspberry Pi 3B+
 CFLAGS   += -mcpu=cortex-a53
 ASFLAGS  += -mcpu=cortex-a53
 
+# Extra compiler flag that disables gcc from generating unaligned memory accesses
+# This is used as an alternative to doing this in the assembly code in start.S
+CFLAGS   += -mno-unaligned-access
+
+# Extra compiler flag for using FPU (see start.S for enable)
+CFLAGS   += -mfpu=vfpv4
+ASFLAGS  += -mfpu=vfpv4
+
+# Extra compiler flag for selecting ARM ABI
+CFLAGS   += -mfloat-abi=softfp
+ASFLAGS  += -mfloat-abi=softfp
+
 # Add a define so we can test for Raspberry Pi in C code if absolutely needed
 DEFS     += -D_XINU_PLATFORM_ARM_RPI_3_
 

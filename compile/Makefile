@@ -98,7 +98,7 @@ INCLUDE := -I$(TOPDIR)/include -I$(TOPDIR)/system/platforms/$(PLATFORM) -I$(TOPD
 
 # Override this as -DDETAIL to enable certain debugging messages in Embedded
 # Xinu.
-DETAIL  :=
+DETAIL  := -DDETAIL
 
 # Set default additional defines.  platformVars can add extra defines if needed.
 DEFS    := $(DETAIL)

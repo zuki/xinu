@@ -1,199 +1,92 @@
 /**
  * @file start.S
  *
- * Initialization code for Embedded Xinu on the Raspberry Pi 3B+.
+ * Initialization code for Embedded Xinu on the Raspberry Pi.
+ *
+ * Embedded Xinu, Copyright (C) 2013.  All rights reserved.
+ *
+ * -----------------------------------------------------------------------------------------
+ *
+ * Specific for Raspberry Pi 3 (BCM2837) - Memory Layout (Not to scale)
+ * 1GB OF RAM (PHYSICAL MEMORY) AVAILABLE. 1GB == 0x3FFFFFFF
+ * +----------+
+ * |          |
+ * | IO SPACE | -> 0x3F000000 - 0x3FFFFFFF IO用に予約 (GPIO, UART, SYS TIMER, USB CORE)
+ * |          |
+ * +----------+
+ * |          |
+ * |          |
+ * |   HEAP   | -> getmem はここから割り当てる
+ * |          |
+ * |          |
+ * +----------+
+ * | OS STACK | -> null プロセスのスタックになる
+ * +----------+
+ * |   BSS    | -> C 環境で必要
+ * +----------+
+ * |   TEXT   | -> XINUのコード
+ * |          |
+ * +----------+
+ * | RESERVED | -> 割り込みハンドラとベクタ
+ * +----------+
  */
-/* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
-/* =====================================================================
- *       ARM CPU CPSRレジスタのMODE定数定義
- * ===================================================================== */
-.equ ARM_MODE_USR, 0x10;    ;@ CPU in USR mode .. Normal User mode
-.equ ARM_MODE_FIQ, 0x11;    ;@ CPU in FIQ mode .. FIQ Processing
-.equ ARM_MODE_IRQ, 0x12;    ;@ CPU in IRQ mode .. IRQ Processing
-.equ ARM_MODE_SVC, 0x13;    ;@ CPU in SVC mode .. Service mode
-.equ ARM_MODE_HYP, 0x1A;    ;@ CPU in HYP mode .. Hypervisor mode
-.equ ARM_MODE_UND, 0x1B;    ;@ CPU in UND mode .. Undefined Instructions mode
-.equ ARM_MODE_SYS, 0x1F;    ;@ CPU in SYS mode .. Priviledged Operating System Tasks mode
-
-/* =====================================================================
- *       FOR CPSRレジスタのMASK定数
- * ===================================================================== */
-.equ ARM_MODE_MASK, 0x1F;   ;@ CPSRレジスタからCPUモードビット以外をすべてクリアするためのマスク
-.equ ARM_I_BIT,     0x80;   ;@ 1をセットするとIRQは無効になる
-.equ ARM_F_BIT,     0x40;   ;@ 1をセットするとFIQは無効になる
+#include <arm.h>     /* For ARM_MODE_SYS */
 
 #define NULLSTK 8192
 
-.section ".init", "ax", %progbits
-.globl _start
-.balign 4
+.section .init
+    .globl _start
 
     /* _start:  Xinuカーネルのエントリポイント。これはカーネルイメージの
-     * 最初のバイトになり、Raspberry PiではGPUによりアドレス 0x8000 に
+     * 先頭に置かれるが、Raspberry PiではGPUによりアドレス 0x8000 に
      * ロードされる。 */
+
+    .func _start
 _start:
-    mov r12, pc                             /* ブートアドレスを保存 */
-    mrs r0, CPSR                            /* R0 = cpsr */
-    orr r0, r0, #(ARM_I_BIT | ARM_F_BIT)    /* Irq/Fiqを無効に */
-    and r11, r0, #ARM_MODE_MASK             /* R11 = cpsr & 0x1F : MODE*/
+    /* atags (ARM boot tags)へのポインタを保存する。Pi 3はatagsを*渡して
+     * おり*、アドレス0x100に渡している。Pi 1と同じように、そこにアクセス
+     * する。Aarch32(ARMv8-A)の標準プロトコルではatagsポインタをレジスタr2に
+     * 渡することになっている。なのでr3に格納し、atagsを解析するCコードから
+     * アクセスできるようにする（実際はもうATAGは使用されていない）。 */
+    ldr     r3, =atags_ptr
+    cmp     r2, #0
+    moveq   r2, #0x100
+    str     r2, [r3]
 
-mp_start:
-    /* CPUがHYP_MODE (EL2)の場合、SVC_MODE (EL1)に移行する */
-    cmp r11, #ARM_MODE_HYP                  /* HYP_MODEにいるかチェック */
-    bne .NotInHypMode                       /* HYP_MODEでなければ以下の処理を回避 */
-    bic r0, r0, #ARM_MODE_MASK              /* レジスタ R0 (CPSR) のCPUモードビットをクリア */
-    orr r0, r0, #ARM_MODE_SVC               /* CPUモードをSVC_MODEに移行 */
-    msr spsr_cxsf, R0                       /* (HYP_MODEの)spsrに値を格納 */
-    add lr, pc, #4                          /* 復帰アドレス(.NotInHypMode)を計算 : pc = curr + 8 (eretを指しているので +4 で.NotInHypMode行となる) */
+    /* プロセッサがすでにSYSTEMモードになっていないかチェックする。
+     * もしそうなら、リセットハンドラへジャンブする。 */
+    mrs    r0, cpsr
+    and    r0, r0, #0b11111
+    cmp    r0, #ARM_MODE_SYS
+    beq    reset_handler
 
-    msr ELR_hyp, lr                         /* をELR_hypからの復帰アドレスをセット */
-    eret                                    /* "eret"でSVC_MODEの.NotInHypModeに復帰する */
 
-/* ここからはSVC_MODE */
-.NotInHypMode:
-/* CPUを(SVC_MODEから)SYS_MODEに移行 */
-    bic r0, r0, #ARM_MODE_MASK              /* レジスタ R0 のCPUモードビットをクリア */
-    orr r0, r0, #ARM_MODE_SYS               /* CPUモードをSYS_MODEに変更 */
-    msr CPSR_c, r0                          /* CPSRに書き込んでSYS_MODEへの移行を完了 */
+    /* ブート時にデバイスはHYP（ハイパーバイザー）モードにロードされるが、
+     * このモードはCPSオペコードにアクセスする権限を持っていない。そのため、
+     * 最も権限の高いモードであるSYSTEMモード（11111）に入るには、まず
+     * SUPERVISORモードに入る必要がある。これによりより多くの権限が与えられ
+     * "cps" オペコードを使用してSYSTEMモードに移行することができるようになる。
+     * まず、CPSRのビットをクリアしてからスーパーバイザーモードに移行する。
+     * プログラムカウンタを4つインクリメントして、32ビットワードをスキップする。
+     * 例外から返ってくるとCPSRは変更され、SUPERVISORモードになっている。
+     * これはリセットハンドラに続き、そこでSYSTEMモードに設定される。 */
 
-/* ここからはSYS_MODE */
-    mov r1, #0
-    mcr p15, 0, r1, c12, c0, 0      /* VBAR (Vector base address) = 0x0 */
+    mrs    r0, cpsr
+    orr    r0, r0, #ARM_MODE_SYS
+    msr    spsr_cxsf, r0
+    add    r0, pc, #4
+    msr    ELR_hyp, r0
+    eret
 
-/* BSS領域を0クリアする (Core 0のみ処理する) */
-    mrc  p15, 0, r3, c0, c0, 5      /* コアIDを読み込む ([1:0]) */
-    ands r3, r3, #0x3               /* コア0か */
-    bne  .clear_bss_exit            /* コア 1,2,3の場合はbss設定は回避 */
+    /* リセットハンドラに続く */
+    b reset_handler
+    .endfunc
 
-.core0_clear_bss:
-    mov r3, #0x0                    /* R3 = 0 */
-    ldr r0, =__bss_start__          /* R0 = BSSセグメントの開始アドレス */
-    ldr r1, =__bss_end__            /* R1 = BSSセグメントの終了アドレス */
-    mov r2, #0                      /* R2 = 0 : クリア値 */
-.clear_bss:
-    cmp r0, r1                      /* if (R0 >= R1 [終了アドレス]) */
-    bge .clear_bss_exit             /* TRUE : BSSクリア処理は終了 */
-    str r2, [r0]                    /* [R0] = 0 : BSS領域に0を書き込む */
-    add r0, r0, #4                  /* R0 += 4  */
-    b .clear_bss                    /* ループバック */
-
-.clear_bss_exit:
-/* =====================================================================
- *      NULLスレッド用のスタックポインタをセットする
- * ===================================================================== */
-    ldr r1, =_end            /* リンカファイルにあるendアドレスのアドレス */
-    add sp, r1, #NULLSTK    /* 必要なスタックサイズを足す */
-
-    /* ARMが使用できる残りのメモリはXinuの"memheap"領域となり
-     * 動的メモリ割り当てに使用される。その開始アドレスを設定する。
-     * これはコア0だけが設定する。 */
-    cmp r3, #0                      /* R3 = CPU IDレジスタ */
-    bne .Only_Core0_Sets_memheap    /* コア0以外はこの処理は回避 */
-    ldr r0, =memheap                /* memheapはsystem/initialize.cで宣言 */
-    str sp, [r0]                    /* &memheap = sp */
-.Only_Core0_Sets_memheap:
-
-/* =====================================================================
- *      LIキャッシュの有効化 ; https://www.aps-web.jp/academy/ca/229/
- * ===================================================================== */
-.equ SCTLR_ENABLE_DATA_CACHE,           0x4             ;@ 1 << 2
-.equ SCTLR_ENABLE_INSTRUCTION_CACHE,    0x1000          ;@ 1 << 12
-    mrc p15, 0, r0, c1, c0, 0                           ;@ R0 = SCTLR
-
-    /* キャッシュを有効化 */
-    orr r0, #SCTLR_ENABLE_DATA_CACHE            ;@ データキャッシュをON
-    orr r0, #SCTLR_ENABLE_INSTRUCTION_CACHE     ;@ 命令キャッシュをON
-    mcr p15, 0, r0, c1, c0, 0                   ;@ SCTLR = R0
-
-/* =====================================================================
- *      _start時のブートモードとアドレスを保存する
- * ===================================================================== */
-    ldr r1, =RPi_BootAddr       /* R1 = &RPi_BootAddr */
-    sub r12, #8                 /* R12 = R12 (_start時のpc) - 8 = _start */
-    str r12, [r1]               /* RPi_BootAddr = R12 */
-    ldr r1, =RPi_CPUBootMode    /* R1 = &RPi_CPUBootMode */
-    str r11, [r1]               /* RPi_CPUBootMode = R11 (_start時のモード）*/
-/* =====================================================================
- *      初期のCPUコアの準備ができたのでCoreReadyカウントを1にセット
- * ===================================================================== */
-    mov r0, #1                  /* R0 = 1 : Core0は準備完了 */
-    ldr r1, =RPi_CoresReady     /* R1 = &RPi_CoresReady */
-    str r0, [r1]                /* RPi_CoresReady = R0 */
-/* =====================================================================
- *      CPUの変更されたモードを読み込んで保存する。モードを変更した場合、
- *      この値はRPi_CPUBootModeに格納したオリジナル値からの変更を反映する。
- * ===================================================================== */
-    mrs r2, CPSR                    /* R2 = CPSR */
-    and r2, r2, #0x1F               /* R2 = CPSR & 0x1F : MODE */
-    ldr r1, =RPi_CPUCurrentMode     /* R1 = &RPi_CPUCurrentMode */
-    str r2, [r1]                    /* RPi_CPUCurrentMod = R2 */
-/* =====================================================================
- *      Arm Main CPUIDレジスタを読んでRPi_CpuIdに保存する
- * ===================================================================== */
-    ldr r1, =RPi_CpuId              /* R1 = &RPi_CpuId */
-    mrc p15, 0, r0, c0, c0, 0       /* R0 = MIDR */
-    str r0, [r1]                    /* RPi_CpuId = MIDR */
-/* =====================================================================
- *      コンパイラモードをRPi_CompileModeに保存する
- * ===================================================================== */
-    eor r0, r0, r0;                 /* R0 = 0 */
-    mov r0, #0x08
-    orr r0, r0, #(4 << 5)           /* 4コアをサポート */
-    ldr r1, =RPi_CompileMode        /* R1 = &RPi_CompileMode */
-    str r0, [r1]                    /* RPi_CompileMode = R0 */
-
-/* =====================================================================
- *      RPi_IO_Base_Addr と RPi_ARM_TO_GPU_Aliasを保存
- * ===================================================================== */
-    ldr r2, =0x3F000000
-    ldr r3, =0xC0000000
-    ldr r1, =RPi_IO_Base_Addr       /* R1 = &RPi_IO_Base_Addr */
-    str r2, [r1]                    /* RPi_IO_Base_Addr = R2  */
-    ldr r1, =RPi_ARM_TO_GPU_Alias   /* R1 = &RPi_ARM_TO_GPU_Alias */
-    str r3, [r1]                    /* RPi_ARM_TO_GPU_Alias = R3 */
-/* =====================================================================
- *     IRRテーブル (_vectors) を0x0000にコピーする
- * ===================================================================== */
-    ldr r0, = _vectors              /* R0 = &_vectors : isr_Tableのアドレス */
-    mov     r1, #0x0000             /* R1 = 0x0000 : */
-    /*do {i=0; i<sizeof(RList); i++) RList[i] = *(_vectors + i * 4); */
-    ldmia   r0!,{r2, r3, r4, r5, r6, r7, r8, r9}
-    /* do {i=0; i<sizeof(RList); i++) *(0x0 + i * 4) = RList[i]; */
-    stmia   r1!,{r2, r3, r4, r5, r6, r7, r8, r9}
-    /* リテラルプールアドレスをisr_Tableの後ろにコピー */
-    ldmia   r0!,{r2, r3, r4, r5, r6, r7, r8, r9}
-    stmia   r1!,{r2, r3, r4, r5, r6, r7, r8, r9}
-
-/* =====================================================================
- *      Core 0以外を起床させる
- *          armstub7.S を参照
- * ===================================================================== */
-/* 当面、シングルコアで実行するのでセカンダリコアは起こさない
-    ldr r0, mp_start
-    mov r1, #1
-    mov r2, #2
-    mov r3, #3
-    mov r9, =0x8000                 ;@ Core1,2,3は Mailbox3 [0x4000008c + Core# * 0x10]
-    str r0 [r9, r1, lsl #4]         ;@ にカーネルアドレスが書き込まれる
-    str r0 [r9, r2, lsl #4]         ;@ のを待っている
-    str r0 [r9, r3, lsl #4]
-    dsb
-    isb
-    sev                             ;@ eventを送って起床させる
-*/
-
-    /* プラットフォーム固有のCのstartup関数に分岐する。この関数は引数を取らず、復帰しない  */
-    b nulluser
-hang:
-    b hang      /* main関数から復帰したらハングさせる（怒らないはず） */
-.balign    4
-.ltorg          /*Tell assembler ltorg data for this code can go here */
-
-/* =====================================================================
- *      ARM例外ベクタテーブル。アドレス0にコピーされる
- *          ARM Architecture Reference ManualのA2.6 "Exception"を参照
- * ===================================================================== */
+/* ARM 例外ベクタテーブル。これはVBARレジスタにコピーされる。 */
+/* ベクタテーブルは32バイトアラインでなければならない */
+.balign    0x20
+.globl _vectors
 _vectors:
     ldr pc, reset_addr      /* リセットハンドラ */
     ldr pc, undef_addr      /* 未定義命令例外ハンドラ */
@@ -204,66 +97,107 @@ _vectors:
     ldr pc, irq_addr        /* IRQ (Interrupt request) 例外ハンドラ */
     ldr pc, fiq_addr        /* FIQ (Fast interrupt request) 例外ハンドラ */
 
-reset_addr:     .word _start
-undef_addr:     .word hang
-swi_addr:       .word hang
-prefetch_addr:  .word hang
-abort_addr:     .word hang
-reserved_addr:  .word hang
+reset_addr:     .word reset_handler
+undef_addr:     .word reset_handler
+swi_addr:       .word reset_handler
+prefetch_addr:  .word reset_handler
+abort_addr:     .word reset_handler
+reserved_addr:  .word reset_handler
 irq_addr:       .word irq_handler
-fiq_addr:       .word hang
+fiq_addr:       .word reset_handler
 
-mbox:   .4byte 0x400000CC
-machid: .4byte 3138
-atags:  .4byte 0x100
-.balign    4
-.ltorg      /* Tell assembler ltorg data for this code can go here */
+_endvectors:
 
-.if (__ARM_FP == 12)
-.balign    4
-.globl get_fpexc
-.type get_fpexc, %function
-get_fpexc:
-    fmrx r0, fpexc
-    bx  lr                                                ;@ Return
+.section .text
 
-.balign    4
-.globl get_fpscr
-.type get_fpscr, %function
-get_fpscr:
-    fmrx r0, fpscr
-    bx  lr                                                ;@ Return
-.endif
+    /* reset_handler: カーネル起動時、ARMプロセッサのリセット時、（現在の
+     * ところは）未処理の例外発生時に、実行されるリセットハンドルルーチン
+     */
+    .func reset_handler
+reset_handler:
 
-/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- *      SMARTSTART32がインタフェースに公開するデータ
- * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-.section ".data.smartstart32", "aw"
-.balign 4
+    /* SUPERVISORモードに入った後、ARMプロセッサが既知の状態になるように、
+     * すべての割り込みを禁止してSYSTEMモードに入る。 */
+    cpsid if
+    /* ARM例外テーブルを.initセクションからアドレス0にコピーする。
+     * 絶対アドレステーブルも同時にコピーする。ここでは全部で
+     * 16ワードであると仮定している */
+    mov   r0, #0
+    ldr   r1, =_vectors
+    ldmia r1!, {r2-r9}
+    stmia r0!, {r2-r9}
+    ldmia r1!, {r2-r9}
+    stmia r0!, {r2-r9}
 
-.globl RPi_IO_Base_Addr;
-RPi_IO_Base_Addr : .4byte 0;        /* ペリフェラルベースアドレス */
+    mov r1, #0
+    mcr p15, 0, r1, c12, c0, 0    /* VBARに例外テーブルのアドレスを書き込む */
 
-.globl RPi_ARM_TO_GPU_Alias;
-RPi_ARM_TO_GPU_Alias: .4byte 0;     /* バスアドレス */
+    /* ARMプロセッサの制御レジスタを変更して次の機能を有効にする。
+     *
+     * - unaligned memory accesses   (bit 22)
+     *
+     * 注意: Xinuは意図的に非整列メモリアクセスを行うことはないはずだが、
+     * gccが文字列のコピーなどで非整列メモリアクセスを生成することがある
+     * ことがわかった（代替案としては、そうしないようにgccに
+     * -mno-unaligned-accessを渡すことだろう）。
+     */
 
-.globl RPi_BootAddr;
-RPi_BootAddr : .4byte 0;            /* CPUブートアドレス */
+    mrc p15, 0, r0, c1, c0, 0
+    orr r0, #1 << 22
+    mcr p15, 0, r0, c1, c0, 0
 
-.globl RPi_CoresReady;
-RPi_CoresReady : .4byte 0;          /* CPUコア準備完了カウント */
+    /* カーネルの.bssセクションをクリアする.  */
+    ldr r0, =_bss
+    ldr r1, =_end
+    mov r2, #0
+    mov r3, #0
+    mov r4, #0
+    mov r5, #0
+    b bssloopa
 
-.globl RPi_CPUBootMode;
-RPi_CPUBootMode : .4byte 0;         /* CPUブートモード */
+bssloopb:
+    stmia r0!, {r2-r5}
 
-.globl RPi_CpuId;
-RPi_CpuId : .4byte 0;               /* CPU Id */
+bssloopa:
+    cmp r0, r1      /* まだbssの終わりに届いていないかチェックする */
+    blo bssloopb    /* if (r0 < r1) goto bssloopb; */
 
-.globl RPi_CompileMode;
-RPi_CompileMode : .4byte 0;        /* コンパイルモード */
+    add sp, r1, #NULLSTK    // シングルコアのNULLタスク用スタックの初期化
 
-.globl RPi_CPUCurrentMode;
-RPi_CPUCurrentMode : .4byte 0;     /* CPUのカレントモード */
+/* 以下はマルチコアの各NULLタスク用のスタックの初期化
+    ldr r3, =core_init_sp
 
-.globl RPi_SmartStartVer;
-RPi_SmartStartVer : .4byte 0x00020007;  /* SmartStartバージョン */
+    // Put the null thread's stack directly after the kernel image.
+    add sp, r1, #NULLSTK    // Core 0 stack pointer
+    str sp, [r3, #0]
+
+    add r0, sp, #NULLSTK    // Core 1 stack pointer
+    str r0, [r3, #4]
+
+    add r1, r0, #NULLSTK    // Core e stack pointer
+    str r1, [r3, #8]
+
+    add r2, r1, #NULLSTK    // Core 3 stack pointer
+    str r2, [r3, #12]
+*/
+    /* ARMが使用できる残りのメモリはXinuの"memheap"領域となり
+     * 動的メモリ割り当てに使用される。その開始アドレスを設定する。  */
+    ldr r0, =memheap
+    str sp, [r0]
+    /* str r2, [r0]        // コア3に割り当てた最後のスタックアドレスのr2を使う */
+
+    /* FPUを有効にする */
+    mov r0, #0xf00000           // cp10とc11をすべてアクセス可に - pi3 - 4.5.29参照
+    mcr p15, 0, r0, c1, c0, 2   // CPACRにr0を書き込む
+    isb
+    mov r1, #0x40000000         // FPUを有効にするためFPEXC_ENビットをセットする
+    vmsr FPEXC, r1
+    isb
+
+    /* Raspberry Piのグラフィックサブシステムを初期化する */
+    bl screenInit
+
+    /* xinu/system/initialize.cにあるnulluser関数に分岐する。
+    /* この関数はシステムを初期化してnullスレッドとなる */
+    b    nulluser
+    .endfunc

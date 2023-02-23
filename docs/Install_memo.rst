@@ -1171,3 +1171,110 @@ https://github.com/7043mcgeep/xinu のmakeと実行
       Rx overruns           0
       Rx USB transfers done 7
       Tx USB transfers done 0
+
+ATAGはあるか
+^^^^^^^^^^^^^^^
+
+7043mcgeep版のxinuのstart.Sにraspi3はatagを渡していると書いてあるので、
+本当に渡されているかチェックした。
+
+.. code-block:: bash
+
+      xsh$ memdump 0x0 0x100                                      # Vectors
+      00000000  18 f0 9f e5 18 f0 9f e5  18 f0 9f e5 18 f0 9f e5
+      00000010  18 f0 9f e5 18 f0 9f e5  18 f0 9f e5 18 f0 9f e5
+      00000020  0c aa 03 00 0c aa 03 00  0c aa 03 00 0c aa 03 00
+      00000030  0c aa 03 00 0c aa 03 00  0c ab 03 00 0c aa 03 00
+      00000040  4f f4 40 61 01 ee 51 1f  0e 49 0e ee 10 1f 01 21
+      00000050  0e ee 33 1f 0c ee 30 0f  bf f3 6f 8f 73 21 f0 f7
+      00000060  00 80 0c ee 10 0f 40 ec  4e 0f 40 f6 42 41 df e9
+      00000070  22 23 36 b1 b6 0e cc 36  20 bf bb 59 00 2b fb d0
+      00000080  bb 51 18 47 00 f8 24 01  00 00 00 00 00 00 00 00
+      00000090  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+      000000a0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+      000000b0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+      000000c0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+      000000d0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+      000000e0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+      000000f0  00 00 00 00 00 00 00 00  00 00 00 00 00 80 00 00
+
+      xsh$ memdump 0x100 0x100                                    # ATAG
+      00000100  05 00 00 00 01 00 41 54  00 00 00 00 00 00 00 00  # ATAG_CORE : 5 byte
+      00000110  00 00 00 00 04 00 00 00  02 00 41 54 00 00 40 3b  # ATAG_MEM  : 0x3b40, 0x0
+      00000120  00 00 00 00 6a 00 00 00  09 00 41 54 62 63 6d 32  # ATAG_CMDLINE : len = 0x6a (106)
+      00000130  37 30 38 5f 66 62 2e 66  62 77 69 64 74 68 3d 36  # bcm2708_fb.fb
+      00000140  35 36 20 62 63 6d 32 37  30 38 5f 66 62 2e 66 62
+      00000150  68 65 69 67 68 74 3d 34  31 36 20 62 63 6d 32 37
+      00000160  30 38 5f 66 62 2e 66 62  73 77 61 70 3d 31 20 64
+      00000170  6d 61 2e 64 6d 61 63 68  61 6e 73 3d 30 78 37 66
+      00000180  66 35 20 62 63 6d 32 37  30 39 2e 62 6f 61 72 64
+      00000190  72 65 76 3d 30 78 61 30  32 30 64 33 20 62 63 6d
+      000001a0  32 37 30 39 2e 73 65 72  69 61 6c 3d 30 78 34 61
+      000001b0  61 62 65 38 34 38 20 62  63 6d 32 37 30 39 2e 75
+      000001c0  61 72 74 5f 63 6c 6f 63  6b 3d 34 38 30 30 30 30
+      000001d0  30 30 20 62 63 6d 32 37  30 39 2e 64 69 73 6b 5f
+      000001e0  6c 65 64 5f 67 70 69 6f  3d 32 39 20 62 63 6d 32
+      000001f0  37 30 39 2e 64 69 73 6b  5f 6c 65 64 5f 61 63 74
+      00000200  69 76 65 5f 6c 6f 77 3d  30 20 73 6d 73 63 39 35
+      00000210  78 78 2e 6d 61 63 61 64  64 72 3d 42 38 3a 32 37
+      00000220  3a 45 42 3a 41 42 3a 45  38 3a 34 38 20 76 63 5f
+      00000230  6d 65 6d 2e 6d 65 6d 5f  62 61 73 65 3d 30 78 33
+      00000240  65 63 30 30 30 30 30 20  76 63 5f 6d 65 6d 2e 6d
+      00000250  65 6d 5f 73 69 7a 65 3d  30 78 34 30 30 30 30 30
+      00000260  30 30 20 20 63 6f 6e 73  6f 6c 65 3d 74 74 79 41
+      00000270  4d 41 30 2c 31 31 35 32  30 30 20 6b 67 64 62 6f
+      00000280  63 3d 74 74 79 41 4d 41  30 2c 31 31 35 32 30 30
+      00000290  20 63 6f 6e 73 6f 6c 65  3d 74 74 79 31 20 72 6f
+      000002a0  6f 74 3d 2f 64 65 76 2f  6d 6d 63 62 6c 6b 30 70
+      000002b0  32 20 72 6f 6f 74 66 73  74 79 70 65 3d 65 78 74
+      000002c0  34 20 72 6f 6f 74 77 61  69 74 00 57 00 00 00 00  # ATAG_NONE
+      000002d0  00 00 00 00 55 55 5d 55  55 55 d5 51 55 55 5d 55
+      000002e0  55 55 55 55 57 57 57 57  55 55 55 55 5f 55 55 57
+      000002f0  d5 55 f5 f5 55 f5 57 55  55 55 55 d5 d5 55 55 57
+
+ATAG_MEMとATAG_CMDLINEがセットされているがセットされたメモリサイズの値は正しくない。よく見れば、
+`platforminit.c` でATAGをパースしていない。やはりATAGは無視して良いと思われる。
+
+## xinu
+
+.. code-block:: none
+
+      USB: Registered USB keyboard driver (HID boot protocol)
+      USB: Registered LAN7800 USB Ethernet Adapter Driver
+      USB: Registered USB Hub Driver
+      USB: Powering on Synopsys DesignWare Hi-Speed USB 2.0 On-The-Go Controller
+      USB: dwc_power_on error: -3
+      USB: [ERROR] Failed to start USB host controller: hardware error              # 致命的エラー
+
+      [main]: open fd=9
+      [etherOpen]: attached 0
+      [wait_device_attached]: start minor=0
+      [wait_device_attached]: wait sem=6
+
+## xinu-7043
+
+.. code-block:: none
+
+      USB: Registered USB keyboard driver (HID boot protocol)
+      USB: Registered LAN7800 USB Ethernet Adapter Driver
+      USB: Registered USB Hub Driver
+      USB: Powering on Synopsys DesignWare Hi-Speed USB 2.0 On-The-Go Controller
+      USB: [ERROR] Device 1: String descriptor language list is empty               # これは致命的でない
+      USB: Attaching high-speed USB 2.0 Hub class device (idVendor=0x0000, idProduct=)
+      USB: Bound USB Hub Driver to high-speed USB 2.0 Hub class device (idVendor=0x00)
+
+      [etherOpen]: attached fd=0
+      [wait_device_attached]: start minor=0
+      [wait_device_attached]: wait sem=6
+      USB: Device 1: New high-speed device connected to port 1
+      USB: Attaching high-speed USB 2.0 Hub class device (idVendor=0x0424, idProduct=)
+      USB: Bound USB Hub Driver to high-speed USB 2.0 Hub class device (idVendor=0x04)
+      USB: Device 2: New high-speed device connected to port 1
+      USB: Attaching high-speed USB 2.0 Hub class device (idVendor=0x0424, idProduct=)
+      USB: Bound USB Hub Driver to high-speed USB 2.0 Hub class device (idVendor=0x04)
+      USB: Device 3: New high-speed device connected to port 1
+      USB: Attaching high-speed USB 2.1 device (idVendor=0x0424, idProduct=0x7800)
+      [lan7800_bind_device]: signal idx=0, sem=6
+      USB: Bound LAN7800 USB Ethernet Adapter Driver to high-speed USB 2.1 device (id)
+      [wait_device_attached]: signal sem=6
+      [    OK    ] Successfully opened ETH0

@@ -17,6 +17,8 @@
 #include <system/arch/arm/rpi-mailbox.h>
 #include <usb_core_driver.h>
 
+extern syscall kprintf(const char *fmt, ...);
+
 /* Ethernetデバイスのグローバルテーブル  */
 struct ether ethertab[NETHER];
 
@@ -83,22 +85,24 @@ lan7800_bind_device(struct usb_device *udev)
      */
 
     /* MACアドレスをセットする */
-    lan7800_set_mac_address(udev, ethptr->devAddress);
+    //lan7800_set_mac_address(udev, ethptr->devAddress);
 
     /* 1回のUSB転送で複数のEthernetフレームを受信できるようにする。 */
-    lan7800_set_reg_bits(udev, HW_CFG, HW_CFG_MEF_);
+    //lan7800_set_reg_bits(udev, HW_CFG, HW_CFG_MEF_);
 
     /* USB Rx転送あたりの最大USB（ネットワークではない！）パケットをセットする。
      * HW_CFG_MEFが設定された場合に必要になる */
-    lan7800_write_reg(udev, BURST_CAP, DEFAULT_BURST_CAP_SIZE / HS_USB_PKT_SIZE);
+    //lan7800_write_reg(udev, BURST_CAP, DEFAULT_BURST_CAP_SIZE / HS_USB_PKT_SIZE);
 
     /* エラーをチェックして復帰する */
     if (udev->last_error != USB_STATUS_SUCCESS)
     {
         return udev->last_error;
     }
+
     ethptr->csr = udev;
     udev->driver_private = ethptr;
+    kprintf("[lan7800_bind_device]: signal idx=%d, sem=%d\r\n", ethptr - ethertab, lan7800_attached[ethptr - ethertab]);
     signal(lan7800_attached[ethptr - ethertab]);
     return USB_STATUS_SUCCESS;
 }
@@ -180,7 +184,10 @@ static uint32_t get_macaddr(uint8_t *macaddr)
 usb_status_t
 lan7800_wait_device_attached(ushort minor)
 {
+    kprintf("[wait_device_attached]: start minor=%d\r\n", minor);
+    kprintf("[wait_device_attached]: wait sem=%d\r\n", lan7800_attached[minor]);
     wait(lan7800_attached[minor]);
+    kprintf("[wait_device_attached]: signal sem=%d\r\n", lan7800_attached[minor]);
     signal(lan7800_attached[minor]);
     return USB_STATUS_SUCCESS;
 }

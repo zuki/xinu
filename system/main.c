@@ -33,16 +33,23 @@ thread main(void)
 
     /* すべてのethernetデバイスをオープンする */
 #if NETHER
+    struct ether *ethptr;
+    ushort i;
+    int result;
+    for (i = 0; i < NETHER; i++)
     {
-        uint i;
-
-        for (i = 0; i < NETHER; i++)
-        {
-            if (SYSERR == open(ethertab[i].dev->num))
-            {
-                kprintf("WARNING: Failed to open %s\r\n",
-                        ethertab[i].dev->name);
-            }
+        ethptr = &ethertab[ethertab[i].dev->minor];
+        kprintf("[main]: open %d\r\n", ethertab[i].dev->num);
+        result = open(ethertab[i].dev->num);
+        if (SYSERR == result) {
+            kprintf("[ ERROR ] Failed to open %s\r\n",
+                    ethertab[i].dev->name);
+        } else if (ETH_STATE_UP == ethptr->state) {
+            kprintf("[  OK  ] Successfully opened %s\t\n",
+                    ethertab[i].dev->name);
+        } else {
+            kprintf("[ WARNING ] Successfully opend but downed %s\r\n",
+                    ethertab[i].dev->name);
         }
     }
 #endif /* NETHER */
@@ -142,7 +149,7 @@ static void print_os_info(void)
 
 #ifdef DETAIL
     /* 検知したプラットフォームを出力する */
-    kprintf("Processor identification: 0x%08X\r\n", cpuid);
+    //kprintf("Processor identification: 0x%08X\r\n", cpuid);
     kprintf("Detected platform as: %s, %s\r\n\r\n",
             platform.family, platform.name);
 #endif
@@ -163,7 +170,7 @@ static void print_os_info(void)
             (ulong)platform.minaddr, (ulong)_start - 1);
 #endif
 
-    kprintf("%10d bytes Xinu code.\r\n", (ulong)&_etext - (ulong)_start);
+    kprintf("%10d bytes Xinu code.\r\n", (ulong)&_end - (ulong)_start);
 #ifdef DETAIL
     kprintf("           [0x%08X to 0x%08X]\r\n",
             (ulong)_start, (ulong)&_end - 1);
