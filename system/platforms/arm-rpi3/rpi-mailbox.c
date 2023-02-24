@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
-#include <system/arch/arm/rpi-mailbox.h>
+#include <string.h>
+#include "rpi-mailbox.h"
 #include "bcm2837.h"
 #include "interrupt.h"
 
@@ -38,7 +39,7 @@ struct __attribute__((__packed__, aligned(4))) MailBoxRegisters {
  * @return 成功した場合は読み取り値、失敗した場合（メールボックスから
  *   返された実際の有効な値の下位4ビットが0）は 0x1。
  */
-static uint32_t rpi_mailbox_read(MAILBOX_CHANNEL channel)
+uint32_t rpi_mailbox_read(MAILBOX_CHANNEL channel)
 {
     uint32_t value;
     if (channel > MB_CHANNEL_GPU)
@@ -60,7 +61,7 @@ static uint32_t rpi_mailbox_read(MAILBOX_CHANNEL channel)
  * @param message 送信するデータブロックメッセージ
  * @return 成功した場合は1、失敗した場合は 0。
  */
-static int rpi_mailbox_write(MAILBOX_CHANNEL channel, uint32_t message)
+int rpi_mailbox_write(MAILBOX_CHANNEL channel, uint32_t message)
 {
     uint32_t value;
     if (channel > MB_CHANNEL_GPU)
@@ -95,4 +96,208 @@ int rpi_MailBoxAccess(uint32_t channel, uint32_t msg)
     }
     restore(im);
     return status;
+}
+
+/**
+ * ボードリビジョンの取得 (mailbox経由)
+ */
+uint32_t rpi_getModel(void)
+{
+    int retval;
+    uint32_t  __attribute__((aligned(16))) msg[7] =
+    {
+        sizeof(msg),                    // Message size
+        0,                              // Response will go here
+        MAILBOX_TAG_GET_BOARD_REVISION, // 0x00010002 : ボードリビジョンの取得
+        4,                              // 値バッファサイズ（バイト）
+        0,                              // リクエストコード: リクエスト
+        0,                              // Model response
+        0                               // Tag end marker
+    };
+
+    retval = rpi_MailBoxAccess(MB_CHANNEL_TAGS, (uint32_t)&msg[0]);
+    if (retval == OK)
+    {
+        return (msg[5]);                // ボードリビジョンを返す
+    }
+    return 0;                           // エラーの場合は0
+}
+
+/**
+ * ボードシリアル番号の取得 (mailbox経由)
+ */
+uint64_t rpi_getserial(void)
+{
+    int retval;
+    uint32_t  __attribute__((aligned(16))) msg[8] =
+    {
+        sizeof(msg),                    // Message size
+        0,                              // Response will go here
+        MAILBOX_TAG_GET_BOARD_SERIAL,   // 0x00010004 : ボードリビジョンの取得
+        8,                              // 値バッファサイズ（バイト）
+        0,                              // リクエストコード: リクエスト
+        0,                              // シリアル番号の下位32ビット
+        0,                              // シリアル番号の上位32ビット
+        0                               // Tag end marker
+    };
+
+    retval = rpi_MailBoxAccess(MB_CHANNEL_TAGS, (uint32_t)&msg[0]);
+    if (retval == OK)
+    {
+        return ((uint64_t)msg[6] << 32 | (uint64_t)msg[5]); // ボードシリアルの64ビットで返す
+    }
+    return 0UL;                           // エラーの場合は0
+}
+
+/**
+ * ARMメモリ上限の取得 (mailbox経由)
+ */
+uint32_t rpi_LastARMAddr(void)
+{
+    int retval;
+    uint32_t  __attribute__((aligned(16))) msg[8] =
+    {
+        sizeof(msg),                    // Message size
+        0,                              // Response will go here
+        MAILBOX_TAG_GET_ARM_MEMORY,     // 0x00010005 : ARMメモリの取得
+        8,                              // 値バッファサイズ（バイト）
+        0,                              // リクエストコード: リクエスト
+        0,                              // ベースアドレス
+        0,                              // メモリサイズ
+        0                               // Tag end marker
+    };
+
+    retval = rpi_MailBoxAccess(MB_CHANNEL_TAGS, (uint32_t)&msg[0]);
+    if (retval == OK)   // ARMメモリ情報の取得に成功
+    {
+        return (msg[5] + msg[6]);   // ベースアドレス + メモリサイズ
+    }
+    return 0;                       // エラーの場合はNULL
+}
+
+/**
+ * MACアドレスをメールボックス経由で取得する
+ */
+uint32_t rpi_getmacaddr(uint8_t *macaddr)
+{
+    int retval;
+    uint32_t  __attribute__((aligned(16))) msg[8] =
+    {
+        sizeof(msg),                    // Message size
+        0,                              // Response will go here
+        MAILBOX_TAG_GET_BOARD_MAC_ADDRESS, // 0x00010003 : MACアドレスの取得
+        6,                              // 値バッファサイズ（バイト）
+        0,                              // リクエストコード: リクエスト
+        0,                              // MACアドレスの下位アドレス
+        0,                              // MACアドレスの上位アドレス
+        0,                              // Tag end marker
+    };
+
+    retval = rpi_MailBoxAccess(MB_CHANNEL_TAGS, (uint32_t)&msg[0]);
+    if (retval == OK) {
+        memcpy(macaddr, ((uint8_t *)msg) + 20, 6);
+        return OK;
+    }
+    return 0;                           // エラーの場合は0
+}
+
+/**
+ * クロックレートの設定 (mailbox経由)
+ */
+int rpi_setclockfreq(MB_CLOCK_ID clkid, uint32_t freq, uint32_t turbo)
+{
+    uint32_t  __attribute__((aligned(16))) msg[9] =
+    {
+        sizeof(msg),                    // Message size
+        0,                              // Response will go here
+        MAILBOX_TAG_SET_CLOCK_RATE,     // 0x00038002 : クロックレートの設定
+        12,                             // 値バッファサイズ（バイト）
+        0,                              // リクエストコード: リクエスト
+        (uint32_t)clkid,                // クロックid
+        freq,                           // 周波数
+        turbo,                          // ターボ設定 (1: skip)
+        0                               // Tag end marker
+    };
+
+    return rpi_MailBoxAccess(MB_CHANNEL_TAGS, (uint32_t)&msg[0]);
+}
+
+/**
+ * クロックレートの取得 (mailbox経由)
+ */
+uint32_t rpi_getclockfreq(MB_CLOCK_ID clkid)
+{
+    int retval;
+    uint32_t  __attribute__((aligned(16))) msg[8] =
+    {
+        sizeof(msg),                    // Message size
+        0,                              // Response will go here
+        MAILBOX_TAG_SET_CLOCK_RATE,     // 0x00038002 : クロックレートの設定
+        8 ,                             // 値バッファサイズ（バイト）
+        0,                              // リクエストコード: リクエスト
+        (uint32_t)clkid,                // クロックid
+        0,                              // 周波数
+        0                               // Tag end marker
+    };
+
+    retval = rpi_MailBoxAccess(MB_CHANNEL_TAGS, (uint32_t)&msg[0]);
+    if (retval == OK)
+        return msg[6];
+    return SYSERR;
+}
+
+/*
+ * ペリフェラルの電源を制御する (mailbox経由)
+ */
+int rpi_setpower(MAILBOX_POWER_ID pwrid, uint32_t on)
+{
+    uint32_t  __attribute__((aligned(16))) msg[8] =
+    {
+        sizeof(msg),                    // Message size
+        0,                              // Response will go here
+        MAILBOX_TAG_SET_POWER_STATE,    // 0x00028001 : 電源状態の設定
+        8,                              // 値バッファサイズ（バイト）
+        0,                              // リクエストコード: リクエスト
+        (uint32_t)pwrid,                // 電源ID
+        (on | 0x2),                     // 1: Power on,  0: Power off (安定するまで待つ)
+        0                               // Tag end marker
+    };
+    return rpi_MailBoxAccess(8, (uint32_t)&msg[0]);
+}
+
+/**
+ * CPUのクロックレートを最大クロックレートに設定する (1.4GHz)
+*/
+void rpi_set_cpu_maxspeed(void)
+{
+    uint32_t  __attribute__((aligned(16))) msg[8] =
+    {
+        sizeof(msg),                    // Message size
+        0,                              // Response will go here
+        MAILBOX_TAG_GET_MAX_CLOCK_RATE, // 0x00030004 : ARM最大クロックレートを取得
+        8,                              // 値バッファサイズ（バイト）
+        0,                              // リクエストコード: リクエスト
+        3,                              // ARMクロック
+        0,                              // クロックレート
+        0                               // Tag end marker
+    };
+    if (rpi_MailBoxAccess(MB_CHANNEL_TAGS, (uint32_t)&msg[0]) == OK)
+    {
+        uint32_t  __attribute__((aligned(16))) msg2[9] =
+        {
+            sizeof(msg2),                   // Message size
+            0,                              // Response will go here
+            MAILBOX_TAG_SET_CLOCK_RATE,     // 0x00038002 : ARM最大クロックレートを設定
+            8,                              // 値バッファサイズ（バイト）
+            0,                              // リクエストコード: リクエスト
+            3,                              // ARMクロック
+            msg[6],                         // クロックレート
+            1,                              // ターボ設定をスキップ
+            0                               // Tag end marker
+        };
+        if (rpi_MailBoxAccess(MB_CHANNEL_TAGS, (uint32_t)&msg[0]) == OK)
+        {
+            /* ARM speed taken to max */
+        }
+    }
 }

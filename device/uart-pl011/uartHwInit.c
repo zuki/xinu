@@ -8,53 +8,6 @@
 #include <clock.h>
 #include "pl011.h"
 
-#ifdef _XINU_PLATFORM_ARM_RPI_
-
-/* GPIOレジスタの開始アドレスからのUARTレジスタのオフセット */
-#define UART_GPIO_OFFSET 0x1000
-
-#define GPFSEL1_OFFSET   0x4
-
-/* GPIOレジスタの開始アドレスからのGPPUDレジスタのオフセット */
-#define GPPUD_OFFSET     0x94
-
-/* GPIOレジスタの開始アドレスからのGPPUDCLK0レジスタのオフセット */
-#define GPPUDCLK0_OFFSET 0x98
-
-/* Raspberry PiでPL011 UARTを使用するために必要なGPIOピンを設定する */
-static void setup_gpio_pins(void *uart_regs)
-{
-    void *gpio_regs = uart_regs - UART_GPIO_OFFSET;
-    ulong sel;
-
-    volatile ulong *GPFSEL1_ptr   = gpio_regs + GPFSEL1_OFFSET;
-    volatile ulong *GPPUD_ptr     = gpio_regs + GPPUD_OFFSET;
-    volatile ulong *GPPUDCLK0_ptr = gpio_regs + GPPUDCLK0_OFFSET;
-
-    /* GPIO pins 14 と 15 にALT0を選択.  */
-    sel = *GPFSEL1_ptr;
-    sel &= ~(7 << 12);
-    sel |= 4 << 12; /* Pin 14 を ALT0 に*/
-    sel &= ~(7 << 15);
-    sel |= 4 << 15; /* Pin 15 を ALT0 に*/
-    *GPFSEL1_ptr = sel;
-
-    /* UARTで使用するGPIO pins 14 to 15 のプルアップ、プルダウンをすべて削除 (p.101) */
-    // 1. pull-up/downを無効にセット
-    *GPPUD_ptr = 0;
-    // 2. 150 cycles待つ
-    udelay(2);
-    // 3. pin 14/15に制御信号のクロックを与える
-    *GPPUDCLK0_ptr = (1 << 14) | (1 << 15);
-    // 4. 150 cycles待つ
-    udelay(2);
-    // 5. 1ですべて無効にしたので省略
-    // 6. クロックを削除する
-    *GPPUDCLK0_ptr = 0;
-}
-#endif /* _XINU_PLATFORM_ARM_RPI_ */
-
-#ifdef _XINU_PLATFORM_ARM_RPI_3_
 
 #include <rpi_gpio.h>
 #include <bcm2837.h>
@@ -75,7 +28,6 @@ static void setup_gpio_pins(void)
     udelay(2);
     regptr->gppudclk[0] = 0;
 }
-#endif /* _XINU_PLATFORM_ARM_RPI_3_ */
 
 devcall uartHwInit(device *devptr)
 {
@@ -84,14 +36,7 @@ devcall uartHwInit(device *devptr)
     /* "制御レジスタ"に0を設定してUARTを無効にする  */
     regptr->cr = 0;
 
-#ifdef _XINU_PLATFORM_ARM_RPI_
-    /* Raspberry Pi のGPIO品を正しく構成する */
-    setup_gpio_pins((void*)regptr);
-#endif
-
-#ifdef _XINU_PLATFORM_ARM_RPI_3_
     setup_gpio_pins();
-#endif
 
     /* 「フラグレジスタ」をポーリングして、UARTの送受信停止を待つ */
     while (regptr->fr & PL011_FR_BUSY)

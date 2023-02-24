@@ -72,7 +72,7 @@
 #include <string.h>
 #include <thread.h>
 #include <usb_core_driver.h>
-#include <system/arch/arm/usb_dwc_regs.h>
+#include "usb_dwc_regs.h"
 #include <usb_hcdi.h>
 #include <usb_hub_defs.h>
 #include <usb_std_defs.h>

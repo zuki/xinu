@@ -8,11 +8,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <framebuffer.h>
-#if defined(_XINU_PLATFORM_ARM_RPI_)
-    #include <bcm2835.h>
-#elif defined(_XINU_PLATFORM_ARM_RPI_3_)
-    #include <bcm2837.h>
-#endif
+#include <bcm2837.h>
 
 /* Draws a colored pixel at given (x, y) coordinates. */
 

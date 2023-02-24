@@ -11,7 +11,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <usb_core_driver.h>
-#include <system/arch/arm/rpi-mailbox.h>
+#include <system/platforms/arm-rpi3/rpi-mailbox.h>
 
 #define LAN7800_VENDOR_ID       0x0424
 #define LAN7800_PRODUCT_ID      0x7800

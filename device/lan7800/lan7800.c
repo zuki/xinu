@@ -7,9 +7,9 @@
 
 #include <stdint.h>
 #include <usb_core_driver.h>
-#include <system/arch/arm/rpi-mailbox.h>
 #include <ether.h>
 #include <clock.h>
+#include <system/platforms/arm-rpi3/rpi-mailbox.h>
 #include "lan7800.h"
 
 /**

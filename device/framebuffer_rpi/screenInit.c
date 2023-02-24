@@ -10,13 +10,8 @@
 #include <stdlib.h>
 #include <shell.h> /* for banner */
 #include <kernel.h>
-#include <system/arch/arm/rpi-mailbox.h>
-
-#if defined(_XINU_PLATFORM_ARM_RPI_)
-    #include <bcm2835.h>
-#elif defined(_XINU_PLATFORM_ARM_RPI_3_)
-    #include <bcm2837.h>
-#endif
+#include <system/platforms/arm-rpi3/rpi-mailbox.h>
+#include <bcm2837.h>
 
 int rows;
 int cols;

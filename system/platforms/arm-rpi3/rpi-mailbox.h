@@ -12,6 +12,7 @@
 
 // すべてのレジスタは32ビットなのでuint32_tを使用するのが妥当
 #include <stdint.h>
+#include "bcm2837.h"
 
 /**
  * Raspberry Piメールボックス定数
@@ -218,18 +219,18 @@ typedef union
     uint32_t Raw32;                         // 32ビットをuint32_tとしてアクセスするためのunion
 } RPI_MODEL_ID;
 
-/** --------------------------------------------------------------------------
- * Raspberry Pi Mailboxアクセス関数.
- * 指定されたチャンネルのメールボックスシステムを通して指定されたデータ
- * ブロックメッセージの送信を実行する。ただし、コンテキストスイッチ
- * されないようにする。これは必要である。なぜなら、PIメールボックス
- * メッセージが発行された場合、他のPIメールボックスメッセージが送信
- * される前にその応答を読まなければならないからである。
- *
- * @param channel メールボックスチャネル
- * @param msg 送信メッセージ
- * @return 成功の場合は OK、失敗の場合は SYSERR。
- * -------------------------------------------------------------------------- */
-int rpi_MailBoxAccess (uint32_t channel, uint32_t msg);
+uint32_t rpi_mailbox_read(MAILBOX_CHANNEL channel);
+int rpi_mailbox_write(MAILBOX_CHANNEL channel, uint32_t message);
+int rpi_MailBoxAccess(uint32_t channel, uint32_t msg);
+uint32_t rpi_getModel(void);
+uint64_t rpi_getserial(void);
+uint32_t rpi_LastARMAddr(void);
+uint32_t rpi_getmacaddr(uint8_t *macaddr);
+int rpi_setclockfreq(MB_CLOCK_ID clkid, uint32_t freq, uint32_t turbo);
+uint32_t rpi_getclockfreq(MB_CLOCK_ID clkid);
+int rpi_setpower(MAILBOX_POWER_ID pwrid, uint32_t on);
+void rpi_set_cpu_maxspeed(void);
+int bcm2837_setpower(enum board_power_feature feature, bool on);
+void bcm2837_power_init(void);
 
 #endif

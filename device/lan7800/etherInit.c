@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
-#include <system/arch/arm/rpi-mailbox.h>
+#include <system/platforms/arm-rpi3/rpi-mailbox.h>
 #include <usb_core_driver.h>
 
 extern syscall kprintf(const char *fmt, ...);
@@ -135,32 +135,6 @@ static const struct usb_device_driver lan7800_driver = {
 };
 
 /**
- * MACアドレスをメールボックス経由で取得する
- */
-static uint32_t get_macaddr(uint8_t *macaddr)
-{
-    int retval;
-    uint32_t  __attribute__((aligned(16))) msg[8] =
-    {
-        sizeof(msg),                    // Message size
-        0,                              // Response will go here
-        MAILBOX_TAG_GET_BOARD_MAC_ADDRESS, // 0x00010003 : MACアドレスの取得
-        6,                              // 値バッファサイズ（バイト）
-        0,                              // リクエストコード: リクエスト
-        0,                              // MACアドレスの下位アドレス
-        0,                              // MACアドレスの上位アドレス
-        0,                              // Tag end marker
-    };
-
-    retval = rpi_MailBoxAccess(MB_CHANNEL_TAGS, (uint32_t)&msg[0]);
-    if (retval == OK) {
-        memcpy(macaddr, ((uint8_t *)msg) + 20, 6);
-        return OK;
-    }
-    return 0;                           // エラーの場合は0
-}
-
-/**
  * @ingroup ether_lan9512
  *
  * 指定したEthernetデバイスが実際に接続されるまで待つ.
@@ -229,7 +203,7 @@ devcall etherInit(device *devptr)
         goto err_free_isema;
     }
 
-    if (get_macaddr(ethptr->devAddress) != OK) {
+    if (rpi_getmacaddr(ethptr->devAddress) != OK) {
         goto err_free_attached_sema;
     }
 

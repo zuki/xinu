@@ -17,7 +17,8 @@ C_FILES = setupStack.c       \
           timer.c            \
           usb_dwc_hcd.c      \
           watchdog.c         \
-          rpi-mailbox.c
+          rpi-mailbox.c      \
+          rpi-power.c
 
 # Add the files to the compile source path
 DIR = ${TOPDIR}/${COMP}
