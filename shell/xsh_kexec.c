@@ -101,7 +101,7 @@ static void usage(const char *command)
 "\t               address and information about the TFTP server hosting\n"
 "\t               the boot file.  The boot file (new kernel) will then be\n"
 "\t               downloaded using TFTP and executed.\n"
-#if defined(_XINU_PLATFORM_ARM_RPI_) || defined(_XINU_PLATFORM_ARM_RPI_3_)
+#ifdef _XINU_PLATFORM_ARM_RPI_
 "\t-u <UARTDEV>   Load the new kernel over the specified UART device.\n"
 "\t               This is currently a Raspberry-Pi specific feature\n"
 "\t               and is designed to be used with \"raspbootcom\"\n"
@@ -140,6 +140,7 @@ static void kexec_from_network(int netdev)
 
     /* Ensure the DHCP server provided the boot filename and TFTP server IP
      * address.  */
+    printf("data.bootfile: %s\n", data.bootfile);
     if ('\0' == data.bootfile[0] || 0 == data.next_server.type)
     {
         fprintf(stderr, "ERROR: DHCP server did not provide boot file "
@@ -177,6 +178,7 @@ static void kexec_from_network(int netdev)
            data.bootfile, str_ip);
     kernel = (void*)tftpGetIntoBuffer(data.bootfile, &nif->ip,
                                       &data.next_server, &size);
+    printf("kernel=0x%08X, *kernel=0x%08X\n", (uint)kernel, *(uint *)kernel);
 
     if (SYSERR == (int)kernel)
     {
@@ -202,7 +204,7 @@ static void kexec_from_network(int netdev)
 
 static void kexec_from_uart(int uartdev)
 {
-#if defined(_XINU_PLATFORM_ARM_RPI_) || defined(_XINU_PLATFORM_ARM_RPI_3_)
+#ifdef _XINU_PLATFORM_ARM_RPI_
     irqmask im;
     device *uart;
     ulong size;

@@ -15,7 +15,14 @@
 #define MAX_REG_ARGS 4
 
 /** 新規スレッドのスタックにコンテキストレコードと引数をセットする
- * (ARM版)  */
+ * (ARM版)
+ * @param stackaddr スタックアドレス
+ * @param procaddr  プロセスアドレス
+ * @param retaddr   リターンアドレス
+ * @param nargs     引数の数
+ * @param ap        引数リスト
+ * @return スタックのトップのアドレス
+ */
 void *setupStack(void *stackaddr, void *procaddr,
                  void *retaddr, unsigned int nargs, va_list ap)
 {
@@ -44,8 +51,8 @@ void *setupStack(void *stackaddr, void *procaddr,
     }
 
     /* 新規スレッドためのコンテキストレコードを構築する */
-
     saddr -= CONTEXT_WORDS;
+    saddr[0] = 0;
 
     /* レジスタで渡される引数（コンテキストレコードの一部） */
     for (i = 0; i < reg_nargs; i++)

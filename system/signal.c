@@ -27,7 +27,11 @@
 syscall signal(semaphore sem)
 {
     register struct sement *semptr;
+    int count;
     irqmask im;
+    unsigned int cpuid;
+
+    cpuid = getcpuid();
 
     im = disable();
     if (isbadsem(sem))
@@ -35,10 +39,16 @@ syscall signal(semaphore sem)
         restore(im);
         return SYSERR;
     }
+
+    semtab_acquire(sem);
     semptr = &semtab[sem];
-    if ((semptr->count++) < 0)
+    count = semptr->count++;
+    semtab_release(sem);
+
+    if (count < 0)
     {
-        ready(dequeue(semptr->queue), RESCHED_YES);
+        ready(dequeue(semptr->queue), RESCHED_NO, cpuid);
+        resched();
     }
     restore(im);
     return OK;

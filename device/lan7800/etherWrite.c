@@ -3,17 +3,21 @@
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
+#include "lan7800.h"
 #include <bufpool.h>
 #include <ether.h>
 #include <interrupt.h>
 #include <string.h>
 #include <usb_core_driver.h>
-#include "lan7800.h"
 
 /**
- * @ingroup ether_lan7800
+ * @ingroup lan7800
  *
  * LAN7800用の etherWrite() の実装. この関数のドキュメントはether.h を参照
+ * @param devptr    書き込むethernetデバイスへのポインタ
+ * @param buf       パケットバッファ
+ * @param len       書き込むバイト数
+ * @return 書き込んだパケット長
  */
 devcall etherWrite(device *devptr, const void *buf, uint len)
 {

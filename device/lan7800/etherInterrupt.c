@@ -1,6 +1,6 @@
 /**
  * @file     etherInterrupt.c
- * @ingroup ether_lan7800
+ * @ingroup lan7800
  *
  * このファイルはLAN7800 USB EthernetアダプタのUSB転送完了コールバックを
  * 提供する。これは他のXinu Ethernetドライバに実装されている  etherInterrupt()
@@ -13,14 +13,15 @@
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
+#include "lan7800.h"
 #include <bufpool.h>
 #include <ether.h>
 #include <string.h>
 #include <usb_core_driver.h>
-#include "lan7800.h"
+#include <kernel.h>
 
 /**
- * @ingroup ether_lan7800
+ * @ingroup lan7800
  *
  * Ethernetパケットの送信を目的としたLAN7800 USB Ethernet
  * アダプタのバルクOUTエンドポイントへの非同期USBバルク転送が成功または
@@ -38,12 +39,12 @@ void lan7800_tx_complete(struct usb_xfer_request *req)
     struct ether *ethptr = req->private;
 
     ethptr->txirq++;
-    usb_dev_debug(req->dev, "LAN7800: Tx complete\n");
+    usb_dev_debug(req->dev, "\n\nLAN7800: Tx complete\n");
     buffree(req);
 }
 
 /**
- * @ingroup ether_lan7800
+ * @ingroup lan7800
  *
  * 1つ以上のEthernetパケットの受信を目的としたLAN7800 USB Ethernet
  * アダプタのバルクINエンドポイントへの非同期USBバルク転送が成功または

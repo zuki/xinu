@@ -7,6 +7,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include <framebuffer.h>
 
 /**
  * @ingroup shell

@@ -45,11 +45,11 @@ devcall etherWrite(device *devptr, const void *buf, uint len)
     sendbuf[5] = (tx_cmd_b >> 8)  & 0xff;
     sendbuf[6] = (tx_cmd_b >> 16) & 0xff;
     sendbuf[7] = (tx_cmd_b >> 24) & 0xff;
-    STATIC_ASSERT(SMSC9512_TX_OVERHEAD == 8);
-    memcpy(sendbuf + SMSC9512_TX_OVERHEAD, buf, len);
+    STATIC_ASSERT(SMSC9512_LAN7800_TX_OVERHEAD == 8);
+    memcpy(sendbuf + SMSC9512_LAN7800_TX_OVERHEAD, buf, len);
 
     /* USB上で送信するデータの合計サイズをセットする*/
-    req->size = len + SMSC9512_TX_OVERHEAD;
+    req->size = len + SMSC9512_LAN7800_TX_OVERHEAD;
 
     /* データを非同期バルクUSB転送として送信する。言い換えると、USBサブ
      * システムにSMSC LAN9512 USB EthernetアダプタにUSB経由でデータの

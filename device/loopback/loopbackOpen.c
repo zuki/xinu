@@ -25,7 +25,7 @@ devcall loopbackOpen(device *devptr)
     lbkptr = &looptab[devptr->minor];
 
     im = disable();
-    /* ループバックがすでにお～っ分済みかチェックする */
+    /* ループバックがすでにオープン済みかチェックする */
     if (LOOP_STATE_FREE != lbkptr->state)
     {
         restore(im);

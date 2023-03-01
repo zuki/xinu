@@ -1278,3 +1278,54 @@ ATAG_MEMとATAG_CMDLINEがセットされているがセットされたメモリ
       USB: Bound LAN7800 USB Ethernet Adapter Driver to high-speed USB 2.1 device (id)
       [wait_device_attached]: signal sem=6
       [    OK    ] Successfully opened ETH0
+
+xinu-7043にあわせた
+^^^^^^^^^^^^^^^^^^^^
+
+`system/lock.c`, `device/telnet/telnetRead.c`, `shell/xsh_ps.c` の
+バグを修正したところ、ETH0のopenまで成功。まだshellが立ち上がらない。
+
+.. code-block:: none
+
+      USB: Registered USB keyboard driver (HID boot protocol)
+      USB: Registered LAN7800 USB Ethernet Adapter Driver
+      USB: Registered USB Hub Driver
+      USB: Powering on Synopsys DesignWare Hi-Speed USB 2.0 On-The-Go Controller
+      USB: [ERROR] Device 1: String descriptor language list is empty
+      USB: Attaching high-speed USB 2.0 Hub class device (idVendor=0x0000, idProduct=)
+      USB: Bound USB Hub Driver to high-speed USB 2.0 Hub class device (idVendor=0x00)
+
+      ***********************************************************
+      ******************** Hello Xinu World! ********************
+      ***********************************************************
+      (Embedded Xinu) (arm-rpi3) #97 (dspace@mini.local) 2023年 2月28日 火曜日 17時28分14秒 JST
+      Detected platform as: BCM2837B0, Raspberry Pi 3 B+
+
+      1056964600 bytes physical memory.
+            [0x00000000 to 0x3EFFFFF7]
+            32 kilobytes L1 data cache.
+      32768 bytes reserved system area.
+            [0x00000000 to 0x00007FFF]
+      7703232 bytes Xinu code.
+            [0x00008000 to 0x00760ABF]
+      32768 bytes stack space.
+            [0x00760AC0 to 0x00768ABF]
+      1049195832 bytes heap space.
+            [0x00768AC0 to 0x3EFFFFF7]
+
+
+      [etherOpen]: attached fd=0
+      [wait_device_attached]: start minor=0
+      [wait_device_attached]: wait sem=6
+      USB: Device 1: New high-speed device connected to port 1
+      USB: Attaching high-speed USB 2.0 Hub class device (idVendor=0x0424, idProduct=)
+      USB: Bound USB Hub Driver to high-speed USB 2.0 Hub class device (idVendor=0x04)
+      USB: Device 2: New high-speed device connected to port 1
+      USB: Attaching high-speed USB 2.0 Hub class device (idVendor=0x0424, idProduct=)
+      USB: Bound USB Hub Driver to high-speed USB 2.0 Hub class device (idVendor=0x04)
+      USB: Device 3: New high-speed device connected to port 1
+      USB: Attaching high-speed USB 2.1 device (idVendor=0x0424, idProduct=0x7800)
+      [lan7800_bind_device]: signal idx=0, sem=6
+      USB: Bound LAN7800 USB Ethernet Adapter Driver to high-speed USB 2.1 device (id)
+      [wait_device_attached]: signal sem=6
+      [  OK  ] Successfully opened ETH0

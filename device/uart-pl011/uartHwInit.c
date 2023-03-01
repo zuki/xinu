@@ -8,6 +8,50 @@
 #include <clock.h>
 #include "pl011.h"
 
+#ifdef _XINU_PLATFORM_ARM_RPI_
+
+/* Offset of UART registers from the starti of the GPIO registers. */
+#define UART_GPIO_OFFSET 0x1000
+
+#define GPFSEL1_OFFSET   0x4
+
+/* Offset of GPPUD register from the start of the GPIO registers.  */
+#define GPPUD_OFFSET     0x94
+
+/* Offset of the GPPUDCLK0_OFFSET register from the start of the GPIO registers.
+ * */
+#define GPPUDCLK0_OFFSET 0x98
+
+/* Set up the GPIO (general-purpose IO) pins needed to use the PL011 UART on the
+ * Raspberry Pi.  */
+static void setup_gpio_pins(void *uart_regs)
+{
+    void *gpio_regs = uart_regs - UART_GPIO_OFFSET;
+    ulong sel;
+
+    volatile ulong *GPFSEL1_ptr   = gpio_regs + GPFSEL1_OFFSET;
+    volatile ulong *GPPUD_ptr     = gpio_regs + GPPUD_OFFSET;
+    volatile ulong *GPPUDCLK0_ptr = gpio_regs + GPPUDCLK0_OFFSET;
+
+    /* Select alternate function 0 on pins 14 and 15.  */
+    sel = *GPFSEL1_ptr;
+    sel &= ~(7 << 12);
+    sel |= 4 << 12; /* Pin 14 */
+    sel &= ~(7 << 15);
+    sel |= 4 << 15; /* Pin 15 */
+    *GPFSEL1_ptr = sel;
+
+    /* Remove pull-up or pull-down on GPIO pins 14 and 15, which will be used
+     * by the UART.  */
+    *GPPUD_ptr = 0;
+    udelay(2);
+    *GPPUDCLK0_ptr = (1 << 14) | (1 << 15);
+    udelay(2);
+    *GPPUDCLK0_ptr = 0;
+}
+#endif /* _XINU_PLATFORM_ARM_RPI_ */
+
+#ifdef _XINU_PLATFORM_ARM_RPI_3_
 
 #include <rpi_gpio.h>
 #include <bcm2837.h>
@@ -29,6 +73,8 @@ static void setup_gpio_pins(void)
     regptr->gppudclk[0] = 0;
 }
 
+#endif /* _XINU_PLATFORM_ARM_RPI_3_ */
+
 devcall uartHwInit(device *devptr)
 {
     volatile struct pl011_uart_csreg *regptr = devptr->csr;
@@ -36,7 +82,14 @@ devcall uartHwInit(device *devptr)
     /* "制御レジスタ"に0を設定してUARTを無効にする  */
     regptr->cr = 0;
 
-    setup_gpio_pins();
+#ifdef _XINU_PLATFORM_ARM_RPI_
+    /* Configure the GPIO pins on the Raspberry Pi correctly. */
+    setup_gpio_pins((void*)regptr);
+#endif
+
+#ifdef _XINU_PLATFORM_ARM_RPI_3_
+	setup_gpio_pins();
+#endif
 
     /* 「フラグレジスタ」をポーリングして、UARTの送受信停止を待つ */
     while (regptr->fr & PL011_FR_BUSY)

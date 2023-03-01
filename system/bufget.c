@@ -8,6 +8,7 @@
 #include <semaphore.h>
 #include <interrupt.h>
 #include <bufpool.h>
+#include <string.h>
 
 /**
  * @ingroup memory_mgmt
@@ -19,12 +20,14 @@
  *
  * @param poolid
  *      バッファプールの識別子（bfpalloc()で返されたID）
+ * @param file ファイル名
+ * @param func 関数名
  *
  * @return
  *      @p poolid が正しいバッファプールを指定していない場合は
  *      ::SYSErr を返す。そうでなければバッファへのポインタを返す。
  */
-void *bufget(int poolid)
+void *bufget_(int poolid, const char *file, const char *func)
 {
     struct bfpentry *bfpptr;
     struct poolbuf *bufptr;
@@ -38,6 +41,10 @@ void *bufget(int poolid)
     bfpptr = &bfptab[poolid];
 
     im = disable();
+    if (0 == strncmp("etherWrite", func, 10)) {
+        // kprintf("bfpptr->freebuf: %d\n", bfpptr->freebuf);
+        // kprintf("bfpptr->freebuf->count: %d\n", semcount(bfpptr->freebuf));
+    }
     wait(bfpptr->freebuf);
     bufptr = bfpptr->next;
     bfpptr->next = bufptr->next;

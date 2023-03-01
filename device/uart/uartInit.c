@@ -4,6 +4,7 @@
 /* Embedded Xinu, Copyright (C) 2009, 2013.  All rights reserved. */
 
 #include <uart.h>
+#include <mutex.h>
 
 /**
  * @ingroup uartgeneric
@@ -29,6 +30,9 @@ devcall uartInit(device *devptr)
 
     struct uart *uartptr = &uarttab[devptr->minor];
 
+    extern mutex_t serial_lock;
+    serial_lock = mutex_create();
+
     /* 統計カウントを初期化する */
     uartptr->cout = 0;
     uartptr->cin = 0;
@@ -53,6 +57,8 @@ devcall uartInit(device *devptr)
     uartptr->ostart = 0;
     uartptr->ocount = 0;
     uartptr->oidle = 1;
+    uartptr->olock = mutex_create();
+
     if (isbadsem(uartptr->osema))
     {
         semfree(uartptr->isema);

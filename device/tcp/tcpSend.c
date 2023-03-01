@@ -1,6 +1,6 @@
 /**
  * @file tcpSend.c
- * 
+ *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
@@ -75,8 +75,8 @@ int tcpSend(struct tcb *tcbptr, uchar ctrl, uint seqnum,
     tcp->acknum = acknum;
     tcp->offset = octets2offset(TCP_HDR_LEN + msslen);
     tcp->control = ctrl;
-    tcp->window = tcpSendWindow(tcbptr);
-    window = tcp->window;
+    window = tcpSendWindow(tcbptr);
+    tcp->window = window;
     data = tcp->data;
 
     /* Add options */

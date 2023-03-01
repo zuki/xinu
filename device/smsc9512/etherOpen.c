@@ -48,8 +48,8 @@ devcall etherOpen(device *devptr)
 
     /* Tx転送のためのバッファプールを作成する  */
     ethptr->outPool = bfpalloc(sizeof(struct usb_xfer_request) + ETH_MAX_PKT_LEN +
-                                   SMSC9512_TX_OVERHEAD,
-                               SMSC9512_MAX_TX_REQUESTS);
+                                   SMSC9512_LAN7800_TX_OVERHEAD,
+                               SMSC9512_LAN7800_MAX_TX_REQUESTS);
     if (ethptr->outPool == SYSERR)
     {
         goto out_restore;

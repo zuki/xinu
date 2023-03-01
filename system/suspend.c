@@ -36,12 +36,16 @@ syscall suspend(tid_typ tid)
     if (THRREADY == thrptr->state)
     {
         getitem(tid);           /* キューから削除 */
+        thrtab_acquire(tid);
         thrptr->state = THRSUSP;
+        thrtab_release(tid);
     }
     // 実行中の場合は、suspend状態にしてリスケジュール
     else
     {
+        thrtab_acquire(tid);
         thrptr->state = THRSUSP;
+        thrtab_release(tid);
         resched();
     }
     prio = thrptr->prio;

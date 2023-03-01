@@ -16,8 +16,10 @@
 #include <nvram.h>
 #include <conf.h>
 #include <framebuffer.h>
+#include <clock.h>
+#include <core.h>
 
-const struct centry commandtab[] = {
+struct centry commandtab[] = {
 #if NETHER
     {"arp", FALSE, xsh_arp},
 #endif
@@ -362,7 +364,7 @@ thread shell(int indescrp, int outdescrp, int errdescrp)
         {
             /* Make background thread ready, but don't reschedule */
             im = disable();
-            ready(child, RESCHED_NO);
+            ready(child, RESCHED_NO, CORE_ZERO);
             restore(im);
         }
         else
@@ -370,7 +372,7 @@ thread shell(int indescrp, int outdescrp, int errdescrp)
             /* Clear waiting message; Reschedule; */
             while (recvclr() != NOMSG);
             im = disable();
-            ready(child, RESCHED_YES);
+            ready(child, RESCHED_YES, CORE_ZERO);
             restore(im);
 
             /* Wait for command thread to finish */

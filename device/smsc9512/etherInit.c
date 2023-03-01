@@ -89,7 +89,7 @@ smsc9512_bind_device(struct usb_device *udev)
     /* USB Rx転送あたりの最大USB（ネットワークではない！）パケットをセットする。
      * HW_CFG_MEFが設定された場合に必要になる */
     smsc9512_write_reg(udev, BURST_CAP,
-                       SMSC9512_DEFAULT_HS_BURST_CAP_SIZE / SMSC9512_HS_USB_PKT_SIZE);
+                       SMSC9512_DEFAULT_HS_BURST_CAP_SIZE / SMSC9512_LAN7800_HS_USB_PKT_SIZE);
 
     /* エラーをチェックして復帰する */
     if (udev->last_error != USB_STATUS_SUCCESS)

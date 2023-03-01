@@ -2,6 +2,7 @@
 #include <thread.h>
 #include <stdio.h>
 #include <testsuite.h>
+#include <core.h>
 
 #define TIMES 5
 
@@ -12,9 +13,11 @@ static void t5(int times, uchar *testArray, int *index)
 {
     /* Disable interrupts to prevent race conditions with the index update. */
     disable();
+    uint cpuid = getcpuid();
+
     if (times > 0)
     {
-        testArray[*index] = thrcurrent;
+        testArray[*index] = thrcurrent[cpuid];
         *index = *index + 1;
         testArray[*index] = times;
         *index = *index + 1;
@@ -37,18 +40,18 @@ thread test_recursion(bool verbose)
     /* reset the number of calls to `t5` */
     calls = 0;
 
-    /* disable interrupts to prevent a preemption from launching a 
+    /* disable interrupts to prevent a preemption from launching a
      * lower-priority thread before the higher-priority ones are created */
     disable();
 
     ready(atid = create((void *)t5, INITSTK, 31, "RECURSION-A",
-                        3, TIMES, testArray, &index), 0);
+                        3, TIMES, testArray, &index), 0, CORE_ZERO);
     ready(btid = create((void *)t5, INITSTK, 32, "RECURSION-B",
-                        3, TIMES, testArray, &index), 0);
+                        3, TIMES, testArray, &index), 0, CORE_ZERO);
     ready(ctid = create((void *)t5, INITSTK, 34, "RECURSION-C",
-                        3, TIMES, testArray, &index), 0);
+                        3, TIMES, testArray, &index), 0, CORE_ZERO);
     ready(dtid = create((void *)t5, INITSTK, 32, "RECURSION-D",
-                        3, TIMES, testArray, &index), 0);
+                        3, TIMES, testArray, &index), 0, CORE_ZERO);
 
     /* Run the tests by yielding the processor */
     yield();

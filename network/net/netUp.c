@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <thread.h>
+#include <core.h>
 
 static int netAlloc(void);
 
@@ -32,7 +33,8 @@ static int netAlloc(void);
  * @return
  *      OK if the network interface was successfully started; otherwise SYSERR.
  */
-syscall netUp(int descrp, const struct netaddr *ip, const struct netaddr *mask,
+syscall
+netUp(int descrp, const struct netaddr *ip, const struct netaddr *mask,
               const struct netaddr *gateway)
 {
     irqmask im;
@@ -157,7 +159,7 @@ syscall netUp(int descrp, const struct netaddr *ip, const struct netaddr *mask,
             goto out_kill_recv_threads;
         }
         netptr->recvthr[i] = tid;
-        ready(tid, RESCHED_NO);
+        ready(tid, RESCHED_NO, CORE_ZERO);
     }
 
     retval = OK;
@@ -178,7 +180,7 @@ out:
 
 /**
  * Obtain a free network interface.
- * @return a free network interface id, SYSERR if all netifs are used 
+ * @return a free network interface id, SYSERR if all netifs are used
  */
 static int netAlloc(void)
 {

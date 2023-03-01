@@ -5,8 +5,14 @@ COMP = system
 
 # Source files for this component
 
+# File for core-level mutex functions
+S_FILES = mutex_util.S
+
 # Important system components
-C_FILES = initialize.c queue.c
+C_FILES = initialize.c queue.c main.c
+
+# File for mutex functions
+C_FILES += mutex.c
 
 # Files for process control
 C_FILES += create.c kill.c ready.c resched.c resume.c suspend.c chprio.c getprio.c queue.c getitem.c queinit.c insert.c gettid.c xdone.c yield.c userret.c
@@ -33,10 +39,13 @@ C_FILES += close.c control.c getc.c open.c ioerr.c ionull.c read.c putc.c seek.c
 C_FILES += debug.c
 
 # Files for MiniJava Compiler
-C_FILES += minijava.c
+#C_FILES += minijava.c
 
 # Files for reading tape archives
 C_FILES += tar.c
+
+# Files for dma buffer management
+C_FILES += dma_buf.c
 
 # Add the files to the compile source path
 DIR = ${TOPDIR}/${COMP}

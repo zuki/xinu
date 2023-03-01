@@ -44,7 +44,7 @@ shellcmd xsh_reset(int nargs, char *args[])
         return 1;
     }
 
-#if defined(_XINU_PLATFORM_ARM_RPI_) || defined(_XINU_PLATFORM_ARM_RPI_3_)
+#if defined(_XINU_PLATFORM_ARM_RPI_)
     /* Set watchdog timer to elapse 1 millisecond from now, then wait for it to
      * go off.  */
     watchdogset(1);

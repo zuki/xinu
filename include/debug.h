@@ -15,5 +15,8 @@
 void hexdump(void *buffer, ulong length, bool text);
 void debugbreak(void);
 void debugret(void);
+void _debug_util(const char *file, const char *func, int line, const char *format, ...);
+
+#define DEBUG(format, ...) _debug_util(__FILE__, __func__, __LINE__, format, ##__VA_ARGS__)
 
 #endif                          /* _DEBGU_H_ */

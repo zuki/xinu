@@ -162,9 +162,7 @@ bssloopa:
     cmp r0, r1      /* まだbssの終わりに届いていないかチェックする */
     blo bssloopb    /* if (r0 < r1) goto bssloopb; */
 
-    add sp, r1, #NULLSTK    // シングルコアのNULLタスク用スタックの初期化
-
-/* 以下はマルチコアの各NULLタスク用のスタックの初期化
+/* 以下はマルチコアの各NULLタスク用のスタックの初期化 */
     ldr r3, =core_init_sp
 
     // Put the null thread's stack directly after the kernel image.
@@ -179,12 +177,11 @@ bssloopa:
 
     add r2, r1, #NULLSTK    // Core 3 stack pointer
     str r2, [r3, #12]
-*/
+
     /* ARMが使用できる残りのメモリはXinuの"memheap"領域となり
      * 動的メモリ割り当てに使用される。その開始アドレスを設定する。  */
     ldr r0, =memheap
-    str sp, [r0]
-    /* str r2, [r0]        // コア3に割り当てた最後のスタックアドレスのr2を使う */
+    str r2, [r0]        // コア3に割り当てた最後のスタックアドレスのr2を使う
 
     /* FPUを有効にする */
     mov r0, #0xf00000           // cp10とc11をすべてアクセス可に - pi3 - 4.5.29参照

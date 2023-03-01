@@ -18,6 +18,9 @@ syscall send(tid_typ tid, message msg)
 {
     register struct thrent *thrptr;
     irqmask im;
+    unsigned int cpuid;
+
+    cpuid = getcpuid();
 
     im = disable();
     if (isbadtid(tid))
@@ -31,18 +34,21 @@ syscall send(tid_typ tid, message msg)
         restore(im);
         return SYSERR;
     }
+
+    thrtab_acquire(tid);
     thrptr->msg = msg;          /* メッセージを配信する           */
     thrptr->hasmsg = TRUE;      /* メッセージフラグを立てる       */
+    thrtab_release(tid);
 
     /* 受信者が待機中の場合は起動する */
     if (THRRECV == thrptr->state)
     {
-        ready(tid, RESCHED_YES);
+        ready(tid, RESCHED_YES, cpuid);
     }
     else if (THRTMOUT == thrptr->state)
     {
         unsleep(tid);
-        ready(tid, RESCHED_YES);
+        ready(tid, RESCHED_YES, cpuid);
     }
     restore(im);
     return OK;

@@ -55,6 +55,8 @@
 #include <usb_hub_defs.h>
 #include <usb_hub_driver.h>
 #include <usb_std_defs.h>
+#include <core.h>
+#include <clock.h>
 
 /** このドライバがサポートするハブあたりの最大ポート数.
  * （USB 2.0は理論的にはハブあたり255個までのポートを許容している） */
@@ -641,7 +643,7 @@ hub_onetime_init(void)
     /* ハブスレッドを作成する */
     hub_thread_tid = create(hub_thread, HUB_THREAD_STACK_SIZE, HUB_THREAD_PRIORITY,
                             HUB_THREAD_NAME, 0);
-    if (SYSERR == ready(hub_thread_tid, RESCHED_NO))
+    if (SYSERR == ready(hub_thread_tid, RESCHED_NO, CORE_ZERO))
     {
         kill(hub_thread_tid);
         hub_thread_tid = BADTID;

@@ -51,6 +51,7 @@ struct uart
     ushort ocount;              /**< バッファにあるバイト数             */
     uchar out[UART_OBLEN];      /**< 出力バッファ                       */
     volatile bool oidle;        /**< UART送信器はアイドル状態？         */
+    mutex_t olock;		        /**< counterを守るmutex                 */
 };
 
 extern struct uart uarttab[];
@@ -88,7 +89,7 @@ void uartStat(ushort);
  *
  * @param devptr デバイスへのポインタ
  */
-devcall uartHwInit(device *devptr);
+devcall uartHwInit(device *);
 
 /**
  * @ingroup uarthardware

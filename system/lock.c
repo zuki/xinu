@@ -4,6 +4,7 @@
 /* Embedded Xinu, Copyright (C) 2009, 2013.  All rights reserved. */
 
 #include <monitor.h>
+#include <core.h>
 
 /**
  * @ingroup monitors
@@ -31,6 +32,8 @@ syscall lock(monitor mon)
 {
     struct monent *monptr;
     irqmask im;
+    uint cpuid;
+    cpuid = getcpuid();
 
     im = disable();
     if (isbadmon(mon))
@@ -44,14 +47,14 @@ syscall lock(monitor mon)
     /* ロックを所有するスレッドがない場合、現在のスレッドを所有者とする */
     if (NOOWNER == monptr->owner)
     {
-        monptr->owner = thrcurrent;     /* current thread now owns the lock  */
+        monptr->owner = thrcurrent[cpuid];     /* current thread now owns the lock  */
         (monptr->count)++;      /* add 1 "lock" to the monitor's count */
         wait(monptr->sem);      /* this thread owns the semaphore      */
     }
     else
     {
         /* 現在のスレッドがロックの所有者の場合はカウントを増分しセマフォを待たない */
-        if (thrcurrent == monptr->owner)
+        if (thrcurrent[cpuid] == monptr->owner)
         {
             (monptr->count)++;
         }
@@ -59,7 +62,7 @@ syscall lock(monitor mon)
         else
         {
             wait(monptr->sem);
-            monptr->owner = thrcurrent;
+            monptr->owner = thrcurrent[cpuid];
             (monptr->count)++;
 
         }

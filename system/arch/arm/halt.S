@@ -13,15 +13,15 @@
  * プロセッサを無限ループに送り込むことによりシステムを停止する.
  */
 halt:
-	.func halt
+    .func halt
 
 _loop:
-	/* IRQとFIQを無効にする  */
-	msr cpsr_c, #ARM_I_BIT | ARM_F_BIT
+    /* IRQとFIQを無効にする  */
+    msr cpsr_c, #ARM_I_BIT | ARM_F_BIT
 
-	/* 割り込みを待機  */
-	wfi
+    /* 割り込みを待機  */
+    wfi
 
-	/* 必要ないはずだが、念の為  */
-	b _loop
-	.endfunc
+    /* 必要ないはずだが、念の為  */
+    b _loop
+    .endfunc

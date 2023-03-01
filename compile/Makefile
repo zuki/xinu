@@ -98,7 +98,7 @@ INCLUDE := -I$(TOPDIR)/include -I$(TOPDIR)/system/platforms/$(PLATFORM) -I$(TOPD
 
 # Override this as -DDETAIL to enable certain debugging messages in Embedded
 # Xinu.
-DETAIL  := -DDETAIL
+DETAIL  :=
 
 # Set default additional defines.  platformVars can add extra defines if needed.
 DEFS    := $(DETAIL)
@@ -306,11 +306,11 @@ objects: $(COMP_OBJ)
 
 %.o: %.c
 	@echo -e "\tCompiling" $@
-	$(CC) $(DEPFLAGS) $(CFLAGS) -g -o $@ $<
+	$(CC) $(DEPFLAGS) $(CFLAGS) -o $@ $<
 
 %.o: %.S
 	@echo -e "\tAssembling" $@
-	$(CC) $(DEPFLAGS) $(ASFLAGS) $(ASCFLAGS) -g -o $@ $<
+	$(CC) $(DEPFLAGS) $(ASFLAGS) -o $@ $<
 
 clean:
 	@echo -e "\tCleaning all objects"

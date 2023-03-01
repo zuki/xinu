@@ -115,7 +115,7 @@ devcall telnetRead(device *devptr, void *buf, uint len)
                     break;
                 }
                 //if (TELNET_ECHO_SELF_ECHOES == tntptr->echoState)
-                if (tntptr->flags & TELNET_FLAG_ECHO);
+                if (tntptr->flags & TELNET_FLAG_ECHO)
                 {
                     telnetEcho(devptr, ch);
                 }
@@ -128,7 +128,7 @@ devcall telnetRead(device *devptr, void *buf, uint len)
                 {
                     tntptr->icount--;
 
-                    if (tntptr->flags & TELNET_FLAG_ECHO);
+                    if (tntptr->flags & TELNET_FLAG_ECHO)
                     {
                         telnetEcho(devptr, ch);
                     }
@@ -142,7 +142,7 @@ devcall telnetRead(device *devptr, void *buf, uint len)
                 tntptr->icount++;
                 tntptr->idelim = TRUE;
                 //if (TELNET_ECHO_SELF_ECHOES == tntptr->echoState)
-                if (tntptr->flags & TELNET_FLAG_ECHO);
+                if (tntptr->flags & TELNET_FLAG_ECHO)
                 {
                     telnetEcho(devptr, ch);
                 }
@@ -277,10 +277,15 @@ devcall telnetRead(device *devptr, void *buf, uint len)
                     TELNET_TRACE("Recv Interrupt");
                     /* Terminate the currently running thread... */
                     /* unless the current thread name begins with "SHELL" */
-                    if (strncmp(thrtab[thrcurrent].name, "SHELL", 5) != 0)
+
+                    uint cpuid;
+                    cpuid = getcpuid();
+                    thrtab_acquire(thrcurrent[cpuid]);
+                    if (strncmp(thrtab[thrcurrent[cpuid]].name, "SHELL", 5) != 0)
                     {
-                        kill(thrcurrent);
+                        kill((tid_typ) thrcurrent);
                     }
+                    thrtab_release(thrcurrent[cpuid]);
                     break;
                 case TELNET_AO:
                     TELNET_TRACE("Recv Abort Output");
@@ -327,7 +332,7 @@ devcall telnetRead(device *devptr, void *buf, uint len)
                     tntptr->icount++;
                 }
                 //if (TELNET_ECHO_SELF_ECHOES == tntptr->echoState)
-                if (tntptr->flags & TELNET_FLAG_ECHO);
+                if (tntptr->flags & TELNET_FLAG_ECHO)
                 {
                     telnetEcho(devptr, ch);
                 }

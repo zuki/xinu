@@ -1,16 +1,16 @@
 #
-# Platform-specific Makefile definitions for the Raspberry Pi port of Embedded
-# Xinu.
+# Platform-specific Makefile definitions for the Raspberry Pi 3 B+
+# port of Embedded Xinu (BCM2837B0).
 #
 
 
-# Include default ARM definitions
-include arch/arm/platformVars
+# Include default ARMv8A definitions
+include arch/armv8/platformVars
 
-PLATFORM_NAME := Raspberry Pi 3B+
+PLATFORM_NAME := Raspberry Pi 3
 
 # Extra compiler and assembler flags to specifically target the ARM1176JZF-S CPU
-# used on the BCM2835 (used by the Raspberry Pi).
+# used on the BCM2837 (used by the Raspberry Pi 3 B+).
 CFLAGS   += -mcpu=cortex-a53
 ASFLAGS  += -mcpu=cortex-a53
 
@@ -37,15 +37,15 @@ APPCOMPS := apps      \
             test
 
 # Embedded Xinu device drivers to build into the kernel image
-DEVICES  := ethloop         \
-            raw             \
+DEVICES  := uart-pl011      \
+            tty             \
+            usb             \
             lan7800         \
             tcp             \
-            telnet          \
-            uart-pl011      \
-            framebuffer_rpi \
             udp             \
-            usb             \
+            framebuffer_rpi \
             usbkbd          \
+            ethloop         \
+            raw             \
             loopback        \
-            tty
+            telnet

@@ -143,11 +143,11 @@ struct usb_control_setup_data {
     uint16_t wLength;
 } __packed;
 
-/** すべての標準USBディクリプタの戦闘フィールド  */
-struct usb_descriptor_header {
+/** すべての標準USBディクリプタの先頭フィールド  */
+struct __attribute__((__packed__, aligned(4))) usb_descriptor_header {
     uint8_t bLength;
     uint8_t bDescriptorType;
-} __packed;
+};
 
 /** USBデバイスディスクリプタの標準フォーマット. USB 2.0仕様の9.6.3の表 9-8 を参照 */
 struct usb_device_descriptor {

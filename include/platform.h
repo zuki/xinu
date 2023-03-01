@@ -7,8 +7,9 @@
 #ifndef _PLATFORM_H_
 #define _PLATFORM_H_
 
-#include <stdint.h>
+#include <stddef.h>
 #include <stdarg.h>
+#include <stdint.h>
 
 /** プラットフォーム名とファミリ名の終端文字を含む最大文字列長.  */
 #define PLT_STRMAX 18
@@ -44,6 +45,13 @@ struct platform
     void *maxaddr;
 
     /**
+     * ARM Cortex A53はL1データキャッシュを最大64KBまで使用できる.
+     * Raspbery Pi 3 Model B+ はL1キャッシュが有効になっている。
+     * この値はplatforminit()でCortex A53 CCSIDRを参照して取得する。
+     */
+    int dcache_size;
+
+    /**
      * システムタイマーの周波数（1秒あたりのサイクル数）.
      * RTCLOCKを有効にした場合は、platforminit()で設定する必要がある。
      * clkcount()が返す値が変化する頻度である。
@@ -72,16 +80,6 @@ struct platform
      * 現在のところ、SMSC LAN9512ドライバでしか仕様されていない。
      */
     unsigned int serial_high;
-
-    /**
-     * ボードのモデルコード (0xd = 3B+)
-    */
-    uint32_t model_id;
-
-    /**
-     * ネットワークテスト用
-    */
-	unsigned int ether_count;
 };
 
 extern struct platform platform;    // initialize.cで定義

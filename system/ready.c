@@ -6,6 +6,7 @@
 
 #include <thread.h>
 #include <queue.h>
+#include <core.h>
 
 /**
  * @ingroup threads
@@ -15,7 +16,7 @@
  * @param resch RESCHED_YESの場合、再スケジュールする
  * @return スレッドをreadylistに追加したら OK、それ以外は SYSERR
  */
-int ready(tid_typ tid, bool resch)
+int ready(tid_typ tid, bool resch, unsigned int core)
 {
     register struct thrent *thrptr;
 
@@ -24,14 +25,31 @@ int ready(tid_typ tid, bool resch)
         return SYSERR;
     }
 
+    thrtab_acquire(tid);
+
     thrptr = &thrtab[tid];
     thrptr->state = THRREADY;
 
-    insert(tid, readylist, thrptr->prio);
+    /* コアアフィニティがセットされていない場合は、現在このコードを
+       実行しているコアにアフィニティをセットする（ほとんど場合は0） */
+    unsigned int cpuid;
+    cpuid = getcpuid();
+    if (-1 == thrptr->core_affinity)
+    {
+        thrptr->core_affinity = core;
+    }
 
-    if (resch == RESCHED_YES)
+    thrtab_release(tid);
+
+    if (SYSERR == insert(tid, readylist[thrptr->core_affinity], thrptr->prio))
+    {
+        return SYSERR;
+    }
+
+    if ((resch == RESCHED_YES) && (thrptr->core_affinity == cpuid))
     {
         resched();
     }
+
     return OK;
 }

@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <core.h>
 
 #if NETHER
 static void usage(char *command)
@@ -330,13 +331,15 @@ shellcmd xsh_snoop(int nargs, char *args[])
     }
 
     /* Use same stdin, stdout, and sterr as this thread */
+    thrtab_acquire(tid);
     thrtab[tid].fdesc[0] = thrtab[gettid()].fdesc[0];
     thrtab[tid].fdesc[1] = thrtab[gettid()].fdesc[1];
     thrtab[tid].fdesc[2] = thrtab[gettid()].fdesc[2];
+    thrtab_release(tid);
 
     /* Start output thread */
     recvclr();
-    ready(tid, RESCHED_NO);
+    ready(tid, RESCHED_NO, CORE_ZERO);
 
     /* Close at proper event */
     if (0 == count)

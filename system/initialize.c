@@ -8,12 +8,17 @@
 
 #include <xinu.h>
 #include <stdint.h>
+#include <platform.h>
+#include <mutex.h>
 
 #ifdef WITH_USB
 #include <usb_subsystem.h>
 #include <usb_core_driver.h>
 #include "../device/lan7800/lan7800.h"
 #endif
+
+#include "platforms/arm-rpi3/mmu.h"
+#include <dma_buf.h>
 
 /* 関数プロトタイプ */
 extern thread main(void);       /* mainは最初に作成されるスレッド */
@@ -23,13 +28,21 @@ static int sysinit(void);       /* システム構造体を初期化する     *
 struct thrent thrtab[NTHREAD];  /* スレッドテーブル               */
 struct sement semtab[NSEM];     /* セマフォテーブル               */
 struct monent montab[NMON];     /* モニターテーブル               */
-qid_typ readylist;              /* READYスレッドリスト            */
+qid_typ readylist[NCORES];      /* READYスレッドリスト            */
 struct memblock memlist;        /* フリーメモリブロックリスト     */
 struct bfpentry bfptab[NPOOL];  /* メモリバッファプールリスト     */
 
+/* 主なマルチコア変数の宣言 */
+mutex_t quetab_mutex;           /* quetabを守るmutex */
+mutex_t thrtab_mutex[NTHREAD];  /* thrtabを守るmutex */
+mutex_t semtab_mutex[NSEM];     /* semtabを守るmutex */
+mutex_t serial_lock;            /* serialのロック */
+
+static void core_nulluser(void);
+
 /* アクティブなシステムステータス */
 int thrcount;                   /* 生きているユーザスレッド数     */
-tid_typ thrcurrent;             /* 現在実行中のスレッドのID       */
+tid_typ thrcurrent[NCORES];     /* 現在実行中のスレッドのID       */
 
 /* startup.S でセットされるパラメタ */
 void *memheap;                  /* ヒープの底（O/Sスタックのトップ） */
@@ -56,16 +69,20 @@ void nulluser(void)
     /* 一般的な初期化を行う  */
     sysinit();
 
+    /* セカンダリコアの待機解除 */
+    unparkcore(1, (void *) core_nulluser, NULL);
+    unparkcore(2, (void *) core_nulluser, NULL);
+    unparkcore(3, (void *) core_nulluser, NULL);
+
 	kprintf("\r\n***********************************************************\r\n");
 	kprintf("******************** Hello Xinu World! ********************\r\n");
 	kprintf("***********************************************************\r\n");
-
 
     /* 割り込みを有効にする  */
     enable();
 
     /* メインスレッドを起動する  */
-    ready(create(main, INITSTK, INITPRIO, "MAIN", 0), RESCHED_YES);
+    ready(create(main, INITSTK, INITPRIO, "MAIN", 0), RESCHED_YES, CORE_ZERO);
 
     /* NULLスレッドは他にすることはないが終了することはできない  */
     while (TRUE)
@@ -89,9 +106,12 @@ static int sysinit(void)
     struct thrent *thrptr;      /* thread control block pointer  */
     struct memblock *pmblock;   /* memory block pointer          */
 
+    /* シリアルロックを初期化する */
+    serial_lock = mutex_create();
+
     /* システムテム変数を初期化する */
     /* このNULLTHREADをシステムの最初のスレッドとしてカウントする */
-    thrcount = 1;
+    thrcount = NCORES;          /* コアごとに1つ塗るスレッド */
 
     /* フリーメモリリストを初期化する */
     memheap = roundmb(memheap);
@@ -113,12 +133,51 @@ static int sysinit(void)
     thrptr->prio = 0;
     strlcpy(thrptr->name, "prnull", TNMLEN);
     thrptr->stkbase = (void *)&_end;
-    //thrptr->stklen = (ulong)memheap - (ulong)&_end;
     thrptr->stklen = 8192;  /* NULLSTK */
     thrptr->stkptr = 0;
     thrptr->memlist.next = NULL;
     thrptr->memlist.length = 0;
-    thrcurrent = NULLTHREAD;
+    thrptr->core_affinity = CORE_ZERO;
+    thrcurrent[CORE_ZERO] = NULLTHREAD;
+
+    /* コア1のNULLスレッド */
+    thrptr = &thrtab[NULLTHREAD1];
+    thrptr->state = THRCURR;
+    thrptr->prio = 0;
+    strlcpy(thrptr->name, "prnull01", TNMLEN);
+    thrptr->stkbase = (void *)(&_end + 8192);
+    thrptr->stklen = 8192;  /* NULLSTK */
+    thrptr->stkptr = 0;
+    thrptr->memlist.next = NULL;
+    thrptr->memlist.length = 0;
+    thrptr->core_affinity = CORE_ONE;
+    thrcurrent[CORE_ONE] = NULLTHREAD1;
+
+    /* コア2のNULLスレッド */
+    thrptr = &thrtab[NULLTHREAD2];
+    thrptr->state = THRCURR;
+    thrptr->prio = 0;
+    strlcpy(thrptr->name, "prnull02", TNMLEN);
+    thrptr->stkbase = (void *)(&_end + 16384);
+    thrptr->stklen = 8192;  /* NULLSTK */
+    thrptr->stkptr = 0;
+    thrptr->memlist.next = NULL;
+    thrptr->memlist.length = 0;
+    thrptr->core_affinity = CORE_TWO;
+    thrcurrent[CORE_TWO] = NULLTHREAD2;
+
+    /* コア3のNULLスレッド */
+    thrptr = &thrtab[NULLTHREAD3];
+    thrptr->state = THRCURR;
+    thrptr->prio = 0;
+    strlcpy(thrptr->name, "prnull03", TNMLEN);
+    thrptr->stkbase = (void *)(&_end + 24576);
+    thrptr->stklen = 8192;  /* NULLSTK */
+    thrptr->stkptr = 0;
+    thrptr->memlist.next = NULL;
+    thrptr->memlist.length = 0;
+    thrptr->core_affinity = CORE_THREE;
+    thrcurrent[CORE_THREE] = NULLTHREAD3;
 
     /* セマフォを初期化する */
     for (i = 0; i < NSEM; i++)
@@ -140,7 +199,11 @@ static int sysinit(void)
     }
 
     /* スレッドreadylistを初期化する */
-    readylist = queinit();
+    for (i = 0; i < NCORES; i++)
+    {
+        readylist[i] = queinit();
+    }
+
 
 #if SB_BUS
     backplaneInit(NULL);
@@ -210,4 +273,18 @@ static int sysinit(void)
     gpioLEDOn(GPIO_LED_CISCOWHT);
 #endif
     return OK;
+}
+
+static void core_nulluser(void)
+{
+    unsigned int cpuid;
+    cpuid = getcpuid();
+
+    disable();
+    while (TRUE)
+    {
+        pldw(&quetab[readylist[cpuid]].next);
+        if (nonempty(readylist[cpuid]))
+            resched();
+    }
 }

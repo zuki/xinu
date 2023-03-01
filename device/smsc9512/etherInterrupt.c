@@ -70,8 +70,8 @@ void smsc9512_rx_complete(struct usb_xfer_request *req)
 
         /* 受信したUSBデータ内の各Ethernetフレームについて実行 */
         for (data = req->recvbuf, edata = req->recvbuf + req->actual_size;
-             data + SMSC9512_RX_OVERHEAD + ETH_HDR_LEN + ETH_CRC_LEN <= edata;
-             data += SMSC9512_RX_OVERHEAD + ((frame_length + 3) & ~3))
+             data + SMSC9512_LAN7800_RX_OVERHEAD + ETH_HDR_LEN + ETH_CRC_LEN <= edata;
+             data += SMSC9512_LAN7800_RX_OVERHEAD + ((frame_length + 3) & ~3))
         {
             /* Rxステータスワードを取得する。これには次のEthernet
              * フレームに関する情報が含まれている */
@@ -80,12 +80,12 @@ void smsc9512_rx_complete(struct usb_xfer_request *req)
             /* frame_lengthを抽出する。これは次のEthernetフレームの長さ
              * （宛先MACアドレスからCRCの終わりとそれに続くペイロードを含む）
              * を指定する（これはRxステータスワードには含まれておらず、
-             * SMSC9512_RX_OVERHEADから計算する）。
+             * SMSC9512_LAN7800_RX_OVERHEADから計算する）。
              */
             frame_length = (recv_status & RX_STS_FL) >> 16;
 
             if ((recv_status & RX_STS_ES) ||
-                (frame_length + SMSC9512_RX_OVERHEAD > edata - data) ||
+                (frame_length + SMSC9512_LAN7800_RX_OVERHEAD > edata - data) ||
                 (frame_length > ETH_MAX_PKT_LEN + ETH_CRC_LEN) ||
                 (frame_length < ETH_HDR_LEN + ETH_CRC_LEN))
             {
@@ -113,7 +113,7 @@ void smsc9512_rx_complete(struct usb_xfer_request *req)
                 pkt = bufget(ethptr->inPool);
                 pkt->buf = pkt->data = (uint8_t*)(pkt + 1);
                 pkt->length = frame_length - ETH_CRC_LEN;
-                memcpy(pkt->buf, data + SMSC9512_RX_OVERHEAD, pkt->length);
+                memcpy(pkt->buf, data + SMSC9512_LAN7800_RX_OVERHEAD, pkt->length);
                 ethptr->in[(ethptr->istart + ethptr->icount) % ETH_IBLEN] = pkt;
                 ethptr->icount++;
 

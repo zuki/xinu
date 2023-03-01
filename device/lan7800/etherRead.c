@@ -1,5 +1,8 @@
 /**
  * @file etherRead.c
+ *
+ * Authors: Patrick J. McGee
+ *             Rade Latinovich
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
@@ -10,7 +13,13 @@
 
 /**
  * @ingroup ether_lan7800
- *  LAN7800用の etherRead() の実装. この関数のドキュメントはether.hを参照 */
+ *  LAN7800用の etherRead() の実装. この関数のドキュメントはether.hを参照
+ *
+ * @param devptr    読み込むethernetデバイスへのポインタ
+ * @param buf       パケットバッファへのポインタ
+ * @param len       読むべきバイト数
+ * @return 受信したパケット長
+ * */
 devcall etherRead(device *devptr, void *buf, uint len)
 {
     irqmask im;

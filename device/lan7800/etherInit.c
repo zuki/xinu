@@ -5,6 +5,8 @@
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
+#include <stddef.h>
+#include <stdint.h>
 #include "lan7800.h"
 #include <clock.h>
 #include <ether.h>
@@ -12,12 +14,16 @@
 #include <platform.h>
 #include <semaphore.h>
 #include <stdlib.h>
-#include <stddef.h>
-#include <string.h>
-#include <system/platforms/arm-rpi3/rpi-mailbox.h>
 #include <usb_core_driver.h>
+#include "../../system/platforms/arm-rpi3/bcm2837_mbox.h"
+#include <string.h>
+#include <kernel.h>
+#include "../../system/platforms/arm-rpi3/bcm2837.h"
+#include <dma_buf.h>
 
 extern syscall kprintf(const char *fmt, ...);
+
+bool lan7800_isattached = 0;
 
 /* Ethernetデバイスのグローバルテーブル  */
 struct ether ethertab[NETHER];
@@ -30,7 +36,18 @@ struct ether ethertab[NETHER];
 static semaphore lan7800_attached[NETHER];
 
 /**
- * 指定されたUSBデバイスへのLAN7800ドライバのバインドを試みる。
+ * getEthAddr()を呼びだし後にMACアドレスを格納するグローバル変数.
+ * これは後にmemcpy()を使いether構造体のdevAddressメンバにコピーされる。
+ */
+uchar addr[ETH_ADDR_LEN] = {0};
+
+/**
+ * @ingroup lan7800
+ *
+ * 指定されたUSBデバイスへのLAN7800ドライバのバインドを試みる.
+ *
+ * @param udev USB構造体へのポインタ
+ * @return USBデバイスの状態
  * @ref usb_device_driver::bind_device "bind_device" の
  * LAN7800ドライバ用の実装であり、そのドキュメントに記載されて
  * いる動作に準拠している。
@@ -64,40 +81,6 @@ lan7800_bind_device(struct usb_device *udev)
     if (ethptr->csr != NULL)
     {
         return USB_STATUS_DEVICE_UNSUPPORTED;
-    }
-
-    /* この関数の残りの部分ではLAN7800を使用可能な状態にするが
-     * 実際にRxとTxを有効にすることはない（これはetherOpen() で行う）。
-     * ここでの作業は主にLAN7800のレジスタへの書き込みである。
-     * ただし、これはUSBに接続されたUSBイーサネットアダプタなので
-     * メモリマップドレジスタではない。レジスタの読み書きはUSBの
-     * コントロール転送を利用して行われる。少し面倒であり、メモリ
-     * アクセスと違ってUSBコントロール転送は失敗する可能性もある。
-     * しかし、ここでは必要な読み書きをすべて行い、最後にエラーが
-     * 発生したか否をチェックする遅延エラーチェックを行っている。
-     */
-
-    udev->last_error = USB_STATUS_SUCCESS;
-
-    /* LAN7800をレジスタ軽腕リセットする必要はないはずである。
-     * USBコードがLAN9512が接続されたUSBポートのリセットを既に実行
-     * しているからである
-     */
-
-    /* MACアドレスをセットする */
-    //lan7800_set_mac_address(udev, ethptr->devAddress);
-
-    /* 1回のUSB転送で複数のEthernetフレームを受信できるようにする。 */
-    //lan7800_set_reg_bits(udev, HW_CFG, HW_CFG_MEF_);
-
-    /* USB Rx転送あたりの最大USB（ネットワークではない！）パケットをセットする。
-     * HW_CFG_MEFが設定された場合に必要になる */
-    //lan7800_write_reg(udev, BURST_CAP, DEFAULT_BURST_CAP_SIZE / HS_USB_PKT_SIZE);
-
-    /* エラーをチェックして復帰する */
-    if (udev->last_error != USB_STATUS_SUCCESS)
-    {
-        return udev->last_error;
     }
 
     ethptr->csr = udev;
@@ -134,8 +117,51 @@ static const struct usb_device_driver lan7800_driver = {
     .unbind_device = lan7800_unbind_device,
 };
 
+/* Get static MAC address from Pi 3 B+ chip, based on the XinuPi
+ * mailbox technique.
+ *
+ * @details
+ *
+ * Get the Pi 3 B+'s MAC address using its ARM->VideoCore (VC) mailbox
+ * and assign corresponding values to a global array containing the MAC.
+ * This array is then assigned to the devAddress member of the ether structure.
+ */
+static void
+getEthAddr(uint8_t *addr)
+{
+    /* Initialize the mailbox buffer */
+    uint32_t *mailbuffer;
+    mailbuffer = dma_buf_alloc(MBOX_BUFLEN / 4);
+
+    /* Fill the mailbox buffer with the MAC address.
+     * This function is defined in system/platforms/arm-rpi3/bcm2837_mbox.c */
+    get_mac_mailbox(mailbuffer);
+
+    ushort i;
+    for (i = 0; i < 2; ++i) {
+
+        /* Access the MAC value within the buffer */
+        uint32_t value = mailbuffer[MBOX_HEADER_LENGTH + TAG_HEADER_LENGTH + i];
+
+        /* Store the low MAC values */
+        if(i == 0){
+            addr[0] = (value >> 0)  & 0xff;
+            addr[1] = (value >> 8)  & 0xff;
+            addr[2] = (value >> 16) & 0xff;
+            addr[3] = (value >> 24) & 0xff;
+        }
+
+        /* Store the remaining high MAC values */
+        if(i == 1){
+            addr[4] = (value >> 0)  & 0xff;
+            addr[5] = (value >> 8)  & 0xff;
+        }
+    }
+}
+
+
 /**
- * @ingroup ether_lan9512
+ * @ingroup lan7800
  *
  * 指定したEthernetデバイスが実際に接続されるまで待つ.
  *
@@ -163,10 +189,11 @@ lan7800_wait_device_attached(ushort minor)
     wait(lan7800_attached[minor]);
     kprintf("[wait_device_attached]: signal sem=%d\r\n", lan7800_attached[minor]);
     signal(lan7800_attached[minor]);
+    lan7800_isattached = 1;
     return USB_STATUS_SUCCESS;
 }
 
-/* smsc9512用の etherInit() の実装; この関数に関するドキュメントは
+/* LAN7800用の etherInit() の実装; この関数に関するドキュメントは
  * ether.h を参照 */
 /**
  * @details
@@ -203,9 +230,8 @@ devcall etherInit(device *devptr)
         goto err_free_isema;
     }
 
-    if (rpi_getmacaddr(ethptr->devAddress) != OK) {
-        goto err_free_attached_sema;
-    }
+    /* Get the MAC address and store it into addr[] */
+    getEthAddr(ethptr->devAddress);
 
     /* このデバイスドライバをUSBコアに登録して復帰する */
     status = usb_register_device_driver(&lan7800_driver);

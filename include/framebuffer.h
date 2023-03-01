@@ -1,6 +1,6 @@
 /**
  * @file framebuffer.h
- * Constants and declarations associated with the framebuffer system.
+ * フレームバッファシステムに関連する定数と宣言.
  */
 /* Embedded Xinu, Copyright (C) 2009, 2013.  All rights reserved. */
 
@@ -10,39 +10,84 @@
 #include <device.h>
 #include <stddef.h>
 
-#define CHAR_WIDTH 8
-#define CHAR_HEIGHT 12
+extern volatile unsigned int mbox[36];
+extern bool screen_initialized;
+
+/* カラーコードの状態の定義（エスケープシーケンス） */
+#define STANDARD        0
+#define ESCAPE          1
+#define BRKT            2
+#define FEATURE         3
+#define SEMI            4
+#define CL1             5
+#define CL2             6
+#define MODE            7
+#define CHANGE_COLOR    8
+#define TERM_CLEAR1     9
+#define START_CCHANGE   10
+
+extern uint fb_esc_color1;
+extern uint fb_esc_color2;
+extern uint fb_icolor;
+extern uint fb_state;
+extern uint ret_ct;
+
+#define MMIO_BASE       0x3F000000
+#define VIDEOCORE_MBOX  (MMIO_BASE+0x0000B880)
+#define MBOX_READ       ((volatile unsigned int*)(VIDEOCORE_MBOX+0x0))
+#define MBOX_POLL       ((volatile unsigned int*)(VIDEOCORE_MBOX+0x10))
+#define MBOX_SENDER     ((volatile unsigned int*)(VIDEOCORE_MBOX+0x14))
+#define MBOX_STATUS     ((volatile unsigned int*)(VIDEOCORE_MBOX+0x18))
+#define MBOX_CONFIG     ((volatile unsigned int*)(VIDEOCORE_MBOX+0x1C))
+#define MBOX_WRITE      ((volatile unsigned int*)(VIDEOCORE_MBOX+0x20))
+#define MBOX_RESPONSE   0x80000000
+#define MBOX_FULL       0x80000000
+#define MBOX_EMPTY      0x40000000
+#define MBOX_TAG_LAST            0
+
+/* フレームバッファ固有の定数と宣言. */
+#define MAILBOX_FULL    0x80000000
+#define MAILBOX_EMPTY   0x40000000
+#define MMIO_BASE       0x3F000000  // ペリフェラルの基底アドレス
+
+#define MAILBOX_CH_PROPERTY 8
+#define MAILBOX_BASE    0xB880      // メールボックスレジスタの基底アドレス
+#define MBOX_REQUEST    0
+#define CHAR_WIDTH      8
+#define CHAR_HEIGHT     12
+
 extern unsigned char FONT[];
 
-#define DEFAULT_HEIGHT 768
-#define DEFAULT_WIDTH 1024
-#define BIT_DEPTH 32
+#define DEFAULT_HEIGHT  768
+#define DEFAULT_WIDTH   1024
+#define BIT_DEPTH       32
 
-#define MAXRETRIES 3 //if screen fails to initialize after three tries, halt
+#define MAXRETRIES      3   // スクリーンの初期化試行回数
 
-/* Some basic colors. 8 bits transparency, 8 bits blue, 8 bits green, 8 bits red.*/
-#define WHITE 0xFFFFFFFF
-#define RED 0xFF0000FF
-#define GREEN 0xFF00FF00
-#define BLUE 0xFFFF0000
-#define BLACK 0xFF000000
-#define GRAY 0xFF808080
-#define SILVER 0xFFC0C0C0
-#define YELLOW 0xFF00FFFF
-#define CYAN 0xFFFFFF00
-#define MAGENTA 0xFFFF00FF
-#define INDIGO 0xFF54082E
-#define DARKBLUE 0xFFA00000
-#define ORANGE 0xFF00A5FF
-#define BROWN 0xFF374E6F
-#define RASPBERRY 0xFF5C0BE3
-#define LEAFGREEN 0xFF009900
-#define DARKGREEN 0xFF174125
-#define PURPLE 0xFF82004B
-#define BLUEIVY 0xFFC79030
-#define PINK 0xFF9000FF
+/* 再フォーマットした基本色. トランスペアレンシ、青、緑、赤が各8ビット. */
 
-#define ERRORCOLOR 0x00000000
+#define WHITE       0xFFFFFFFF
+#define RED         0xFFFF0000
+#define GREEN       0xFF00FF00
+#define BLUE        0xFF0000FF
+#define BLACK       0xFF000000
+#define GRAY        0xFF808080
+#define SILVER      0xFFC0C0C0
+#define YELLOW      0xFFFFFF00
+#define CYAN        0xFF00FFFF
+#define MAGENTA     0xFFFF00FF
+#define INDIGO      0xFF2E0854
+#define DARKBLUE    0xFF0000A0
+#define ORANGE      0xFFFFA500
+#define BROWN       0xFF6F4E37
+#define RASPBERRY   0xFFE30B5C
+#define LEAFGREEN   0xFF009900
+#define DARKGREEN   0xFF254117
+#define PURPLE      0xFF4B0082
+#define BLUEIVY     0xFF3090C7
+#define PINK        0xFFFF0090
+
+#define ERRORCOLOR  0x00000000
 
 struct defaultcolor {
     char *colorname;
@@ -51,7 +96,7 @@ struct defaultcolor {
 
 /* flip the bytes to get the blue, green, red order and tack on a 255 transparency. */
 #define colorconvert(x) ((((((x)& 0xff)<<24) | (((x)>>24) & 0xff) | \
-                                   (((x) & 0xff0000)>>8) | (((x) & 0xff00)<<8)) >> 8) | 0xff000000)
+                (((x) & 0xff0000)>>8) | (((x) & 0xff00)<<8)) >> 8) | 0xff000000)
 /* Turtle constants */
 #define TURTLE_BODY 0xFF347C2C
 #define TURTLE_HEAD 0xFF438D80
@@ -62,16 +107,16 @@ struct defaultcolor {
 
 /* The struct the GPU is looking for. */
 struct framebuffer {
-	ulong width_p;	/* requested width of physical display */
-	ulong height_p;	/* requested height of physical display */
-	ulong width_v;	/* requested width of virtual display */
-	ulong height_v;	/* requested height of virtual display */
-	ulong pitch;	/* zero upon request; in response: # bytes between rows */
-	ulong depth;	/* requested depth in bits per pixel */
-	ulong x;	/* requested x offset of virtual framebuffer */
-	ulong y;	/* requested y offset of virtual framebuffer */
-	ulong address;	/* framebuffer address. Zero upon request; failure if zero upon response. */
-	ulong size;	/* framebuffer size. Zero upon request.  */
+    ulong width_p;      /* requested width of physical display */
+    ulong height_p;     /* requested height of physical display */
+    ulong width_v;      /* requested width of virtual display */
+    ulong height_v;     /* requested height of virtual display */
+    ulong pitch;        /* zero upon request; in response: # bytes between rows */
+    ulong depth;        /* requested depth in bits per pixel */
+    ulong x;            /* requested x offset of virtual framebuffer */
+    ulong y;            /* requested y offset of virtual framebuffer */
+    ulong address;      /* framebuffer address. Zero upon request; failure if zero upon response. */
+    ulong size;         /* framebuffer size. Zero upon request.  */
 };
 
 extern ulong framebufferAddress;
@@ -94,9 +139,9 @@ extern bool minishell;
 extern ulong linemap[];
 
 /* Turtle command structs and definitions */
-#define COMMANDNAMELENGTH 10    /* max length of procedure name */
-#define COMMANDLENGTH 100       /* max length of new procedure */
-#define MAXNEWCOMMANDS 10       /* cannot add more than 10 new commands at a time */
+#define COMMANDNAMELENGTH   10      /* max length of procedure name */
+#define COMMANDLENGTH       100     /* max length of new procedure */
+#define MAXNEWCOMMANDS      10      /* cannot add more than 10 new commands at a time */
 
 struct defaultcommand {
     char commandname[COMMANDNAMELENGTH];
@@ -117,6 +162,11 @@ syscall fbprintf(char *fmt, ...);
 /* other function prototypes */
 void screenInit(void);
 int framebufferInit(void);
+ulong mailboxRead(void);
+void mailboxWrite(ulong);
+ulong physToBus(void *);
+void writeMMIO(ulong, ulong, ulong);
+ulong readMMIO(ulong, ulong);
 void screenClear(ulong);
 void minishellClear(ulong);
 void viewlinemap(void);

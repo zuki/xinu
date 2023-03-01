@@ -14,7 +14,7 @@
  * Checks if an incoming TCP segment is valid.
  * @param pkt incoming packet
  * @param tcbptr pointer to transmission control block for connection
- * @precondition TCB mutex is already held 
+ * @precondition TCB mutex is already held
  * @postcondition TCB mutex is still held
  */
 bool tcpRecvValid(struct packet *pkt, struct tcb *tcbptr)
@@ -22,7 +22,7 @@ bool tcpRecvValid(struct packet *pkt, struct tcb *tcbptr)
     struct tcpPkt *tcp;
     ushort tcplen;
     tcpseq temp;
-    bool result;
+    bool result = FALSE;
     bool resultB;
     ushort seglen;
     uint availwnd;

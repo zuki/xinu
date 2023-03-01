@@ -25,6 +25,9 @@ syscall semfree(semaphore sem)
     register struct sement *semptr;
     irqmask im;
     tid_typ tid;
+    unsigned int cpuid;
+
+    cpuid = getcpuid();
 
     im = disable();
     if (isbadsem(sem))
@@ -33,15 +36,18 @@ syscall semfree(semaphore sem)
         return SYSERR;
     }
 
+    semtab_acquire(sem);
     semptr = &semtab[sem];
     while (nonempty(semptr->queue))
     {
         tid = dequeue(semptr->queue);   /* 待機中のスレッドを開放する */
-        ready(tid, RESCHED_NO);
+        ready(tid, RESCHED_NO, cpuid);
     }
 
     semptr->count = 0;
     semptr->state = SFREE;
+    semtab_release(sem);
+
     restore(im);
     return OK;
 }

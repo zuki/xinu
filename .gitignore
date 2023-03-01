@@ -40,3 +40,5 @@ docs/_build/
 include/version.h
 
 doxy_docs/
+
+*.org

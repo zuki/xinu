@@ -8,6 +8,7 @@
 #define _SEMAPHORE_H_
 
 #include <queue.h>
+#include <mutex.h>
 
 /* セマフォの状態定義 */
 #define SFREE 0x01 /**< このセマフォは空き */
@@ -27,6 +28,9 @@ struct sement                   /* セマフォテーブルエントリ     */
 };
 
 extern struct sement semtab[];
+extern mutex_t semtab_mutex[];
+void semtab_acquire(semaphore);
+void semtab_release(semaphore);
 
 /* isbadsem - 指定されたセマフォIDと状態をチェックする */
 #define isbadsem(s) ((s >= NSEM) || (SFREE == semtab[s].state))

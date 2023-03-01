@@ -48,5 +48,5 @@ devcall loopbackPutc(device *devptr, char ch)
 
     restore(im);
 
-    return ch;
+    return (int)ch;
 }

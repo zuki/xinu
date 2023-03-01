@@ -6,6 +6,7 @@
 
 #include <kernel.h>
 #include <stdarg.h>
+#include <mutex.h>
 
 /**
  * @ingroup uartgeneric
@@ -28,7 +29,11 @@ syscall kprintf(const char *format, ...)
     va_list ap;
 
     va_start(ap, format);
+
+    mutex_acquire(serial_lock);
     retval = kvprintf(format, ap);
+    mutex_release(serial_lock);
+
     va_end(ap);
     return retval;
 }

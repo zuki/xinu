@@ -1,5 +1,5 @@
 #
-# Makefile definitions for Embedded Xinu shared between all supported ARM
+# Makefile definitions for Embedded Xinu shared between single-core ARM
 # platforms.
 #
 

@@ -10,6 +10,9 @@
 #include <stdio.h>
 #include <thread.h>
 #include <version.h>
+#include <stdlib.h>
+#include <core.h>
+#include "platforms/arm-rpi3/mmu.h"
 
 static void print_os_info(void);
 
@@ -39,7 +42,7 @@ thread main(void)
     for (i = 0; i < NETHER; i++)
     {
         ethptr = &ethertab[ethertab[i].dev->minor];
-        kprintf("[main]: open %d\r\n", ethertab[i].dev->num);
+        //kprintf("[main]: open %d\r\n", ethertab[i].dev->num);
         result = open(ethertab[i].dev->num);
         if (SYSERR == result) {
             kprintf("[ ERROR ] Failed to open %s\r\n",
@@ -128,7 +131,8 @@ thread main(void)
                                  shelldevs[i][0],
                                  shelldevs[i][1],
                                  shelldevs[i][2]),
-                                RESCHED_NO))
+                                 RESCHED_NO,
+                                 CORE_ZERO))
             {
                 kprintf("WARNING: Failed to create %s", name);
             }
@@ -147,46 +151,36 @@ static void print_os_info(void)
     kprintf(VERSION);
     kprintf("\r\n\r\n");
 
-#ifdef DETAIL
     /* 検知したプラットフォームを出力する */
     //kprintf("Processor identification: 0x%08X\r\n", cpuid);
     kprintf("Detected platform as: %s, %s\r\n\r\n",
             platform.family, platform.name);
-#endif
 
     /* Xinuのメモリレイアウトを出力する */
     kprintf("%10d bytes physical memory.\r\n",
             (ulong)platform.maxaddr - (ulong)platform.minaddr);
-#ifdef DETAIL
     kprintf("           [0x%08X to 0x%08X]\r\n",
             (ulong)platform.minaddr, (ulong)(platform.maxaddr - 1));
-#endif
 
+    /* 利用可能なデータキャッシュを出力する */
+    kprintf("%10d kilobytes L1 data cache.\r\n", platform.dcache_size);
 
     kprintf("%10d bytes reserved system area.\r\n",
             (ulong)_start - (ulong)platform.minaddr);
-#ifdef DETAIL
     kprintf("           [0x%08X to 0x%08X]\r\n",
             (ulong)platform.minaddr, (ulong)_start - 1);
-#endif
 
     kprintf("%10d bytes Xinu code.\r\n", (ulong)&_end - (ulong)_start);
-#ifdef DETAIL
     kprintf("           [0x%08X to 0x%08X]\r\n",
             (ulong)_start, (ulong)&_end - 1);
-#endif
 
     kprintf("%10d bytes stack space.\r\n", (ulong)memheap - (ulong)&_end);
-#ifdef DETAIL
     kprintf("           [0x%08X to 0x%08X]\r\n",
             (ulong)&_end, (ulong)memheap - 1);
-#endif
 
     kprintf("%10d bytes heap space.\r\n",
             (ulong)platform.maxaddr - (ulong)memheap);
-#ifdef DETAIL
     kprintf("           [0x%08X to 0x%08X]\r\n\r\n",
             (ulong)memheap, (ulong)platform.maxaddr - 1);
-#endif
     kprintf("\r\n");
 }

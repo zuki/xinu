@@ -5,53 +5,78 @@
 
 #include <arm.h>
 
-.globl ctxsw
+.text
+    .align 4
+    .globl ctxsw
 
 /**
  *  @ingroup threads
  *-----------------------------------------------------------------------
- *  ctxsw  -  Switch from one thread context to another.
+ *  ctxsw  -  スレッドコンテキストを切り替える.
  *------------------------------------------------------------------------
  *
- * This is the ARM version.  How it works: we have to save r4-r11 and lr, since
- * r4-r11 are callee-save and lr needs to be loaded into the pc when this
- * context is switched to again.  Registers r0-r3 are caller-save so they do
- * *not* need not be saved, but they are pushed anyway to leave space since they
- * are part of the context constructed by create() to pass thread arguments.
+ * ARM版のctxswである。動作原理: r4-r11はcalllee-saveのため、lrは
+ * 再度このコンテキストに切り替わった際にPCにロードする必要があるため、
+ * r4-r11とlrを保存する必要がある。レジスタr0-r3はcaller-saveなので
+ * 保存する必要はない。ただし、スレッドの引数を渡すために create() に
+ * よって構築されるコンテキストの一部であるため、そのスペースを確保する
+ * ためにプッシュされる。
  *
- * When restoring a context, we pop both the lr and pc.  These are both set to
- * appropriate values in create().  But when saving a context below, we only
- * have an appropriate value for pc--- namely, the lr, a.k.a. the address
- * ctxsw() will return to.  The lr at that instruction is unknown.  However,
- * this is irrelevant because the lr is caller-save, and we can simply push a
- * garbage value from r13 instead.
+ * コンテキストを復元する際にはlrとpcをポップする。これらの値はcreate()により
+ * 適切な値に設定されている。ただし、以下のようにコンテキストを保存する際には
+ * 適切な値はpc（すなわち、ctxsw()が復帰するアドレスであるlr）しかセットして
+ * いない。その命令時点でのlrは不明である。しかし、lrはcaller-saveであるので
+ * これは問題ないので、代わりにr13から適当な値をプッシュしてけばよい。
  *
- * We almost don't need to do anything about the CPSR here, since:
+ * CPSRについてはここではほとんど何もする必要がない。
  *
- *   - We do all our context switches to/from the same mode (namely, SYS mode).
- *   - The ARM ABI does not expect comparison flags in the CPSR to be preserved
- *         across function calls.
- *   - resched() takes care of saving/restoring whether interrupts are enabled
- *         or not when resuming a thread that has been switched out.
- *   - Xinu never makes changes to the CPSR not already covered above, such as
- *         switching to executing Thumb instructions.
+ *  - コンテキストスイッチはすべて同じモード（SYSモード）で行う。
+ *  - ARMのABIはCPSRの比較フラグが関数呼び出しの間保持されることを
+ *      期待しない。
+ *  - resched()がスイッチアウトされたスレッドを再開する際に割り込みが
+ *      有効か否かを保存/復元するように配慮している。
+ *  - Xinuは、Thumb命令の実行への切り替えなど、上記ですでにカバーされて
+ *      いること以外のCPSRへの変更を行うことがない。
  *
- * However, interrupts are disabled when ctxsw() is called from resched(), but
- * we want interrupts to be enabled when starting a *new* thread, which
- * resched() does not take care of.  We solve this by including the control bits
- * of the current program status register in the context and adding a line of
- * code to create() that sets the control bits of new threads such that
- * interrupts are enabled.
+ * しかし、ctxsw()がresched()から呼び出される際、割り込みは無効になっている
+ * が、resched()が面倒を見ない*新しい*スレッドを起動する際には割り込みを
+ * 有効にしたい。そこで、現在のプログラム状態レジスタの制御ビットを
+ * コンテキストに含め、割り込みが有効になるように新しいスレッドの制御
+ * ビットを設定するコードをcreate()に追加して解決している。
  *------------------------------------------------------------------------*/
+/**
+ * @fn void ctxsw(&oldregs, &newregs)
+ *
+ * 現在のプロセッサの情報を保存して別のプロセスにコンテキスト
+ * （レジスタ値）を切り替える. この関数は通常考えられるようには
+ * 復帰しない。なぜなら、別のプロセスのスタックポインタをロードし、
+ * その場所にジャンプしてコードの実行を開始するからである。
+ *
+ * @param  oldregs 現プロセスのレジスタ保存領域のアドレス
+ * @param  newregs 新プロセスのレジスタ保存領域のアドレス
+ * @return 特例。上記参照。
+ */
 ctxsw:
-	.func ctxsw
-	mrs r12, cpsr
-	push {r0-r14}
+    .func ctxsw
+    mrs r12, cpsr
+    push {r0-r14}
 
-	str sp, [r0]
-	ldr sp, [r1]
+    str sp, [r0]
+    ldr sp, [r1]
 
-	pop {r0-r12}
-	msr cpsr_c, r12
-	pop {lr, pc}
-	.endfunc
+    /* スタックの対応する位置からレジスタをロードする。プログラムが
+     * ジャンプするため、プログラムカウンタは最後にロードする必要が
+     * ある。この場合、リターンとはプログラムカウンタにリンクレジスタを
+     * ロードすることに相当する。
+     */
+
+    pop {r0-r12}
+    msr cpsr_c, r12
+
+    /* リンクレジスタをプログラムカウンタにロードする。リンクレジスタの
+     * 値を変更したため、元の関数には戻らず、別プロセスの新しい関数に
+     * 移行する。
+     */
+    pop {lr, pc}
+
+    .endfunc

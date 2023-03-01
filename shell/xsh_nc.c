@@ -16,6 +16,7 @@
 #include <tcp.h>
 #include <thread.h>
 #include <udp.h>
+#include <core.h>
 
 #if NETHER
 static void usage(char *command);
@@ -175,17 +176,26 @@ shellcmd xsh_nc(int nargs, char *args[])
         fprintf(stderr, "Failed to spawn threads");
         return 1;
     }
+
+    thrtab_acquire(recvthr);
+
     thrtab[recvthr].fdesc[0] = stdin;
     thrtab[recvthr].fdesc[1] = stdout;
     thrtab[recvthr].fdesc[2] = stderr;
+
+    thrtab_release(recvthr);
+    thrtab_acquire(sendthr);
+
     thrtab[sendthr].fdesc[0] = stdin;
     thrtab[sendthr].fdesc[1] = stdout;
     thrtab[sendthr].fdesc[2] = stderr;
 
+    thrtab_release(sendthr);
+
     /* Start both threads */
     while (recvclr() != NOMSG);
-    ready(recvthr, RESCHED_YES);
-    ready(sendthr, RESCHED_NO);
+    ready(recvthr, RESCHED_YES, CORE_ZERO);
+    ready(sendthr, RESCHED_NO, CORE_ZERO);
 
     /* Wait for one thread to die */
     while ((msg != recvthr) && (msg != sendthr))

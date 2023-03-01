@@ -13,7 +13,7 @@
 #include <debug.h>
 #include <stddef.h>
 #include <memory.h>
-#endif /* __ASSEMBLER__ */
+#include <mutex.h>
 
 /* スレッドスタックのトップをマークするありえない値                     */
 #define STACKMAGIC  0x0A0AAAA9
@@ -32,6 +32,10 @@
 /* 様々なスレッド定義                                                   */
 #define TNMLEN      16          /**< スレッド"名"の長さ                 */
 #define NULLTHREAD  0           /**< nullスレッドのID                   */
+#define NULLTHREAD1 1		    /**< セカンダリcpuのullスレッドのID     */
+#define NULLTHREAD2 2
+#define NULLTHREAD3 3
+
 #define BADTID      (-1)        /**< 不正なtidが必要な場合に使用する    */
 
 /* スレッド初夏家庭数 */
@@ -62,10 +66,8 @@
 
 /* アセンブリファイルに公開する sizeof(struct thrent) と */
 /* offsetof(struct thrent, stkdiv)  */
-#define THRENTSIZE 148
-#define STKDIVOFFSET 104
-
-#ifndef __ASSEMBLER__
+#define THRENTSIZE      148
+#define STKDIVOFFSET    104
 
 /**
  * スレッドテーブルエントリが何であるかを定義する
@@ -85,11 +87,19 @@ struct thrent
     bool hasmsg;                /**< msgが有効な場合、非ゼロ            */
     struct memblock memlist;    /**< スレッドの空きメモリリスト         */
     int fdesc[NDESC];           /**< スレッドのデバイスディスクリプタ   */
+    uint core_affinity;         /**< スレッドのコアフィニティ           */
 };
 
 extern struct thrent thrtab[];
 extern int thrcount;            /**< 現在アクティブなスレッド           */
-extern tid_typ thrcurrent;      /**< 現在実行中のスレッド               */
+extern tid_typ thrcurrent[];    /**< 現在実行中のスレッド               */
+
+extern unsigned int getcpuid(void);
+//extern unsigned int core_affinity[];
+extern mutex_t thrtab_mutex[];
+
+void thrtab_acquire(tid_typ);
+void thrtab_release(tid_typ);
 
 /* スレッド間コミュニケーションのプロトタイプ */
 syscall send(tid_typ, message);
@@ -104,7 +114,7 @@ tid_typ create(void *procaddr, uint ssize, int priority,
 tid_typ gettid(void);
 syscall getprio(tid_typ);
 syscall kill(int);
-int ready(tid_typ, bool);
+int ready(tid_typ, bool, uint);
 int resched(void);
 syscall sleep(uint);
 syscall unsleep(tid_typ);

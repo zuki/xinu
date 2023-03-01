@@ -39,12 +39,16 @@ syscall unsleep(tid_typ tid)
         return SYSERR;
     }
 
+    quetab_acquire();
+
     next = quetab[tid].next;
     if (next < NTHREAD)
     {
         // 次のsleepスレッドの待ち時間を調整
         quetab[next].key += quetab[tid].key;
     }
+
+    quetab_release();
 
     // スレッドをreadyキューから削除
     getitem(tid);

@@ -5,6 +5,7 @@
 
 #include <semaphore.h>
 #include <interrupt.h>
+#include <core.h>
 
 static semaphore semalloc(void);
 
@@ -37,7 +38,9 @@ semaphore semcreate(int count)
     sem = semalloc();       /* Allocate semaphore.  */
     if (SYSERR != sem)      /* If semaphore was allocated, set count.  */
     {
+        semtab_acquire(sem);
         semtab[sem].count = count;
+        semtab_release(sem);
     }
     /* Restore interrupts and return either the semaphore or SYSERR.  */
     restore(im);
@@ -62,9 +65,34 @@ static semaphore semalloc(void)
         nextsem = (nextsem + 1) % NSEM;
         if (SFREE == semtab[nextsem].state)
         {
+            semtab_acquire(nextsem);
             semtab[nextsem].state = SUSED;
+            semtab_release(nextsem);
             return nextsem;
         }
     }
     return SYSERR;
+}
+
+
+/**
+ * semtabロックを取得する.
+ *
+ * @param sem セマフォ
+ */
+void semtab_acquire(semaphore sem)
+{
+    pldw(&semtab[sem]);
+    mutex_acquire(semtab_mutex[sem]);
+}
+
+/**
+ * semtabロックを開放する.
+ *
+ * @param sem セマフォ
+ */
+void semtab_release(semaphore sem)
+{
+    __asm volatile ("dmb");
+    mutex_release(semtab_mutex[sem]);
 }

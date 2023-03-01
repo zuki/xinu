@@ -39,10 +39,13 @@ static const unsigned long copy_kernel[] = {
     0xe4843004,
     0xe2511001,
     0x1afffffb,
-    0xe3a0f902,
+    0xe3a0f902
 };
 
 #define COPY_KERNEL_ADDR ((void*)(0x8000 - sizeof(copy_kernel)))
+
+extern void stop_mmu(void);
+extern void invalidate_tlbs(void);
 
 /**
  * カーネルの実行 - 制御を新しいカーネルに渡す.
@@ -69,12 +72,21 @@ syscall kexec(const void *kernel, uint size)
     /* アセンブリスタブを安全な場所にコピーする  */
     memcpy(COPY_KERNEL_ADDR, copy_kernel, sizeof(copy_kernel));
 
+    stop_mmu();
+    invalidate_tlbs();
+
     /* アセンブリスタブを実行して、新しいカーネルを最終的な場所に
      * コピーし、制御を渡す */
     extern void *atags_ptr;
     (( void (*)(const void *, unsigned long, void *))(COPY_KERNEL_ADDR))
                 (kernel, (size + 3) / 4, atags_ptr);
 
+    kprintf("Returned from copy_kernel...\r\n");
+
+    while (1)
+    {
+
+    }
     /* 制御は絶対にここには来ないはず */
     restore(im);
     return SYSERR;

@@ -63,6 +63,8 @@
 #include <usb_hub_driver.h>
 #include <usb_std_defs.h>
 #include <usb_subsystem.h>
+#include "../../system/platforms/arm-rpi3/mmu.h"
+#include <clock.h>
 
 /** 同時にサポートするUSBデバイスの最大数  */
 #define MAX_NUSBDEV 32
@@ -72,7 +74,7 @@
 
 /** 必要に応じて実際のデバイスに動的に割り当てることができるUSB
  * デバイス構造体のテーブル */
-static struct usb_device usb_devices[MAX_NUSBDEV];
+struct usb_device usb_devices[MAX_NUSBDEV];
 
 /** USBコアに登録されているUSBデバイスドライバのテーブル */
 static const struct usb_device_driver *usb_device_drivers[MAX_NUSBDEV];
@@ -957,6 +959,9 @@ usb_attach_device(struct usb_device *dev)
 
     /* 新しく構成されたデバイスにドライバのバインドを試みる */
     status = usb_try_to_bind_device_driver(dev);
+
+    // TODO: 遅延は、なぜか実行を進める...
+    udelay(12);
 
     if (status == USB_STATUS_DEVICE_UNSUPPORTED)
     {

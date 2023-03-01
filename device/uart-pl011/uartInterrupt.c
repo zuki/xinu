@@ -70,9 +70,11 @@ interrupt uartInterrupt(void)
                 do
                 {
                     regptr->dr = uartptr->out[uartptr->ostart];
+                    mutex_acquire(uartptr->olock);
                     uartptr->ostart = (uartptr->ostart + 1) % UART_OBLEN;
                     uartptr->ocount--;
                     count++;
+                    mutex_release(uartptr->olock);
                 } while (!(regptr->fr & PL011_FR_TXFF) && (uartptr->ocount > 0));
 
                 /* 1バイト以上が出力バッファから正常に削除され、UARTハードウェアに
@@ -113,10 +115,12 @@ interrupt uartInterrupt(void)
                 {
                     /* 入力バッファにこのバイト用のスペースがあるので、それを追加して
                      * 受信した1文字を集計する */
+                    mutex_acquire(uartptr->olock);
                     uartptr->in[(uartptr->istart +
                                  uartptr->icount) % UART_IBLEN] = c;
                     uartptr->icount++;
                     count++;
+                    mutex_release(uartptr->olock);
                 }
                 else
                 {

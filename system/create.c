@@ -6,6 +6,7 @@
 #include <platform.h>
 #include <string.h>
 #include <thread.h>
+#include <core.h>
 
 static int thrnew(void);
 
@@ -56,8 +57,13 @@ tid_typ create(void *procaddr, uint ssize, int priority,
 
     /* 新規スレッドIDを割り当てる  */
     tid = thrnew();
+
+    thrtab_acquire(tid);
+
     if (SYSERR == (int)tid)
     {
+        thrtab_release(tid);
+
         stkfree(saddr, ssize);
         restore(im);
         return SYSERR;
@@ -88,6 +94,8 @@ tid_typ create(void *procaddr, uint ssize, int priority,
     thrptr->stkptr = setupStack(saddr, procaddr, INITRET, nargs, ap);
     va_end(ap);
 
+    thrtab_release(tid);
+
     /* 割り込み状態を復元して新規スレッドのTIDを返す  */
     restore(im);
     return tid;
@@ -114,4 +122,27 @@ static int thrnew(void)
         }
     }
     return SYSERR;
+}
+
+/**
+ * thrtabをロックする.
+ *
+ * @param tid スレッドID
+ */
+void thrtab_acquire(tid_typ tid)
+{
+    pldw(&thrtab[tid]);
+    pldw(&thrtab[tid].core_affinity);
+    mutex_acquire(thrtab_mutex[tid]);
+}
+
+/**
+ * thrtabのロックを解除する.
+ *
+ * @param tid スレッドID
+ */
+void thrtab_release(tid_typ tid)
+{
+    __asm volatile ("dmb");
+    mutex_release(thrtab_mutex[tid]);
 }

@@ -78,6 +78,8 @@
 #include <usb_std_defs.h>
 #include <usb_util.h>
 #include "bcm2837.h"
+#include "mmu.h"
+#include <dma_buf.h>
 
 /** ワードサイズの次の倍数まで数値を丸めあげる  */
 #define WORD_ALIGN(n) (((n) + sizeof(ulong) - 1) & ~(sizeof(ulong) - 1))
@@ -158,9 +160,25 @@ static semaphore chfree_sema;
  */
 static struct usb_xfer_request *channel_pending_xfers[DWC_NUM_CHANNELS];
 
-/** DMA用のアライメントされたバッファ. */
-static uint8_t aligned_bufs[DWC_NUM_CHANNELS][WORD_ALIGN(USB_MAX_PACKET_SIZE)]
-                    __aligned(4);
+/**
+ * DMA用のアラインされたバッファ.
+ * Embedded Xinu 2.01（2013年頃）においてこのドライバを構想する際、
+ * DMAバッファには2つの可能性が存在した。
+ *  1. データがワードアラインであればハードウェアでDMA
+ * 	または
+ *  2. 2次元の"aligned_bufs"バッファを介して手動でDMAを行い、
+ *      memcpy()で読み書きを行う。
+ *
+ * Embedded Xinu 3.0（2019年移植版）では、マルチコアのアトミック操作を
+ * 容易にするためにL1データキャッシュを有効にしているため、キャッシュ
+ * コヒーレンシを維持するためにDMAをガードする必要がある。ARM Cortex
+ * A-53のキャッシュメンテナンス走査はやや曖昧なところがある。たとえば、
+ * 無効化処理（DCIMVAC）は、データキャッシュラインも「クリーン」
+ * （フラッシュ）する可能性がある。したがって、上記の#2だけを採用し、
+ * セクションをキャッシュされないメモリ領域に割り当てるとという判断は
+ * 容易だった（mmu.c を参照）。
+ */
+static uint8_t *aligned_bufs[DWC_NUM_CHANNELS];
 
 /** 非0のワード内で最初に1がセットされているビットの位置を探す.  */
 static inline ulong first_set_bit(ulong word)
@@ -835,7 +853,7 @@ dwc_channel_start_xfer(uint chan, struct usb_xfer_request *req)
      * フレームあたりのパケット数を決定する */
     if (req->endpoint_desc != NULL)
     {
-        /* 円とポイントは明示的に指定されている。エンドポイント
+        /* エンドポイントは明示的に指定されている。エンドポイント
          * ディスクリプタから必要な情報を取得する */
         characteristics.endpoint_number =
                                     req->endpoint_desc->bEndpointAddress & 0xf;
@@ -979,37 +997,18 @@ dwc_channel_start_xfer(uint chan, struct usb_xfer_request *req)
         }
     }
 
+    /* DMAバッファを設定する。データはARM物理アドレスからVideoCore
+     * アドレスに変換するために0xC0000000とORする必要がある */
+    chanptr->dma_address = (uint32_t)aligned_bufs[chan] | 0xC0000000;
     /* DMAバッファを設定する  */
-    if (IS_WORD_ALIGNED(data))
+
+    /* OUTエンドポイントでは送信するデータをDMAバッファにコピーする */
+    if (characteristics.endpoint_direction == USB_DIRECTION_OUT)
     {
-        /* ワードアライメントされている場合はソースから、または
-         * ディスティネーションに直接DMAすることができる  */
-        chanptr->dma_address = (uint32_t)data;
-    }
-    else
-    {
-        /* 実際のソースまたはディスティネーションがワードアラインされて
-         * いないため、DMA用に代替バッファを使用する必要がある。転送
-         * しようとしているサイズがこの代替バッファより大きい場合、
-         * 適合する最大のパケット数に制限する。 */
-        chanptr->dma_address = (uint32_t)aligned_bufs[chan];
-        if (transfer.size > sizeof(aligned_bufs[chan]))
-        {
-            transfer.size = sizeof(aligned_bufs[chan]) -
-                            (sizeof(aligned_bufs[chan]) %
-                              characteristics.max_packet_size);
-            req->short_attempt = 1;
-        }
-        /* OUTエンドポイントでは送信するデータをDMAバッファにコピーする */
-        if (characteristics.endpoint_direction == USB_DIRECTION_OUT)
-        {
-            memcpy(aligned_bufs[chan], data, transfer.size);
-        }
+       memcpy(aligned_bufs[chan], data, transfer.size);
     }
 
-    /* 送受信する次のデータチャンクの開始位置へのポインタをセットする
-     * （上で代替バッファが選択された場合、ハードウェアが使用する
-     * 実際のDMAアドレスとは異なる場合がある）。  */
+    /* 送受信する次のデータチャンクの開始位置へのポインタをセットする */
     req->cur_data_ptr = data;
 
     /* この転送用に設定するパケット数を計算する  */
@@ -1069,7 +1068,7 @@ dwc_channel_start_xfer(uint chan, struct usb_xfer_request *req)
  *      遅延するUSB転送リクエスト
  *
  * @return
- *      今スレッドは復帰しない
+ *      このスレッドは復帰しない
  */
 static thread
 defer_xfer_thread(struct usb_xfer_request *req)
@@ -1181,7 +1180,7 @@ defer_xfer(struct usb_xfer_request *req)
                                          DEFER_XFER_THREAD_PRIORITY,
                                          DEFER_XFER_THREAD_NAME,
                                          1, req);
-        if (SYSERR == ready(req->deferer_thread_tid, RESCHED_NO))
+        if (SYSERR == ready(req->deferer_thread_tid, RESCHED_NO, 0))
         {
             req->deferer_thread_tid = BADTID;
             usb_dev_error(req->dev,
@@ -1241,14 +1240,11 @@ dwc_handle_normal_channel_halted(struct usb_xfer_request *req, uint chan,
               * これも良いことである）。  */
             bytes_transferred = req->attempted_bytes_remaining -
                                 chanptr->transfer.size;
-            /* 必要ならDMAバッファからデータをコピーする */
-            if (!IS_WORD_ALIGNED(req->cur_data_ptr))
-            {
-                memcpy(req->cur_data_ptr,
-                       &aligned_bufs[chan][req->attempted_size -
-                                           req->attempted_bytes_remaining],
-                       bytes_transferred);
-            }
+            /* DMAバッファからデータをコピーする */
+
+            memcpy(req->cur_data_ptr,
+                    &aligned_bufs[chan][req->attempted_size - req->attempted_bytes_remaining],
+                    bytes_transferred);
         }
         else
         {
@@ -1799,7 +1795,7 @@ dwc_start_xfer_scheduler(void)
                                     XFER_SCHEDULER_THREAD_STACK_SIZE,
                                     XFER_SCHEDULER_THREAD_PRIORITY,
                                     XFER_SCHEDULER_THREAD_NAME, 0);
-    if (SYSERR == ready(dwc_xfer_scheduler_tid, RESCHED_NO))
+    if (SYSERR == ready(dwc_xfer_scheduler_tid, RESCHED_NO, 0))
     {
         semfree(chfree_sema);
         mailboxFree(hcd_xfer_mailbox);
@@ -1815,11 +1811,19 @@ usb_status_t
 hcd_start(void)
 {
     usb_status_t status;
+    int i;
+
+    /* キャッシュメンテナンス操作をしなくても住むようにDMAバッファに
+       使用するアンキャッシュ領域を割り当てる */
+    for (i = 0; i < DWC_NUM_CHANNELS; i++)
+    {
+        aligned_bufs[i] = dma_buf_alloc(WORD_ALIGN(USB_MAX_PACKET_SIZE));
+    }
 
     status = dwc_power_on();
     if (status != USB_STATUS_SUCCESS)
     {
-        usb_info("dwc_power_on error: %d\n\r", status);
+        usb_debug("dwc_power_on error: %d\n\r", status);
         return status;
     }
     dwc_soft_reset();
@@ -1828,7 +1832,7 @@ hcd_start(void)
     status = dwc_start_xfer_scheduler();
     if (status != USB_STATUS_SUCCESS)
     {
-        usb_info("dwc_start_xfer_scheduler error: %d\n\r", status);
+        usb_debug("dwc_start_xfer_scheduler error: %d\n\r", status);
         dwc_power_off();
     }
     return status;
