@@ -8,10 +8,12 @@ S_FILES = ctxsw.S           \
           halt.S            \
           intutils.S        \
           irq_handler.S     \
+          memory_barrier.S  \
           pause.S           \
           getmode.S         \
           getcpuid.S        \
           setupCores.S      \
+          setmode.S         \
           mmu_util.S        \
           preload_data.S    \
           mutex_util.S

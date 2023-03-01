@@ -53,11 +53,11 @@ unsigned long clkcount(void)
 {
     unsigned long count;
 
-    pre_peripheral_read_mb;
+    pre_peripheral_read_mb();
 
     count = regs->CLO;
 
-    post_peripheral_read_mb;
+    post_peripheral_read_mb();
 
     return count;
 }
@@ -70,7 +70,7 @@ unsigned long clkcount(void)
 */
 void clkupdate(unsigned long cycles)
 {
-    pre_peripheral_write_mb;
+    pre_peripheral_write_mb();
 
     /* タイマーを設定するために、システムタイマーの出力コンペア
      * レジスタのうち、GPUが使用していないC3（System Timer Compare 3）を
@@ -89,5 +89,5 @@ void clkupdate(unsigned long cycles)
      * 必ず正しく処理されることに注意されたい。  */
     regs->C3 = regs->CLO + cycles;
 
-    post_peripheral_write_mb;
+    post_peripheral_write_mb();
 }

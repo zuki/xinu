@@ -143,6 +143,6 @@ void thrtab_acquire(tid_typ tid)
  */
 void thrtab_release(tid_typ tid)
 {
-    __asm volatile ("dmb");
+    dmb();
     mutex_release(thrtab_mutex[tid]);
 }

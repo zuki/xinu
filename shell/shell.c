@@ -39,7 +39,7 @@ struct centry commandtab[] = {
     {"gpiostat", FALSE, xsh_gpiostat},
 #endif
     {"help", FALSE, xsh_help},
-#if defined(ETH0) || defined(_XINU_PLATFORM_ARM_RPI_) || defined(_XINU_PLATFORM_ARM_RPI_3_)
+#if defined(ETH0) || defined(_XINU_PLATFORM_ARM_RPI_)
     {"kexec", FALSE, xsh_kexec},
 #endif
     {"kill", TRUE, xsh_kill},
@@ -64,6 +64,13 @@ struct centry commandtab[] = {
 #if NETHER
     {"ping", FALSE, xsh_ping},
     {"pktgen", FALSE, xsh_pktgen},
+#endif
+
+#ifdef _XINU_PLATFORM_ARM_RPI_3_
+    {"random", TRUE, xsh_random},
+#endif
+
+#if NETHER
     {"rdate", FALSE, xsh_rdate},
 #endif
     {"reset", FALSE, xsh_reset},
@@ -89,7 +96,7 @@ struct centry commandtab[] = {
 #if NETHER
     {"timeserver", FALSE, xsh_timeserver},
 #endif
-#if FRAMEBUF
+#if TTY1
     {"turtle", FALSE, xsh_turtle},
 #endif
 #if NUART
@@ -111,7 +118,6 @@ struct centry commandtab[] = {
 };
 
 ulong ncommand = sizeof(commandtab) / sizeof(struct centry);
-extern ulong foreground;
 
 /**
  * @ingroup shell
@@ -134,7 +140,7 @@ thread shell(int indescrp, int outdescrp, int errdescrp)
     ushort i, j;                /* temp variables           */
     irqmask im;                 /* interrupt mask state     */
     char *hostptr = NULL;       /* pointer to hostname      */
-
+    printf("shell start\n");
     /* Setup buffer for string for nvramGet call for hostname */
 #if defined(ETH0) && NVRAM
     char hostnm[NET_HOSTNM_MAXLEN + 1]; /* hostname of backend      */
@@ -168,22 +174,27 @@ thread shell(int indescrp, int outdescrp, int errdescrp)
     stdout = outdescrp;
     stderr = errdescrp;
 
-    /* Print shell banner to framebuffer, if exists */
-#if defined(FRAMEBUF)
-    if (indescrp == FRAMEBUF)
-    {
-        foreground = RASPBERRY;
-        printf(SHELL_BANNER_NONVT100);
-        foreground = LEAFGREEN;
-        printf(SHELL_START);
-        foreground = GREEN;
+    /* If indescrp is CONSOLE (not TTY1/framebuffer), then remove the turtle command from
+     * the command table. Note: removal requires commandtab to be non-constant */
+    int idx = 0;
+    if(indescrp == CONSOLE) {
+        for(int i = 0; i < ncommand; i++) { // Find turtle location in the command table
+            if (strcmp(commandtab[i].name, "turtle") == 0) {
+            idx = i;
+                break;
+            }
+        } // Remove it
+
+        for(int j = idx; j < ncommand - 1; j++){
+            commandtab[j] = commandtab[j+1];
+        }
     }
-    else
-#endif
-    {
-        printf(SHELL_BANNER);
-        printf(SHELL_START);
-    }
+
+    /* Print shell banner
+     * If the frame buffer is being used (TTY1) instead of the terminal (CONSOLE),
+     * fbPutc() will parse the ANSI color code and change the foregroud color accordingly. */
+    printf(SHELL_BANNER_PI3);
+    printf(SHELL_START);
 
     /* Continually receive and handle commands */
     while (TRUE)
@@ -341,6 +352,8 @@ thread shell(int indescrp, int outdescrp, int errdescrp)
             continue;
         }
 
+        thrtab_acquire(child);
+
         /* Set file descriptors for newly created thread */
         if (NULL == inname)
         {
@@ -360,6 +373,8 @@ thread shell(int indescrp, int outdescrp, int errdescrp)
         }
         thrtab[child].fdesc[2] = stderr;
 
+        thrtab_release(child);
+
         if (background)
         {
             /* Make background thread ready, but don't reschedule */
@@ -377,7 +392,11 @@ thread shell(int indescrp, int outdescrp, int errdescrp)
 
             /* Wait for command thread to finish */
             while (receive() != child);
+/* RPI3 では10秒スリープする。他のプラットフォームでも必要かもしれないが
+   定かでない */
+#ifndef _XINU_PLATFORM_ARM_RPI_3_
             sleep(10);
+#endif
         }
     }
 

@@ -83,6 +83,8 @@ lan7800_bind_device(struct usb_device *udev)
         return USB_STATUS_DEVICE_UNSUPPORTED;
     }
 
+    udev->last_error = USB_STATUS_SUCCESS;
+
     ethptr->csr = udev;
     udev->driver_private = ethptr;
     kprintf("[lan7800_bind_device]: signal idx=%d, sem=%d\r\n", ethptr - ethertab, lan7800_attached[ethptr - ethertab]);

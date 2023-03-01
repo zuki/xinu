@@ -17,8 +17,6 @@
 
 extern void _inval_area(uint32_t);
 
-#define dmb_asm __asm volatile ("dmb")
-
 /**
  * @ingroup framebuffer
  *
@@ -32,17 +30,17 @@ void drawPixel(int x, int y, ulong color)
 
     //check if somebody tried to draw something out of range.
     if ( (y < DEFAULT_HEIGHT) && (x < DEFAULT_WIDTH) && (y >= 0) && (x >= 0) ) {
-        pre_peripheral_write_mb;
+        pre_peripheral_write_mb();
 
         // compute address of pixel to write.
         // framebuffer address + (y*pitch)+(x*(depth/8))
         volatile ulong *address = (volatile ulong *)(framebufferAddress +
                     (y * pitch) + (x * (BIT_DEPTH/8)));
-        dmb_asm;
+        dmb();
         *address = color;
-        dmb_asm;
+        dmb();
         _inval_area((uint32_t)address);
-        dmb_asm;
+        dmb();
     }
 }
 

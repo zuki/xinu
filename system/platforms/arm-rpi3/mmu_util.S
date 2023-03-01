@@ -134,6 +134,7 @@ sec4:
 
     bx   lr
 
+/* void start_mmu(unsigned int); */
 .globl start_mmu
 start_mmu:
     mov  r2, #0
@@ -148,7 +149,7 @@ start_mmu:
     mcr  p15, 0, r2, c3, c0, 0      ;@ domain access control: domainへのアクセスはDomain fault
 
     orr  r0, #0x6A                  ;@ 01101010: NOS=1, RSN=01, IRGN=01, S=1
-    orr  r0, #0x6A
+    //orr  r0, #0x6A
 
     mcr  p15, 0, r0, c2, c0, 0      ;@ tlbr0 base
     mcr  p15, 0, r0, c2, c0, 1      ;@ tlbr1 base

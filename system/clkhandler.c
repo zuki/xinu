@@ -36,7 +36,7 @@ interrupt clkhandler(void)
         clkticks = 0;
     }
 
-    /* sleepqがから出ない場合は、第一キーを減ずる     */
+    /* sleepqが空でない場合は、第一キーを減ずる     */
     /* キーがゼロに達したら、wakeupを呼び出す         */
     if (nonempty(sleepq) && (--firstkey(sleepq) <= 0))
     {

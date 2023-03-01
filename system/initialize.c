@@ -85,12 +85,7 @@ void nulluser(void)
     ready(create(main, INITSTK, INITPRIO, "MAIN", 0), RESCHED_YES, CORE_ZERO);
 
     /* NULLスレッドは他にすることはないが終了することはできない  */
-    while (TRUE)
-    {
-#ifndef DEBUG
-        pause();
-#endif                          /* DEBUG */
-    }
+    while (TRUE) {}
 }
 
 /**
@@ -111,7 +106,7 @@ static int sysinit(void)
 
     /* システムテム変数を初期化する */
     /* このNULLTHREADをシステムの最初のスレッドとしてカウントする */
-    thrcount = NCORES;          /* コアごとに1つ塗るスレッド */
+    thrcount = NCORES;          /* コアごとに1つヌルスレッド */
 
     /* フリーメモリリストを初期化する */
     memheap = roundmb(memheap);
@@ -263,7 +258,7 @@ static int sysinit(void)
     nvramInit();
 #endif
 
-#if NNETIF
+#if NETHER
     /* ネットインタフェースを初期化する */
     netInit();
 #endif

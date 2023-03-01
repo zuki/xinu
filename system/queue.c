@@ -87,6 +87,6 @@ void quetab_acquire()
 
 void quetab_release()
 {
-    __asm volatile ("dmb");
+    dmb();
     mutex_release(quetab_mutex);
 }

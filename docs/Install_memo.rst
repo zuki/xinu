@@ -1329,3 +1329,92 @@ xinu-7043にあわせた
       USB: Bound LAN7800 USB Ethernet Adapter Driver to high-speed USB 2.1 device (id)
       [wait_device_attached]: signal sem=6
       [  OK  ] Successfully opened ETH0
+
+シェルが動く
+^^^^^^^^^^^^^^^
+
+`make clean` ではclearされないディレクトリがあった。オブジェクトファイルを
+すべて削除し、いちからmakeしたら動いた
+
+.. code-block:: none
+      USB:(Registered USB keyboard driver (HID boot protocol)
+      USB: Registered LAN7800 USB Ethernet Adapter Driver
+      USB: Registered USB Hub Driver
+      USB: Powering on Synopsys DesignWare Hi-Speed USB 2.0 On-The-Go Controller
+      USB: [ERROR] Device 1: String descriptor language list is empty
+      USB: Attaching high-speed USB 2.0 Hub class device (idVendor=0x0000, idProduct=)
+      USB: Bound USB Hub Driver to high-speed USB 2.0 Hub class device (idVendor=0x00)
+
+      ***********************************************************
+      ******************** Hello Xinu World! ********************
+      ***********************************************************
+      (Embedded Xinu) (arm-rpi3) #113 (dspace@mini.local) 2023年 3月 1日 水曜日 18時5T分36秒
+      Detected platform as: BCM2837B0, Raspberry Pi 3 B+
+
+      1056964600 bytes physical memory.
+            [0x00000000 to 0x3EFFFFF7]
+            32 kilobytes L1 data cache.
+      32768 bytes reserved system area.
+            [0x00000000 to 0x00007FFF]
+      7703232 bytes Xinu code.
+            [0x00008000 to 0x00760ABF]
+      32768 bytes stack space.
+            [0x00760AC0 to 0x00768ABF]
+      1049195832 bytes heap space.
+            [0x00768AC0 to 0x3EFFFFF7]
+
+
+      [etherOpen]: attached fd=0
+      [wait_device_attached]: start minor=0
+      [wait_device_attached]: wait sem=6
+      USB: Device 1: New high-speed device connected to port 1
+      USB: Attaching high-speed USB 2.0 Hub class device (idVendor=0x0424, idProduct=)
+      USB: Bound USB Hub Driver to high-speed USB 2.0 Hub class device (idVendor=0x04)
+      USB: Device 2: New high-speed device connected to port 1
+      USB: Attaching high-speed USB 2.0 Hub class device (idVendor=0x0424, idProduct=)
+      USB: Bound USB Hub Driver to high-speed USB 2.0 Hub class device (idVendor=0x04)
+      USB: Device 3: New high-speed device connected to port 1
+      USB: Attaching high-speed USB 2.1 device (idVendor=0x0424, idProduct=0x7800)
+      [lan7800_bind_device]: signal idx=0, sem=6
+      USB: Bound LAN7800 USB Ethernet Adapter Driver to high-speed USB 2.1 device (id)
+      [wait_device_attached]: signal sem=6
+      [  OK  ] Successfully opened ETH0
+      [main] nshells=2
+      [main] thr=13
+      [main] ready OK
+      h[main] thr=14
+      e[main] ready OK
+      ll start
+
+                                                      _______.
+      ------------------------------------------------/_____./|------
+      ____  ___.__                 .___   .__    | ____ shell start
+      | |
+      \   \/  /|__| ____  __ __    |  _ \ |__|   |/ /_| | |
+      \     / |  |/    \|  |  \   | |_| ||  |     |__  | |
+      /     \ |  |   |  \  |  /   |  __/ |  |    /___| | .
+      /___/\  \|__|___|  /____/    | |    |__|   | ______/
+            \_/        \/          |/            |/
+      2019                                            v3.0
+      ---------------------------------------------------------------
+      Welcome to the wonderful world of Xinu!
+      xsh$ ps
+      TID NAME             STATE PRIO PPID STACK BASE STACK PTR   STACK LEN CPUID
+      --- ---------------- ----- ---- ---- ---------- ----------  --------- -----
+      0 prnull           ready    0    0 0x00760AC0 0x00762A04       8192     0
+      1 prnull01         curr     0    0 0x00768AC0 0x00000000       8192     1
+      2 prnull02         curr     0    0 0x00770AC0 0x00000000       8192     2
+      3 prnull03         curr     0    0 0x00778AC0 0x00000000       8192     3
+      4 USB scheduler    wait    60    0 0x3EFFFFF4 0x3EFFFF44       4096     0
+      5 USB hub thread   wait    60    0 0x3EFFEFF4 0x3EFFEF34       8192     0
+      6 arpDaemon        wait    30    0 0x3EFFCFF4 0x3EFFCF4C       4096     0
+      7 rtDaemon         wait    30    0 0x3EFFBFF4 0x3EFFBF4C       4096     0
+      8 icmpDaemon       wait    30    0 0x3EFFAFF4 0x3EFFAF4C       4096     0
+      9 tcpTimer         sleep   20    0 0x3EFF9FF4 0x3EFF9F4C      65536     0
+      11 USB defer xfer   sleep  100    5 0x3EFD9FF4 0x3EFD9F5C       4096     0
+      12 USB defer xfer   sleep  100    9 0x3EFD8FF4 0x3EFD8F5C       4096     0
+      13 SHELL0           recv    20   10 0x3EFD7FF4 0x3EFD7D4C      65536     0
+      14 SHELL1           wait    20   10 0x3EFC7FF4 0x3EFC7CFC      65536     0
+      15 ps               curr    20   13 0x3EFE9FF4 0x3EFE9E5C       8192     0
+      xsh$ exit
+      Shell closed.

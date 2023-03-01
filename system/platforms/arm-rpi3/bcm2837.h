@@ -99,16 +99,21 @@ extern void bcm2837_power_init(void);
  * セクション 1.3に記載されているメモリの順序に関する注意事項を         *
  * 満たすために必要である。                                             *
  ************************************************************************/
+
+extern void dmb(void);
+
+extern bool lan7800_isattached;
+
 /** ペリフェラルからの読み込みの前後に必要なメモリバリア  */
-#define pre_peripheral_read_mb    __asm volatile ("dmb")
-#define post_peripheral_read_mb   __asm volatile ("dmb")
+#define pre_peripheral_read_mb    dmb
+#define post_peripheral_read_mb   dmb
 
 /** ペリフェラルへの書き込みの前後に必要なメモリバリア */
-#define pre_peripheral_write_mb   __asm volatile ("dmb")
-#define post_peripheral_write_mb  __asm volatile ("dmb")
+#define pre_peripheral_write_mb   dmb
+#define post_peripheral_write_mb  dmb
 
 /** ペリフェラルの読み書きの前後に必要なメモリバリア */
-#define pre_peripheral_access_mb  __asm volatile ("dmb")
-#define post_peripheral_access_mb __asm volatile ("dmb")
+#define pre_peripheral_access_mb  dmb
+#define post_peripheral_access_mb dmb
 
 #endif /* _BCM2835_H_ */

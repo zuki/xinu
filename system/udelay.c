@@ -15,6 +15,9 @@
  * ただし、プラットフォームのクロック周波数が 1,000,000 の偶数倍で
  * あることを仮定している。
  */
+/* TODO: udelayの除数は1000000だったが、Pi 3 B+では1000でなければならない。
+ * したがって、これはプラットフォーム非依存ではない。
+ */
 
 /**
  * @ingroup timer
@@ -29,7 +32,7 @@
 void udelay(ulong us)
 {
     /* delay = 待機するタイマーティック数  */
-    ulong delay = (platform.clkfreq / 1000000) * us;
+    ulong delay = (platform.clkfreq / 1000) * us;
 
     /* start = 開始時のティックカウント  */
     ulong start = clkcount();

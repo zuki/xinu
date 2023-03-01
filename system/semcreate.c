@@ -93,6 +93,6 @@ void semtab_acquire(semaphore sem)
  */
 void semtab_release(semaphore sem)
 {
-    __asm volatile ("dmb");
+    dmb();
     mutex_release(semtab_mutex[sem]);
 }

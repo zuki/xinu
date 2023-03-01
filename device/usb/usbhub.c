@@ -555,6 +555,8 @@ hub_thread(void)
 
                 usb_dev_debug(req->dev, "Processing hub status change\n");
 
+                // XXX TODO delay moves along execution for some reason...
+                udelay(25);
                 /* メッセージフォーマットは、どのポートのステータスに変化が
                  * あったかを示すビットマップである。ハブデバイス自体の
                  * ステータス変化を示すビット0 は無視する。 */
