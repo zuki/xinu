@@ -1337,6 +1337,7 @@ xinu-7043にあわせた
 すべて削除し、いちからmakeしたら動いた
 
 .. code-block:: none
+
       USB:(Registered USB keyboard driver (HID boot protocol)
       USB: Registered LAN7800 USB Ethernet Adapter Driver
       USB: Registered USB Hub Driver
