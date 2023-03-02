@@ -36,7 +36,7 @@ devcall etherOpen(device *devptr)
     int retval = SYSERR;
 
     im = disable();
-    kprintf("[etherOpen]: attached fd=%d\r\n", devptr->minor);
+
     /* USBデバイスが実際に接続されるのを待つ  */
     if (lan7800_wait_device_attached(devptr->minor) != USB_STATUS_SUCCESS)
     {

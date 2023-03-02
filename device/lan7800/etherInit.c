@@ -21,8 +21,6 @@
 #include "../../system/platforms/arm-rpi3/bcm2837.h"
 #include <dma_buf.h>
 
-extern syscall kprintf(const char *fmt, ...);
-
 bool lan7800_isattached = 0;
 
 /* Ethernetデバイスのグローバルテーブル  */
@@ -87,7 +85,6 @@ lan7800_bind_device(struct usb_device *udev)
 
     ethptr->csr = udev;
     udev->driver_private = ethptr;
-    kprintf("[lan7800_bind_device]: signal idx=%d, sem=%d\r\n", ethptr - ethertab, lan7800_attached[ethptr - ethertab]);
     signal(lan7800_attached[ethptr - ethertab]);
     return USB_STATUS_SUCCESS;
 }
@@ -186,10 +183,7 @@ getEthAddr(uint8_t *addr)
 usb_status_t
 lan7800_wait_device_attached(ushort minor)
 {
-    kprintf("[wait_device_attached]: start minor=%d\r\n", minor);
-    kprintf("[wait_device_attached]: wait sem=%d\r\n", lan7800_attached[minor]);
     wait(lan7800_attached[minor]);
-    kprintf("[wait_device_attached]: signal sem=%d\r\n", lan7800_attached[minor]);
     signal(lan7800_attached[minor]);
     lan7800_isattached = 1;
     return USB_STATUS_SUCCESS;

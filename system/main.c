@@ -42,7 +42,6 @@ thread main(void)
     for (i = 0; i < NETHER; i++)
     {
         ethptr = &ethertab[ethertab[i].dev->minor];
-        //kprintf("[main]: open %d\r\n", ethertab[i].dev->num);
         result = open(ethertab[i].dev->num);
         if (SYSERR == result) {
             kprintf("[ ERROR ] Failed to open %s\r\n",
@@ -122,25 +121,10 @@ thread main(void)
     {
         uint i;
         char name[16];
-        tid_typ thr;
-        kprintf("[main] nshells=%d\n", nshells);
+
         for (i = 0; i < nshells; i++)
         {
             sprintf(name, "SHELL%u", i);
-            thr = create(shell, INITSTK, INITPRIO, name, 3,
-                                 shelldevs[i][0],
-                                 shelldevs[i][1],
-                                 shelldevs[i][2]);
-            if (SYSERR == thr) {
-                kprintf("[main] create error %s\n", name);
-                continue;
-            }
-            kprintf("[main] thr=%d\n", thr);
-            if (SYSERR == ready(thr, RESCHED_NO, CORE_ZERO)) {
-                kprintf("WARNING: Failed to create %s", name);
-            }
-            kprintf("[main] ready OK\n");
-        /*
             if (SYSERR == ready(create
                                 (shell, INITSTK, INITPRIO, name, 3,
                                  shelldevs[i][0],
@@ -152,7 +136,6 @@ thread main(void)
             {
                 kprintf("WARNING: Failed to create %s", name);
             }
-        */
         }
     }
 #endif
