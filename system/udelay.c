@@ -29,7 +29,8 @@
 void udelay(ulong us)
 {
     /* delay = 待機するタイマーティック数  */
-    ulong delay = (platform.clkfreq / 1000000) * us;
+    /* TODO: 除数に1000000を設定するとtestsuiteがうごかない */
+    ulong delay = (platform.clkfreq / 1000) * us;
 
     /* start = 開始時のティックカウント  */
     ulong start = clkcount();
