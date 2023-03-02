@@ -140,7 +140,7 @@ thread shell(int indescrp, int outdescrp, int errdescrp)
     ushort i, j;                /* temp variables           */
     irqmask im;                 /* interrupt mask state     */
     char *hostptr = NULL;       /* pointer to hostname      */
-    printf("shell start\n");
+
     /* Setup buffer for string for nvramGet call for hostname */
 #if defined(ETH0) && NVRAM
     char hostnm[NET_HOSTNM_MAXLEN + 1]; /* hostname of backend      */
