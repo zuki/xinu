@@ -11,7 +11,7 @@
 //#include <usbkbd.h>
 //#include <stdio.h>
 //#include <usb_util.h>
-//#include "bcm2837_mbox.h"
+#include "bcm2837_mbox.h"
 #include "bcm2837.h"
 #include <rpi_gpio.h>
 #include "../../../device/uart-pl011/pl011.h"
@@ -66,8 +66,7 @@ void led_off(void)
  */
 int platforminit(void)
 {
-    //uint32_t *mailbuffer;
-    //mailbuffer = dma_buf_alloc(MBOX_BUFLEN / 4);
+    uint32_t  __attribute__((aligned(16))) mailbuffer[8];
 
     strlcpy(platform.family, "BCM2837B0", PLT_STRMAX);
     strlcpy(platform.name, "Raspberry Pi 3 B+", PLT_STRMAX);
@@ -76,16 +75,16 @@ int platforminit(void)
     platform.clkfreq = 1000000;
     platform.serial_low = 0;
     platform.serial_high = 0;
-/*
+
     // maxaddr
-    get_armmemory_mailbox(mailbuffer);
+    get_armmemory_mailbox(&mailbuffer[0]);
     platform.maxaddr = (void *)(mailbuffer[MBOX_HEADER_LENGTH + TAG_HEADER_LENGTH] + mailbuffer[MBOX_HEADER_LENGTH + TAG_HEADER_LENGTH+1]);
 
     /// serial_low/high
-    get_serial_mailbox(mailbuffer);
+    get_serial_mailbox(&mailbuffer[0]);
     platform.serial_low = mailbuffer[MBOX_HEADER_LENGTH + TAG_HEADER_LENGTH];
     platform.serial_high = mailbuffer[MBOX_HEADER_LENGTH + TAG_HEADER_LENGTH+1];
-*/
+
     uint32_t cache_encoding = _getcacheinfo();
     switch (cache_encoding) {
         case 0x7003E01A:

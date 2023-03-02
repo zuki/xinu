@@ -1419,3 +1419,36 @@ xinu-7043にあわせた
       15 ps               curr    20   13 0x3EFE9FF4 0x3EFE9E5C       8192     0
       xsh$ exit
       Shell closed.
+
+`platforminit.c` で `bcm2837_mailbox` を使うと動かない件
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+バッファを作成するのに `dma_buf_alloc()` を使っていたが、まだheapの
+初期化が済んでいないのでこの関数は使えないのが原因だった。
+
+`uint32_t  __attribute__((aligned(16))) mailbuffer[8];` のように
+スタックを使うようにしたら動くようになった。
+
+.. code-block:: none
+
+      ***********************************************************
+      ******************** Hello Xinu World! ********************
+      ***********************************************************
+      (Embedded Xinu) (arm-rpi3) #124 (dspace@mini.local) 2023年 3月 2日 木曜日 16時00分40秒 JST
+
+      Detected platform as: BCM2837B0, Raspberry Pi 3 B+
+
+      994050048 bytes physical memory.
+            [0x00000000 to 0x3B3FFFFF]          # <= 物理メモリの上限アドレスが948MBになっている
+            32 kilobytes L1 data cache.
+      32768 bytes reserved system area.
+            [0x00000000 to 0x00007FFF]
+      7703232 bytes Xinu code.
+            [0x00008000 to 0x00760ABF]
+      32768 bytes stack space.
+            [0x00760AC0 to 0x00768ABF]
+      986281280 bytes heap space.
+            [0x00768AC0 to 0x3B3FFFFF]
+
+
+      [  OK  ] Successfully opened ETH0
