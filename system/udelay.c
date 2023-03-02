@@ -32,7 +32,7 @@
 void udelay(ulong us)
 {
     /* delay = 待機するタイマーティック数  */
-    ulong delay = (platform.clkfreq / 1000) * us;
+    ulong delay = (platform.clkfreq / 1000000) * us;
 
     /* start = 開始時のティックカウント  */
     ulong start = clkcount();
