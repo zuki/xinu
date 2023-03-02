@@ -3,7 +3,7 @@
         "${workspaceFolder}/**",
         "include/**"
     ],
-    "C_Cpp.errorSquiggles": "Disabled",
+    "C_Cpp.errorSquiggles": "disabled",
     "files.associations": {
         "*.h": "c",
         "*.ld": "editorconfig",
