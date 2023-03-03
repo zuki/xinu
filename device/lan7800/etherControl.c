@@ -14,7 +14,7 @@
 #include "lan7800.h"
 
 /**
- * @ingroup ether_lan7800
+ * @ingroup lan7800
  *
  * @brief lan7800用のetherControl() の実装. ether.hにあるこの関数の文書を参照
  *

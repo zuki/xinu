@@ -1,5 +1,5 @@
 /**
- * @defgroup raw Raw Packets
+ * @defgroup raw Rawパケット
  * @ingroup devices
- * @brief Send and receive raw packets.
+ * @brief Rawパケットを送受信する.
  */

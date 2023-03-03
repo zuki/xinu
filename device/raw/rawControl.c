@@ -12,12 +12,12 @@
 /**
  * @ingroup raw
  *
- * Control function for raw sockets.
- * @param devptr RAW device table entry
- * @param func control function to execute
- * @param arg1 first argument for the control function
- * @param arg2 second argument for the control function
- * @return the result of the control function
+ * rawソケットのためのコントロール関数.
+ * @param devptr RAWデバイステーブルエントリ
+ * @param func 実行するコントロール関数
+ * @param arg1 コントロール関数への第一引数
+ * @param arg2 コントロール関数への第二引数
+ * @return コントロール関数の結果
  */
 devcall rawControl(device *devptr, int func, long arg1, long arg2)
 {

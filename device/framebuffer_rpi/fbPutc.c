@@ -25,9 +25,9 @@ uint ret_ct = 0;
 /**
  * @ingroup framebuffer
  *
- * Write a single character to the framebuffer
- * @param devptr    pointer to framebuffer device
- * @param ch        character to write
+ * フレームバッファに一文字を書き出す.
+ * @param devptr フレームバッファデバイスへのポインタ
+ * @param ch     書き出す文字
  */
 devcall fbPutc(device *devptr, char ch)
 {

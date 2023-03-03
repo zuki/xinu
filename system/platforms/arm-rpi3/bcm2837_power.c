@@ -12,9 +12,9 @@
 /**
  * @ingroup bcm2837
  *
- * Write to the specified channel of the mailbox.  
- * @param channel	Mailbox channel to write to
- * @param value		Value to write to the mailbox
+ * メールボックスの指定のチャンネルに書き出す.
+ * @param channel 書き出すメールボックスチャンネル
+ * @param value   メールボックスに書き出した値
  */
 void
 bcm2837_mailbox_write(uint channel, uint value)
@@ -28,9 +28,9 @@ bcm2837_mailbox_write(uint channel, uint value)
 /**
  * @ingroup bcm2837
  *
- * Read from the specified channel of the mailbox.  
- * @param channel	Mailbox channel to read from
- * @return		Value read from the mailbox
+ * メールボックスの指定のチャンネルから読み込む.
+ * @param channel 読み込むメールボックスチャンネル
+ * @return        メールボックスから読み込んだ値
  */
 uint
 bcm2837_mailbox_read(uint channel)
@@ -50,8 +50,8 @@ bcm2837_mailbox_read(uint channel)
 /**
  * @ingroup bcm2837
  *
- * Retrieve the bitmask of power on/off state.  
- * @return Value held by the BCM2837's mailbox power management channel
+ * 電源オン/オフ状態のビットマスクを取得する.
+ * @return BCM2837のメールボックス電源管理チャンネルに格納されている値
  */
 static uint bcm2837_get_power_mask(void)
 {
@@ -61,8 +61,8 @@ static uint bcm2837_get_power_mask(void)
 /**
  * @ingroup bcm2837
  *
- * Set the bitmask of power on/off state.  
- * @param mask	Bitmask to write to the channel
+ * 電源オン/オフ状態のビットマスクをセットする.
+ * @param mask	チャンネルに書き出すビットマスク
  */
 static void
 bcm2837_set_power_mask(uint mask)
@@ -73,20 +73,20 @@ bcm2837_set_power_mask(uint mask)
 /**
  * @ingroup bcm2837
  *
- * Bitmask that gives the current on/off state of the BCM2837 hardware.
- * This is a cached value.  
+ * BCM2837ハードウェアの現在のオン/オフ状態を与えるビットマスク.
+ * これはキャッスされる値である.
  */
 static uint bcm2837_power_mask;
 
 /**
  * @ingroup bcm2837
  *
- * Powers on or powers off BCM2837 hardware.
+ * BCM2837ハードウェアの電源をオン/オフする.
  *
  * @param feature	Device or hardware to power on or off.
  * @param on	::TRUE to power on; ::FALSE to power off.
  *
- * @return ::OK if successful; ::SYSERR otherwise.
+ * @return 成功の場合は ::OK; それ以外は ::SYSERR.
  */
 int bcm2837_setpower(enum board_power_feature feature, bool on)
 {
@@ -112,7 +112,8 @@ int bcm2837_setpower(enum board_power_feature feature, bool on)
 /**
  * @ingroup bcm2837
  *
- * Resets BCM2837 power to default state (all devices powered off).
+ * BCM2837の電源をデフォルト状態（すべてのデバイスの
+ * 電源をオフ）にリセットする.
  */
 void bcm2837_power_init(void)
 {

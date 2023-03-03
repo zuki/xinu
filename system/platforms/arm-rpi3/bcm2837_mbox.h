@@ -1,5 +1,6 @@
-/*`
+/**
  * @file bcm2837_mboc.h
+ * @ingroup bcm2837
  *
  * BCM2837B0 (Pi 3 B+)用のメールボックスドライバ.
  */

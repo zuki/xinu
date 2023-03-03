@@ -31,7 +31,8 @@ bool screen_initialized;
 volatile unsigned int  __attribute__((aligned(16))) mbox[36];
 
 /* screenInit(): Calls framebufferInit() several times to ensure we successfully initialize, just in case. */
-void screenInit() {
+void screenInit()
+{
     int i = 0;
     while (framebufferInit() == SYSERR) {
         if ( (i++) == MAXRETRIES) {
@@ -48,10 +49,11 @@ void screenInit() {
 /**
  * @ingroup framebuffer
  *
- * Initializes the framebuffer used by the GPU via the framebuffer mailbox.
- * @return ::OK on success; ::SYSERR on failure.
+ * フレームバッファメールボックスを介してGPUを使いフレーム
+ * バッファを初期化する.
+ * @return 成功の場合は ::OK; 失敗の場合は ::SYSERR.
  */
-int framebufferInit()
+int framebufferInit(void)
 {
     /* Build the mailbox buffer for the frame buffer
      * Mailbox 8 (ARM->VC PROPERTY mailbox) is used on the Pi 3 B+
@@ -132,7 +134,7 @@ int framebufferInit()
 /**
  * @ingroup framebuffer
  *
- * Very heavy handed clearing of the screen to a single color.
+ * 非常に重い処理で画面を一色にクリアする.
  * @param color
  */
 void screenClear(ulong color) {
@@ -149,8 +151,8 @@ void screenClear(ulong color) {
 /**
  * @ingroup framebuffer
  *
- * Clear the minishell window
- * @param color	Color to paint the window upon clear
+ * minishellウィンドウをクリアする.
+ * @param color	ウィンドウをクリアするのに使用する色
  */
 void minishellClear(ulong color) {
     ulong *address = (ulong *)(framebufferAddress + (pitch * (DEFAULT_HEIGHT - (MINISHELLMINROW * CHAR_HEIGHT))) +  (DEFAULT_WIDTH * (BIT_DEPTH / 8)));
@@ -165,9 +167,9 @@ void minishellClear(ulong color) {
 /**
  * @ingroup framebuffer
  *
- * Clear the "linemapping" array used to keep track of pixels we need to remember
+ * 記憶しておきたいピクセルを記録するための配列 "linemapping" をクリアする.
  */
-void initlinemap() {
+void initlinemap(void) {
     int i = MAPSIZE;
     while (i != 0) {
         i--;

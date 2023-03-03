@@ -1,7 +1,7 @@
 /**
  * @defgroup tcp TCP
  * @ingroup devices
- * @brief Transmission Control Protocol driver
+ * @brief TCPドライバ
  *
- * This module provides an interface to the Transmission Control Protocol (TCP).
+ * このモジュールはTCP (Transmission Control Protocol) へのインタフェースを提供する.
  */

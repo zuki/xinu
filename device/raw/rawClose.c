@@ -13,9 +13,9 @@
 /**
  * @ingroup raw
  *
- * Close a raw socket device.
- * @param devptr RAW device table entry
- * @return OK if raw socket is closed properly, otherwise SYSERR
+ * rawソケットデバイスをクローズする.
+ * @param devptr RAWデバイステーブルエントリ
+ * @return rawソケットが正しくクローズされた場合は OK; そうでない場合は SYSERR
  */
 devcall rawClose(device *devptr)
 {

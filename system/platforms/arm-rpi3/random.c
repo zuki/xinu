@@ -6,6 +6,7 @@
 #include <random.h>
 
 /**
+ * @ingroup bcm2837
  * 乱数を初期化する.
  */
 void random_init(void)
@@ -18,6 +19,7 @@ void random_init(void)
 }
 
 /**
+ * @ingroup bcm2837
  * 乱数を発生させる.
  *
  * @return 乱数

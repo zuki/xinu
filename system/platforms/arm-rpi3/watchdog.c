@@ -22,6 +22,7 @@
 #define PM_WDOG_UNITS_PER_MILLISECOND (PM_WDOG_UNITS_PER_SECOND / 1000)
 
 /**
+ * @ingroup bcm2837
  * ウォッチドッグタイマーをセットする.
  *
  * @param msecs

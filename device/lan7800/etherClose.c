@@ -6,7 +6,7 @@
 #include <ether.h>
 
 /**
- * @ingroup ether_lan7800
+ * @ingroup lan7800
  * @brief lan7800用のetherClose() の実装.
  * ether.h にあるこの関数の文書を参照
  *

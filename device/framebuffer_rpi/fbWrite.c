@@ -9,16 +9,16 @@
 /**
  * @ingroup framebuffer
  *
- * Write a buffer of characters to the framebuffer.
+ * 文字バッファをフレームバッファに書き出す.
  *
- * @param devptr  pointer to framebuffer device
- * @param buf   buffer of characters to write
- * @param len   number of characters to write from the buffer
+ * @param devptr  フレームバッファデバイスへのポインタ
+ * @param buf   書き出す文字バッファ
+ * @param len   バッファから書き出す文字数
  *
  * @return
- *      The number of characters written, which may be less than @p len in the
- *      event of a write error; or ::SYSERR if an error occurred before any
- *      characters at all were written.
+ *      書き出した文字数。書き出しエラーが発生した場合、これは @p len
+ *      より小さい場合がある。文字を書き出す前にエラーが発生した場合は
+ *      ::SYSERR .
  */
 devcall fbWrite(device *devptr, const uchar *buf, uint len)
 {

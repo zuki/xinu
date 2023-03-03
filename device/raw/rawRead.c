@@ -14,11 +14,11 @@
 /**
  * @ingroup raw
  *
- * Read a packet from a raw socket.
- * @param devptr pointer to RAW device
- * @param buf buffer for read packet
- * @param len size of the buffer 
- * @return number of octets read, SYSERR if error occurred 
+ * rawソケットからパケットを読み込む.
+ * @param devptr RAWデバイスへのポインタ
+ * @param buf パケットを読み込むバッファ
+ * @param len バッファのサイズ
+ * @return 読み込んだオクテット数、エラーが発生した場合は SYSERR
  */
 devcall rawRead(device *devptr, void *buf, uint len)
 {

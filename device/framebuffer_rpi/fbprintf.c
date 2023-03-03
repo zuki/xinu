@@ -13,10 +13,10 @@
 /**
  * @ingroup framebuffer
  *
- * perform a synchronous character write
- * @param *devptr pointer to device on which to write character
- * @param c character to write
- * @return c on success, SYSERR on failure
+ * 同期的に文字を書き出す.
+ * @param c 書き出す文字
+ * @param devptr 文字を書き出すデバイスへのポインタ
+ * @return 成功の場合は c、失敗の場合は SYSERR
  */
 syscall fbputc(uchar c, device *devptr)
 {
@@ -27,9 +27,9 @@ syscall fbputc(uchar c, device *devptr)
 /**
  * @ingroup framebuffer
  *
- * perform a synchronous kernel read
- * @param *devptr pointer to device on which to write character
- * @return character read on success, SYSERR on failure
+ * 同期的にカーネルを読み込む. 現在は未実装。
+ * @param devptr 文字を読み込むデバイスへのポインタ
+ * @return 成功の場合は読み込んだ文字、失敗の場合は SYSERR
  */
 syscall fbgetc(device *devptr)
 {
@@ -39,11 +39,11 @@ syscall fbgetc(device *devptr)
 /**
  * @ingroup framebuffer
  *
- * kernel printf: formatted, unbuffered output to framebuffer
- * Akin to "kprintf" for the serial driver.
- * Alternate: fprintf(FRAMEBUF, "string");
- * @param *fmt pointer to string being printed
- * @return OK on success
+ * カーネルprintf: フレームバッファへフォーマットした、バッファ
+ * なしの出力を行う. シリアルドライバ用の"kprintf*に相当する。
+ * 代替: fprintf(FRAMBUF, "string");
+ * @param fmt 出力する文字列へのポインタ
+ * @return 成功の場合は OK
  */
 syscall fbprintf(char *fmt, ...)
 {

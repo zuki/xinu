@@ -11,11 +11,12 @@
 /**
  * @ingroup raw
  *
- * Locate the raw socket for a packet
- * @param src source IP address of the packet
- * @param dst destination IP address of the packet
- * @param proto protocol of the packet
- * @return most completely matched socket, NULL if no match
+ * パケットのrawソケットを探す.
+ * @param src パケットの送信元IPアドレス
+ * @param dst パケットの宛先IPアドレス
+ * @param proto パケットのプロトコル
+ * @return もっとも完全にマッチしたソケット、
+ *  マッチするソケットがなかった場合はNULL
  */
 struct raw *rawDemux(struct netaddr *src, struct netaddr *dst,
                      ushort proto)

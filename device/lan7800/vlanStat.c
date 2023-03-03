@@ -7,7 +7,7 @@
 #include <stdio.h>
 
 /**
- * @ingroup ether_lan7800
+ * @ingroup lan7800
  *
  * VLAN統計を出力. 未実装
  */

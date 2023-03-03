@@ -1,8 +1,9 @@
 /**
  * @file dispatch.c
+ * @ingroup bcm2837
  *
  * このファイルには、Raspberry Piに使われているBCM2835 SoCの割り込み
- * コントローラとインタフェースするコードが含まれている。
+ * コントローラとインタフェースするコードが含まれている.
  *
  * この「割り込みコントローラ」は、より具体的には、BCM2835上の
  * ARMプロセッサが使用する割り込みコントローラである。つまり、
@@ -24,7 +25,9 @@
 #include <stddef.h>
 #include "bcm2837.h"
 
-/** BCM2835割り込みコントローラレジスタのレイアウト. */
+/**
+ * @ingroup bcm2837
+ * BCM2835割り込みコントローラレジスタのレイアウト. */
 struct bcm2835_interrupt_registers {
     unsigned int IRQ_basic_pending;
     unsigned int IRQ_pending_1;
@@ -41,29 +44,39 @@ struct bcm2835_interrupt_registers {
 static volatile struct bcm2835_interrupt_registers * const regs =
         (volatile struct bcm2835_interrupt_registers*)INTERRUPT_REGS_BASE;
 
-/** GPUとARMで共用されるIRQの数. これらはIRQ_pending_1とIRQ_pending_2に
+/**
+ * @ingroup bcm2837
+ * GPUとARMで共用されるIRQの数. これらはIRQ_pending_1とIRQ_pending_2に
  * 現れるIRQに対応する
  */
 #define BCM2835_NUM_GPU_SHARED_IRQS     64
 
-/** ARM専用のIRQの数. これらはIRQ_basic_pendingの最初の
+/**
+ * @ingroup bcm2837
+ * ARM専用のIRQの数. これらはIRQ_basic_pendingの最初の
  * 0ビットに現れるIRQに対応する
  */
 #define BCM2835_NUM_ARM_SPECIFIC_IRQS   8
 
-/* このハードウェアのIRQの総数.  */
+/**
+ * @ingroup bcm2837
+ * このハードウェアのIRQの総数.  */
 #define BCM2835_NUM_IRQS (BCM2835_NUM_GPU_SHARED_IRQS + BCM2835_NUM_ARM_SPECIFIC_IRQS)
 
-/** Xinuの割り込みハンドラ関数テーブル.
+/**
+ * @ingroup bcm2837
+ * Xinuの割り込みハンドラ関数テーブル.
  * これはIRQ番号をハンドラ関数にマッピングする配列である。
  */
 interrupt_handler_t interruptVector[BCM2835_NUM_IRQS];
 
-/** ARMで有効化されたIRQのビットビットテーブル. */
+/**
+ * ARMで有効化されたIRQのビットビットテーブル. */
 static unsigned int arm_enabled_irqs[3];
 
-/** 指定されたIRQのハンドラ関数を呼び出す. 存在しない場合はpanic
- *  @param irq_num IRQ番号
+/**
+ * 指定されたIRQのハンドラ関数を呼び出す. 存在しない場合はpanic
+ * @param irq_num IRQ番号
 */
 static void handle_irq(uchar irq_num)
 {
@@ -81,8 +94,9 @@ static void handle_irq(uchar irq_num)
     }
 }
 
-/** IRQラインの保留ビットがセットされているかチェックする.
- *  セットされていれば、そのハンドラ関数を呼び出す。
+/**
+ * IRQラインの保留ビットがセットされているかチェックする.
+ * セットされていれば、そのハンドラ関数を呼び出す。
  *
  *  @param irq_num IRQ番号
  */
@@ -121,13 +135,15 @@ static void check_irq_pending(uchar irq_num)
     }
 }
 
-/* 非0のワードで最初にセットされているビットの位置を探す. */
+/** 非0のワードで最初にセットされているビットの位置を探す. */
 static inline unsigned long first_set_bit(unsigned long word)
 {
     return 31 - __builtin_clz(word);
 }
 
 /**
+ * @ingroup bcm2837
+ *
  * 保留中のすべての割り込み要求を処理する.
  *
  * BCM2835 (Raspberry Pi)では、ARMに登録されているすべての割り込みを
@@ -152,6 +168,8 @@ void dispatch(void)
 }
 
 /**
+ * @ingroup bcm2837
+ *
  * 割り込み要求ラインを有効にする.
  * @param irq_num
  *      有効にする割り込みのインデックス. 現在のプラットフォームで
@@ -177,6 +195,8 @@ void enable_irq(irqmask irq_num)
 }
 
 /**
+ * @ingroup bcm2837
+ *
  * 割り込み要求ラインを無効にする.
  * @param irq_num
  *      無効にする割り込みのインデックス. 現在のプラットフォームで

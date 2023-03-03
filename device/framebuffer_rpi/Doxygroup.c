@@ -1,8 +1,9 @@
 /**
- * @defgroup framebuffer Framebuffer
+ * @defgroup framebuffer フレームバッファ
  * @ingroup devices
- * @brief Driver for the BCM2835 (Raspberry Pi) framebuffer.
+ * @brief BCM2837B0 (Raspberry Pi 3 B+) フレームバッファドライバ.
  *
- * This driver communicates with the VideoCore GPU on the Raspberry Pi and
- * provides functions to draw shapes and print text to the screen.
+ * このドライバはRaspberry Piに搭載されているVideoCore GPUと通信し、
+ * スクリーンに図形を描画したりテキストをプリントしたりする関数を
+ * 提供する.
  */

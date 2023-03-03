@@ -7,9 +7,18 @@
 
 #include <framebuffer.h>
 
-/* font.c includes a 12 byte representation of each of the first 128 ASCII
- * characters.  each byte is one row of 0's and 1's, where 1's represent that a
- * pixel should be rendered in that location. */
+/**
+ * @ingroup framebuffer
+ *
+ * 指定の位置、色でしての文字を描画する. font.cにはASCII文字の最初の128
+ * 文字の12ビイト表現が含まれている。各バイトは0と1から成る一行である。
+ * ここで1はその位置にピクセルを描画することを表す。
+ *
+ * @param c 文字コード
+ * @param x 描画する位置のx座標
+ * @param y 描画する位置のy座標
+ * @param color 描画する文字の色
+ */
 void drawChar(char c, int x, int y, ulong color)
 {
     int i, j;

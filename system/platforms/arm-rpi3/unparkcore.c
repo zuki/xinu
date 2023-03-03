@@ -14,14 +14,23 @@ extern void CoreSetup(void) __attribute__((naked));
 typedef void (*fn)(void);
 extern void sev(void);
 
-/** 各コアの開始地点のアドレスを保管する配列 */
+/**
+ * @ingroup bcm2837
+ * 各コアの開始地点のアドレスを保管する配列
+ */
 void *corestart[4];
 
-/** 各コアの初期スタックポインタを保管する配列.
- * 値はstart.Sでセットされる */
+/**
+ * @ingroup bcm2837
+ * 各コアの初期スタックポインタを保管する配列.
+ * 値はstart.Sでセットされる
+ */
 unsigned int core_init_sp[4];
 
-/** 各コアに渡される引数へのポインタを保管する配列 */
+/**
+ * @ingroup bcm2837
+ * 各コアに渡される引数へのポインタを保管する配列
+ */
 void *init_args[4];
 
 /**

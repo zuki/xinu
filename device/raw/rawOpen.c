@@ -1,6 +1,6 @@
 /**
  * @file rawOpen.c
- * 
+ *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
@@ -14,12 +14,12 @@
 /**
  * @ingroup raw
  *
- * Open a raw socket.
- * @param devptr RAW device table entry
- * @param ap 2nd argument is the local IP address
- *           3rd argument is the remote IP address
- *           4th argument is the IP protocol
- * @return OK if raw socket is opened properly, otherwise SYSERR
+ * rawソケットをオープンする.
+ * @param devptr RAWデバイステーブルエントリ
+ * @param ap 第2引数はローカルIPアドレス
+ *           第3引数はリモートIPアドレス
+ *           第4引数はIPプロトコル
+ * @return rawソケットが正しくオープンされたら OK; そうでなければ SYSERR
  */
 devcall rawOpen(device *devptr, va_list ap)
 {

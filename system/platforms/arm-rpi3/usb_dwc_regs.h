@@ -13,6 +13,7 @@
 #include <usb_util.h>
 
 /**
+ * @ingroup usbhcd
  * DWCホストのチャンネル数である. それぞれが独立のUSB転送に使用できる。
  * BCM2835 (Raspberry Pi)では8チャンネル使用できる。これはドキュメント
  * "BCM2835 ARM Peripherals" の201ページに記載されている。
@@ -20,6 +21,8 @@
 #define DWC_NUM_CHANNELS 8
 
 /**
+ * @ingroup usbhcd
+ *
  * DesignWare Hi-Speed USB 2.0 On-The-Goコントローラのレジスタレイアウト.
  * これについての正式なドキュメントは存在しない。ただし、レジスタの位置
  * （とそのある程度の意味）はSynopsys社が提供したこのハードウェアの
@@ -50,7 +53,8 @@ struct dwc_regs {
      * 構成する  */
     uint32_t ahb_configuration;
 
-/** USBコントローラからの割り込みを有効にする（実際はアプリケーション全体の
+/**
+ * USBコントローラからの割り込みを有効にする（実際はアプリケーション全体の
  * 割り込みを有効にする: アンマスク）. デフォルトは無効（マスク）になっている。 */
 #define DWC_AHB_INTERRUPT_ENABLE  (1 << 0)
 
@@ -259,13 +263,14 @@ struct dwc_regs {
     uint32_t stuff[191];
 
     /**
-     * @name Host registers
+     * @name ホストレジスタ
      *
-     * The registers beginning at this point are considered to be the "Host"
-     * registers.  These are used for the "Host" half of the OTG (On-The-Go)
-     * protocol, which allows this hardware to act as either a USB host or a USB
-     * device.  This is the only half we are concerned with in this driver and
-     * we do not declare the corresponding Device registers.  */
+     * このポイントから始まるレジスタは「ホスト」レジスタとみなされる。
+     * これらはOTG（On-The-Go）プロトコルの「ホスト」パートで使用される。
+     * OTGはこのハードウェアがUSBホストまたはUSBデバイスとして動作することを
+     * 可能にする。このドライバではホストだけを扱うのでデバイスに対ソウル
+     * レジスタは宣言しない
+     */
     /**@{*/
 
     /* 0x400 */

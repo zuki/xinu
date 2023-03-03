@@ -14,9 +14,9 @@ struct raw rawtab[NRAW];
 /**
  * @ingroup raw
  *
- * Initialize raw socket structures.
- * @param devptr RAW device table entry
- * @return OK if device is initialized
+ * rawソケット構造体を初期化する.
+ * @param devptr RAWデバイステーブルエントリ
+ * @return デバイスが初期化されたら OK
  */
 devcall rawInit(device *devptr)
 {

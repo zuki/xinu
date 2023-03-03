@@ -12,9 +12,9 @@
 /**
  * @ingroup raw
  *
- * Process an incoming protocol other than UDP or TCP.
- * @param pkt pointer to the incoming packet
- * @return OK if packet was processed succesfully, otherwise SYSERR
+ * UDP/TCP以外の着信プロトコルを処理する.
+ * @param pkt 着信パケットへのポインタ
+ * @return パケットを正しく処理できたら OK、そうでなければ SYSERR
  */
 syscall rawRecv(struct packet *pkt, struct netaddr *src,
                 struct netaddr *dst, ushort proto)

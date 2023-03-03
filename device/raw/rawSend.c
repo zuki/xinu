@@ -13,11 +13,11 @@
 /**
  * @ingroup raw
  *
- * Send an outgoing packet of protocol other than UDP or TCP.
- * @param rawptr pointer to the raw socket control block
- * @param buf buffer to semd
- * @param len size of the buffer
- * @return OK if packet was sent succesfully, otherwise SYSERR
+ * UDP/TCP以外の発信プロトコルを送信する.
+ * @param rawptr rawソケットコントロールブロックへのポインタ
+ * @param buf 送信するバッファ
+ * @param len バッファのサイズ
+ * @return パケットを正しく送信できたら OK、そうでなければ SYSERR
  */
 syscall rawSend(struct raw *rawptr, void *buf, uint len)
 {

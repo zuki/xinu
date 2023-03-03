@@ -6,15 +6,23 @@
 #include <platform.h>
 #include <arm.h>
 
-/** ワード単位のARMコンテキストレコード数（r0-r11, cpsr, lr, pcを含む) */
+/**
+ * @ingroup bcm2837
+ * ワード単位のARMコンテキストレコード数（r0-r11, cpsr, lr, pcを含む)
+ */
 #define CONTEXT_WORDS 15
 
-/** 標準的なARM呼び出し規約では最初の4引数はr0-r3で渡し、
- * 残りはスタックで渡す  */
+/**
+ * @ingroup bcm2837
+ * 標準的なARM呼び出し規約では最初の4引数はr0-r3で渡し、残りはスタックで渡す
+ */
 #define MAX_REG_ARGS 4
 
-/** 新規スレッドのスタックにコンテキストレコードと引数をセットする
- * (ARM版)
+/**
+ * @ingroup bcm2837
+ *
+ * 新規スレッドのスタックにコンテキストレコードと引数をセットする
+ * (ARM版).
  * @param stackaddr スタックアドレス
  * @param procaddr  プロセスアドレス
  * @param retaddr   リターンアドレス

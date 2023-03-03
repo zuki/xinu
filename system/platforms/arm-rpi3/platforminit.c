@@ -32,6 +32,7 @@ const struct atag *atags_ptr = (void*)-1;
 extern void *_end;
 
 /**
+ * @ingroup bcm2837
  * GPIOピン16を出力に初期化する.
  */
 void led_init(void)
@@ -43,6 +44,8 @@ void led_init(void)
 }
 
 /**
+ * @ingroup bcm2837
+ *
  * GPIOピン16をオン.
  */
 void led_on(void)
@@ -52,6 +55,8 @@ void led_on(void)
 }
 
 /**
+ * @ingroup bcm2837
+ *
  * GPIOピン16をオフ.
  */
 void led_off(void)
@@ -61,7 +66,9 @@ void led_off(void)
 }
 
 /**
- * Raspberry Pi 3B+ 固有の情報を初期化する.
+ * @ingroup bcm2837
+ *
+ * Raspberry Pi 3 B+ 固有の情報を初期化する.
  * @return OK
  */
 int platforminit(void)

@@ -14,10 +14,10 @@
 /**
  * @ingroup framebuffer
  *
- * Compute the double-precision result of a power operation.
- * @param base  Double-precision base value of operation
- * @param exp   Integer exponent to which the base is raised
- * @return Double-precision result of the power operation
+ * べき乗演算を倍精度で実行する.
+ * @param base  倍精度の演算のベース値
+ * @param exp   整数の指数
+ * @return 倍精度のべき乗計算結果
  */
 double power(double base, int exp)
 {
@@ -33,9 +33,9 @@ double power(double base, int exp)
 /**
  * @ingroup framebuffer
  *
- * Compute the factorial of an integer.
- * @param num   Integer to compute factorial operation on
- * @return    Long integer result of the factorial operation
+ * 整数の階乗を計算する.
+ * @param num   階乗を計算する整数
+ * @return    長整数型の階乗演算結果
  */
 long factorial(int num)
 {
@@ -47,10 +47,10 @@ long factorial(int num)
 /**
  * @ingroup framebuffer
  *
- * Compute the Taylor series approximation of cosine using power and factorial.
- * @param x     Base value
- * @param terms Terms of the sum
- * @return Double-precision result of the cosine approximation
+ * コサインのテイラー級数近似をべき乗と階乗を使って計算する.
+ * @param x     ベース値
+ * @param terms 和の条件
+ * @return 倍精度のコサイン近似結果
  */
 double cosine_taylor(double x, int terms)
 {
@@ -66,9 +66,9 @@ double cosine_taylor(double x, int terms)
 /**
  * @ingroup framebuffer
  *
- * Compute the cosine using the Taylor approximation as a helper function.
- * @param x   Angle, in degrees
- * @return    Double-precision result of the computation
+ * ヘルパー関数としてテイラー近似を使用してコサインを計算する.
+ * @param x   角度（度単位）
+ * @return    倍精度の演算結果
  */
 double cos(int x)
 {
@@ -102,10 +102,10 @@ double cos(int x)
 /**
  * @ingroup framebuffer
  *
- * Compute the Taylor series approximation of sine.
- * @param x     Base value
- * @param terms Terms of the sum
- * @return Double-precision result of the sine approximation
+ * サインのテイラー級数近似をべき乗と階乗を使って計算する.
+ * @param x     ベース値
+ * @param terms 和の条件
+ * @return 倍精度のサイン近似結果
  */
 double sine_taylor(double x, int terms)
 {
@@ -121,11 +121,11 @@ double sine_taylor(double x, int terms)
 /**
  * @ingroup framebuffers
  *
- * Compute the sine using the Taylor approximation as a helper function.
- * Note: For graphics purposes, the sine must always be turned negative because
- * a monitor is technically in quadrant 4 instead of quadrant 1.
- * @param x Angle, in degrees
- * @return Double-precision result of the computation
+ * ヘルパー関数としてテイラー近似を使用してコサインを計算する.
+ * 注意: 技術的には、モニターは第1象限ではなく第4象限にあるため、
+ * グラフィック目的ではサインは常にマイナスにしなければならない。
+ * @param x   角度（度単位）
+ * @return    倍精度の演算結果
  */
 double sin(int x)
 {

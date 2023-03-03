@@ -5,6 +5,7 @@
 .globl pldw
 
 /**
+ * @ingroup bcm2837
  * @fn void pldw(unsigned int *var)
  *
  * pldw 命令のラップ関数.

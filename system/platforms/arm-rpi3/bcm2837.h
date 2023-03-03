@@ -1,11 +1,13 @@
 /**
  * @file bcm2837.h
+ * @ingroup bcm2837
  *
- * Definitions specific to the BCM2835 SoC used in the Raspberry Pi.
+ * Raspberry Piで使用されているBCM2837 SoC固有の定義.
  *
- * Note that although some of the numbers defined in this file are documented in
- * Broadcom's "BCM2835 ARM Peripherals" document, unfortunately some could only
- * be found in the Linux source (arch/arm/mach-bcm2708/include/mach/platform.h).
+ * なお、このファイルで定義されている数値の一部はBroadcomのドキュメント
+ * "BCM2835 ARM Peripherals"に記載されているが、残念ながらLinuxのソース
+ * （arch/arm/mach-bcm2708/include/mach/platform.h）でしか確認できない
+ * ものもある。
  */
 
 #ifndef _ARM_BCM2837_H_

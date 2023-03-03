@@ -7,7 +7,7 @@
 #include <stdio.h>
 
 /**
- * @ingroup ether_lan7800
+ * @ingroup lan7800
  *
  * ethernet統計を出力する.
  *

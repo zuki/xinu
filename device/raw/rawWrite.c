@@ -11,11 +11,11 @@
 /**
  * @ingroup raw
  *
- * Write a packet to a raw socket.
- * @param devptr pointer to RAW device
- * @param buf buffer to write
- * @param len size of the buffer 
- * @return number of octets written, SYSERR if error occurred 
+ * rawソケットへパケットを書き出す.
+ * @param devptr RAWデバイスへのポインタ
+ * @param buf 書き出すバッファ
+ * @param len バッファのサイズ
+ * @return 書き出したオクテット数、エラーが発生した場合は SYSERR
  */
 devcall rawWrite(device *devptr, void *buf, uint len)
 {

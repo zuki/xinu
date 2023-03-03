@@ -1,22 +1,21 @@
 /**
  * @defgroup udp UDP
  * @ingroup devices
- * @brief User Datagram Protocol driver
+ * @brief UDP ドライバ.
  *
- * This module provides an interface to the User Datagram Protocol (UDP).
+ * このモジュールはUD P(User Datagram Protocol) へのインタフェースを提供する。
  *
- * @defgroup udpexternal UDP standard functions
+ * @defgroup udpexternal UDP標準関数
  * @ingroup udp
- * @brief Primary UDP API, including functions compliant with Xinu's device
- * model.
+ * @brief 主なUDP API, Xinuのデバイスモデルに準拠した関数を含む.
  *
- * Users should use udpAlloc() to allocate a UDP device, then use the generic
- * device calls open(), read(), write(), control(), or close() on it, each of
- * which calls the corresponding function listed here.  A UDP device essentially
- * corresponds to a "socket" as used in other operating systems.  Local and
- * remote ports and addresses are specified in the open() calle.
+ * ユーザはまず、udpAlloc()でUDPデバイスを割り当て、そのopen()、read()、write()、
+ * control()、close()といった汎用デバイスコールを使ってここに挙げた対応する関数を
+ * 呼び出す必要がある。UDPデバイスは基本的に他のオペレーティングシステムで使用
+ * されている「ソケット」に対応している。ローカル/リモートのポート/アドレスは
+ * open()コールで指定される。
  *
- * @defgroup udpinternal UDP internals
+ * @defgroup udpinternal UDP内部関数
  * @ingroup udp
- * @brief Low-level functions mostly internal to the UDP driver.
+ * @brief ほとんどがUDPドライバの内部関数である低レベル関数.
  */

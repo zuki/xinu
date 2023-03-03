@@ -11,7 +11,7 @@
 #include <ctype.h>
 
 /**
- * @ingroup ether_lan7800
+ * @ingroup lan7800
  *
  * コロン区切りの文字列表記のMACをバイト配列に変換する
  * @param src コロン区切りのMAC文字列へのポインタ

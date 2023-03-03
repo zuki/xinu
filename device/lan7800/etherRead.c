@@ -12,7 +12,7 @@
 #include <string.h>
 
 /**
- * @ingroup ether_lan7800
+ * @ingroup lan7800
  *  LAN7800用の etherRead() の実装. この関数のドキュメントはether.hを参照
  *
  * @param devptr    読み込むethernetデバイスへのポインタ
