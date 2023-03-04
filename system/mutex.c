@@ -17,7 +17,7 @@ static mutex_t mutex_alloc(void);
  * ロックされていないmutexを作成して返す.
  * @return 成功したら mutex; 失敗したら SYSERR
  */
-mutex_t mutex_create()
+mutex_t mutex_create(void)
 {
     mutex_t mux;
 
@@ -50,7 +50,7 @@ syscall mutex_free(mutex_t mux)
 /**
  * mutexを取得する.
  *
- * @param 取得するmutex
+ * @param mux 取得するmutex
  * @return 成功したら OK; 失敗したら SYSERR
  */
 syscall mutex_acquire(mutex_t mux)
@@ -69,7 +69,7 @@ syscall mutex_acquire(mutex_t mux)
 /**
  * mutexを開放する.
  *
- * @param 開放するmutex
+ * @param mux 解放するmutex
  * @return 成功したら OK; 失敗したら SYSERR
 */
 syscall mutex_release(mutex_t mux)
