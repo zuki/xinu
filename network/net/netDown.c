@@ -12,15 +12,15 @@
 /**
  * @ingroup network
  *
- * Bring down a network interface.
+ * ネットワークインタフェースを切断する.
  *
  * @param descrp
- *      Device descriptor for the underlying network device of the interface.
+ *      インタフェースの.
  *
  * @return
- *      ::OK if the interface was successfully brought down; ::SYSERR otherwise.
- *      Currently, ::SYSERR is only returned if no network interface is running
- *      on the device.
+ *      インタフェースを成功裏に切断できたら ::OK; そうでなければ ::SYSERR.
+ *      現在のところ、::SYSERR が返されるのはそのデバイスで実行中のネットワーク
+ *      ネットワークがない場合のみ
  */
 syscall netDown(int descrp)
 {
@@ -41,18 +41,19 @@ syscall netDown(int descrp)
 
     NET_TRACE("Stopping netif %u on device %d", netptr - netiftab, descrp);
 
-    /* Kill receiver threads.  TODO: There is a known bug here: this can kill
-     * the receiver threads at inopportune times and leak resources (such as
-     * packet buffers allocated with netGetbuf()).  */
+    /* 受信スレッドをKillする。TODO: ここには既知のバグがある:
+     * 不適切なタイミングで受信スレッドをkillし、（netGetbuf()で割り当てた
+     * パケットバッファなどの）リソースがリークする可能性がある。  */
     for (i = 0; i < NET_NTHR; i++)
     {
         kill(netptr->recvthr[i]);
     }
 
-    /* Clear all entries in the route table for this network interface.  */
+    /* このネットワークインタフェースに関するルートテーブルのすべての
+     * エントリをクリアする */
     rtClear(netptr);
 
-    /* Mark interface as free, restore interrupts, and return success.  */
+    /* インタフェースに空きマークを付け、割り込みを復元して成功を返す  */
     netptr->state = NET_FREE;
     restore(im);
     return OK;

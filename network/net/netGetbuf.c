@@ -1,6 +1,6 @@
 /**
- * file netGetbuf.c
- * 
+ * @file netGetbuf.c
+ *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
@@ -12,12 +12,12 @@
 /**
  * @ingroup network
  *
- * Provides a buffer for storing a packet.
- * @return pointer to a packet buffer, SYSERR if an error occured
+ * パケットを格納するバッファを提供する.
+ * @return パケットバッファへのポインタ, エラーが発生したら SYSERR
  */
 struct packet *netGetbuf(void)
 {
-    struct packet *pkt = NULL;          /**< pointer to packet            */
+    struct packet *pkt = NULL;          /* pointer to packet            */
 
     /* Obtain a buffer for the packet */
     pkt = bufget(netpool);
@@ -31,7 +31,7 @@ struct packet *netGetbuf(void)
     /* Initialize packet buffer */
     pkt->nif = NULL;
     pkt->len = 0;
-    /* Initialize curr to point to end of buffer */
+    /* currがバッファの最後の位置を指すように初期化する */
     pkt->curr = pkt->data + NET_MAX_PKTLEN;
 
     return pkt;

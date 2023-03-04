@@ -1,6 +1,6 @@
 /**
- * file netGetbuf.c
- * 
+ * @file netGetbuf.c
+ *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
@@ -11,8 +11,9 @@
 /**
  * @ingroup network
  *
- * Frees a buffer for storing a packet.
- * @return OK if successful, SYSERR if an error occured
+ * パケットを格納するバッファを解放する.
+ * @param ptk パケットへのポインタ
+ * @return 成功したら OK, エラーが発生したら SYSERR
  */
 syscall netFreebuf(struct packet *pkt)
 {

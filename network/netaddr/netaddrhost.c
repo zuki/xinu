@@ -10,20 +10,20 @@
 /**
  * @ingroup network
  *
- * Calculate the host portion of a network address, which is essentially the
- * opposite of masking it with netaddrmask().  For example, with IPv4,
- * extracting the host portion of 192.168.0.50 with a mask of 255.255.255.0 will
- * produce 0.0.0.50.
-
+ * ネットワークアドレスのホスト部分を計算する。これは基本的には
+ * netaddrmask()でのマスキングとは反対の演算である。たとえば、IPv4で
+ * 192.168.0.50 からマスク 255.255.255.0 でホスト部分を取り出すと
+ * 0.0.0.50 になる。
+ *
  * @param a
- *      Network address from which to extract the host portion.
+ *      ホスト部分を取り出すネットワークアドレス
  * @param mask
- *      The netmask to use.
+ *      使用するネットマスク
  *
  * @return
- *      SYSERR if @p a and @p mask are not the same type of network address;
- *      otherwise returns OK and modifies @p a in place to produce just the host
- *      portion of the network address.
+ *      @p a と @p mask が同じ種別のネットワークアドレスでない場合は SYSERR;
+ *      そうでなければ OK を返し、@a にはネットワークアドレスのホスト部分だけの
+ *      値に変更する
  */
 syscall netaddrhost(struct netaddr *a, const struct netaddr *mask)
 {

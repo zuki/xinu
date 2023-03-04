@@ -11,16 +11,16 @@
 /**
  * @ingroup network
  *
- * Format a network address and place in a null-terminated string.
+ * ネットワークアドレスをフォーマットしてヌル終端の文字列とする.
  *
  * @param str
- *      Pointer to the output string, which must have enough space for the
- *      appropriate type of network address, including the null terminator.
+ *      出力文字列へのポインタ。適切なネットワークアドレス種別を格納する
+ *      （ヌル終端文字を含む）のに十分なスペースを保つ必要がある
  * @param addr
- *      Network address to format.
+ *      フォーマットするネットワークアドレス
  *
  * @return
- *      A pointer to the resulting string cast to an @c int.
+ *      @c int にキャストした作成文字列へのポインタ
  */
 int netaddrsprintf(char *str, const struct netaddr *addr)
 {

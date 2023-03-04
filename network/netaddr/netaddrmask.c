@@ -8,10 +8,16 @@
 #include <network.h>
 #include <ipv4.h>
 
+/** @ingroup network
+ * グローバルIPブロードキャストアドレス
+*/
 const struct netaddr NETADDR_GLOBAL_IP_BRC = { NETADDR_IPv4, IPv4_ADDR_LEN,
     {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}
 };
 
+/** @ingroup network
+ * グローバルEthernetブロードキャストアドレス
+*/
 const struct netaddr NETADDR_GLOBAL_ETH_BRC = { NETADDR_ETHERNET, ETH_ADDR_LEN,
     {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}
 };
@@ -19,17 +25,17 @@ const struct netaddr NETADDR_GLOBAL_ETH_BRC = { NETADDR_ETHERNET, ETH_ADDR_LEN,
 /**
  * @ingroup network
  *
- * Apply a mask to a network address.  For example, with IPv4, masking
- * 192.168.0.50 with 255.255.255.0 will produce 192.168.0.0.
+ * ネットワークアドレスにマスクを適用する. たとえば、IPv4の
+ * 192.168.0.50 を 255.255.255.0 でマスクすると 192.168.0.0 となる。
  *
  * @param a
- *      Network address to mask.
+ *      マスクするネットワークアドレス
  * @param mask
- *      The mask to apply.
+ *      適用するマスク
  *
  * @return
- *      SYSERR if @p a and @p mask are not the same type of network address;
- *      otherwise returns OK and modifies @p a in place to mask it.
+ *      @p a と @p mask が同じ種別のネットワークアドレスでない場合は SYSERR;
+ *      そうでなければ OK を返し、@a にはマスクした値に変更する
  */
 syscall netaddrmask(struct netaddr *a, const struct netaddr *mask)
 {

@@ -18,20 +18,20 @@ static int netAlloc(void);
 /**
  * @ingroup network
  *
- * Starts a network interface using the specified protocol addresses.
+ * 指定されたプロトコルアドレスを使ってネットワークインタフェースを開始する.
  *
  * @param descrp
- *      Index of the underlying network device on which to open the interface.
+ *      インタフェースをオープンするネットワークデバイスのインデックス
  * @param ip
- *      Protocol address; cannot be NULL.
+ *      プロトコルアドレス; NULLは不可
  * @param mask
- *      Protocol address mask; cannot be NULL.
+ *      プロトコルアドレスマスク; NULLは不可
  * @param gateway
- *      Protocol address of the gateway, or NULL if unspecified.  If
- *      unspecified, it is interpreted as "no gateway".
+ *      ゲートウェイのプロトコルアドレス, 指定しない場合は NULL. 指定しない
+ *      場合は「ゲーウェイなし」と解釈される。
  *
  * @return
- *      OK if the network interface was successfully started; otherwise SYSERR.
+ *      ネットワークインタフェースが成功裏に開始されたら OK; そうでなければ SYSERR
  */
 syscall
 netUp(int descrp, const struct netaddr *ip, const struct netaddr *mask,
@@ -44,7 +44,7 @@ netUp(int descrp, const struct netaddr *ip, const struct netaddr *mask,
     uint nthreads;
     int retval = SYSERR;
 
-    /* Error check arguments */
+    /* 1. 引数のエラーチェック */
     if (isbaddev(descrp) || NULL == ip || NULL == mask)
     {
         NET_TRACE("Bad device, null IP, or null mask");
@@ -60,7 +60,8 @@ netUp(int descrp, const struct netaddr *ip, const struct netaddr *mask,
     }
     im = disable();
 
-    /* Ensure network interface is not already started on underlying device */
+    /* 2. 指定のデバイスですでにネットワークインタフェースが
+     *    開始されていないことを確認する */
     netptr = netLookup(descrp);
     if (NULL != netptr)
     {
@@ -68,7 +69,7 @@ netUp(int descrp, const struct netaddr *ip, const struct netaddr *mask,
         goto out_restore;
     }
 
-    /* Select a free network interface */
+    /* 3. 未使用のネットワークインタフェースを選択する */
     nif = netAlloc();
     if (SYSERR == nif)
     {
@@ -78,7 +79,7 @@ netUp(int descrp, const struct netaddr *ip, const struct netaddr *mask,
     netptr = &netiftab[nif];
     NET_TRACE("Starting netif %d on device %d", nif, descrp);
 
-    /* Initialize the network interface structure */
+    /* 4. ネットワークインタフェース構造体を初期化する */
     bzero(netptr, sizeof(struct netif));
     netptr->dev = descrp;
     netptr->state = NET_ALLOC;
@@ -90,7 +91,8 @@ netUp(int descrp, const struct netaddr *ip, const struct netaddr *mask,
         goto out_free_nif;
     }
 
-    /* Get NIC hardware address and hardware broadcast address  */
+    /* 5. NICのハードウェアアドレスとハードウェアブロードキャスト
+     *    アドレスを取得する */
     if ((SYSERR ==
          control(descrp, NET_GET_HWADDR, (long)&netptr->hwaddr, 0))
         || (SYSERR ==
@@ -100,16 +102,16 @@ netUp(int descrp, const struct netaddr *ip, const struct netaddr *mask,
         goto out_free_nif;
     }
 
-    /* Set protocol addresses */
+    /* 6. プロトコルアドレスをセットする */
     netaddrcpy(&netptr->ip, ip);
     netaddrcpy(&netptr->mask, mask);
     if (NULL != gateway)
     {
         netaddrcpy(&netptr->gateway, gateway);
     }
-    /* The following loop will turn, for example, an IPv4 mask of 255.255.255.0
-     * and IPv4 address of 192.168.0.50 into an IPv4 broadcast address of
-     * 192.168.0.255.  */
+    /* 次のループは、たとえば、IPv4マスクが255.255.255.0、
+     * IPv4アドレスが192.168.0.50の場合、IPv4ブロードキャスト
+     * アドレスが192.168.0.255となるようにする */
     netptr->ipbrc.type = netptr->ip.type;
     netptr->ipbrc.len = netptr->ip.len;
     for (i = 0; i < netptr->ip.len; i++)
@@ -134,16 +136,16 @@ netUp(int descrp, const struct netaddr *ip, const struct netaddr *mask,
               netptr->mtu, netptr->linkhdrlen);
 #endif
 
-    /* TODO: Get hostname from nvram (if nvram available)  */
+    /* TODO: nvramからホスト名を取得する（nvramが利用可能であれば）  */
 
-    /* Add subnet address and gateway to the route table */
+    /* 7. サブネットアドレスとゲートウェイをルートテーブルに追加する */
     rtAdd(&netptr->ip, NULL, &netptr->mask, netptr);
     if (NULL != gateway)
     {
         rtDefault(&netptr->gateway, netptr);
     }
 
-    /*  Spawn receive threads associated with this interface */
+    /*  8. このインタフェースに関係する受信スレッドを立ち上げる */
     for (i = 0; i < NET_NTHR; i++)
     {
         char thrname[DEVMAXNAME + 30];
@@ -179,8 +181,9 @@ out:
 }
 
 /**
- * Obtain a free network interface.
- * @return a free network interface id, SYSERR if all netifs are used
+ * 未使用のネットワークインタフェースを取得する.
+ * @return 未使用のネットワークインタフェースのid,
+ *         すべてのネットワークインタフェース使用済みの場合は SYSERR
  */
 static int netAlloc(void)
 {

@@ -9,6 +9,10 @@
 
 /**
  * @ingroup network
+ * チェックサムを計算する.
+ * @param data データへのポインタ
+ * @param len データ長
+ * @return チェックサム
  */
 ushort netChksum(void *data, uint len)
 {

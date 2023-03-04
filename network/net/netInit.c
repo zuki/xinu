@@ -18,27 +18,35 @@
 #define NNETIF 0
 #endif
 
+/**
+ * @ingroup network
+ * ネットワークインタフェーステーブル変数
+*/
 struct netif netiftab[NNETIF];
+/**
+ * @ingroup network
+ * パケットバッファプール変数
+*/
 int netpool;
 
 /**
  * @ingroup network
  *
- * Initialize network interfaces
- * @return OK if initialized properly, otherwise SYSERR
+ * ネットワークインタフェースを初期化する.
+ * @return 正しく初期化されたら OK, そうでなければ SYSERR
  */
 syscall netInit()
 {
     int i = 0;
 
-    /* Clear each network interface */
+    /* 1. ネットワークインタフェーステーブルをクリアする */
     for (i = 0; i < NNETIF; i++)
     {
         bzero(&netiftab[i], sizeof(struct netif));
         netiftab[i].state = NET_FREE;
     }
 
-    /* Allocate packet buffer pool */
+    /* 2. パケットバッファプールを割り当てる */
     netpool = bfpalloc(NET_MAX_PKTLEN + sizeof(struct packet),
                        NET_POOLSIZE);
     NET_TRACE("netpool has been assigned pool ID %d.\r\n", netpool);
@@ -47,24 +55,25 @@ syscall netInit()
         return SYSERR;
     }
 
-    /* Initialize ARP */
+    /* 3. ARPを初期化する */
     if (SYSERR == arpInit())
     {
         return SYSERR;
     }
 
+    /* 4. ルートテーブルを初期化する */
     if (SYSERR == rtInit())
     {
         return SYSERR;
     }
 
-    /* Initialize ICMP */
+    /* 5. ICMPを初期化する */
     if (SYSERR == icmpInit())
     {
         return SYSERR;
     }
 
-    /* Initialize TCP */
+    /* 6. TCPを初期化する:  tcptimerプロセスを実行する */
 #if NTCP
     i = create((void *)tcpTimer, INITSTK, INITPRIO, "tcpTimer", 0);
     if (SYSERR == i)

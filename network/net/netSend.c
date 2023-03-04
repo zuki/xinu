@@ -1,6 +1,6 @@
 /**
- * file netSend.c
- * 
+ * @file netSend.c
+ *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
@@ -15,24 +15,23 @@
 /**
  * @ingroup network
  *
- * Appends the Link-Level header to a packet and writes to the 
- * underlying interface.
- * @param pkt packet to send
- * @param hwaddr hardware address of the destination, NULL if should lookup
- * @param praddr protocol address of the destination, NULL if hwaddr is known
- * @param type type of the packet to put in link level header
- * @return OK if packet was sent, TIMEOUT if ARP request timed out,
- * 	otherwise SYSERR
+ * リンク層のヘッダーをパケットに追加してインタフェースに書き出す.
+ * @param pkt 送信するパケット
+ * @param hwaddr 宛先のハードウェアアドレス, 検索が必要な場合は NULL
+ * @param praddr 宛先のプロトコルアドレス, hwaddrが基地の場合は NULL
+ * @param type リンク層ヘッダーに埋め込むパケットの種別
+ * @return パケットが送信されたら OK, ARPリクエストがタイムアウトした場合は
+ *         TIMEOUT, それ以外は SYSERR
  */
 syscall netSend(struct packet *pkt, const struct netaddr *hwaddr,
                 const struct netaddr *praddr, ushort type)
 {
-    struct netif *netptr = NULL;        /**< pointer to network interface */
-    struct etherPkt *ether = NULL;      /**< pointer to Ethernet header   */
-    int result;                         /**< result of ARP lookup         */
+    struct netif *netptr = NULL;        /* pointer to network interface */
+    struct etherPkt *ether = NULL;      /* pointer to Ethernet header   */
+    int result;                         /* result of ARP lookup         */
     struct netaddr addr;
 
-    /* Setup and error check pointers */
+    /* 1. エラーチェック */
     if (NULL == pkt)
     {
         return SYSERR;
@@ -45,12 +44,12 @@ syscall netSend(struct packet *pkt, const struct netaddr *hwaddr,
 
     NET_TRACE("Send packet of type 0x%04X", type);
 
-    /* Make space for Link-Level header */
+    /* 2. リンク層ヘッダー用のスペースを確保する */
     pkt->curr -= netptr->linkhdrlen;
     pkt->len += netptr->linkhdrlen;
     ether = (struct etherPkt *)(pkt->curr);
 
-    /* Setup Ethernet header */
+    /* 3. Ethernetヘッダーを設定する */
     ether->type = hs2net(type);
     memcpy(ether->src, netptr->hwaddr.addr, netptr->hwaddr.len);
 #ifdef TRACE_NET
@@ -59,7 +58,8 @@ syscall netSend(struct packet *pkt, const struct netaddr *hwaddr,
     NET_TRACE("Src = %s", str);
 #endif
 
-    /* If no hardware address was specified, lookup using protocol address */
+    /* 4. ハードウェアアドレスの指定がなかった場合はプロトコルアドレスを使って
+     *    検索する */
     if (NULL == hwaddr)
     {
         NET_TRACE("Hardware address lookup required");
@@ -71,16 +71,16 @@ syscall netSend(struct packet *pkt, const struct netaddr *hwaddr,
         }
     }
 
-    /* Copy destination hardware address into link-level header */
+    /* 5. 宛先ハードウェアアドレスをethernetヘッダーにコピーする */
     memcpy(ether->dst, hwaddr->addr, hwaddr->len);
 
-    /* Write the packet to the underlying device */
+    /* 6. デバイスにパケットを書き出す */
     if (pkt->len != write(netptr->dev, pkt->curr, pkt->len))
     {
         return SYSERR;
     }
 
-    /* Snoop packet */
+    /* 6. パケットをSnoopする */
     if (netptr->capture != NULL)
     {
         snoopCapture(netptr->capture, pkt);

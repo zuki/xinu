@@ -11,9 +11,9 @@
 /**
  * @ingroup network
  *
- * Lookup a network interface, given an underlying device.
- * @param devnum device number to find netif for.
- * @return network interface, NULL if none exists
+ * デバイスからネットワークインタフェースを検索する.
+ * @param devnum ネットワークインタフェースを検索するデバイス番号
+ * @return ネットワークインタフェース, 存在しなかったら NULL
  */
 struct netif *netLookup(int devnum)
 {

@@ -10,10 +10,10 @@
 /**
  * @ingroup network
  *
- * Compare two network addresses
- * @param a first network address
- * @param b second network address
- * @return ::TRUE if addresses are the same, otherwise ::FALSE.
+ * 2つのネットワークアドレスを比較する.
+ * @param a 第1ネットワークアドレス
+ * @param b 第2ネットワークアドレス
+ * @return アドレスが等しい場合は ::TRUE, そうでなければ ::FALSE.
  */
 bool netaddrequal(const struct netaddr *a, const struct netaddr *b)
 {

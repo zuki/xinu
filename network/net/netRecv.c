@@ -18,23 +18,23 @@
 /**
  * @ingroup network
  *
- * Receive thread to handle one incoming packet at a time
+ * 一度に1つ着信パケットを処理する受信スレッド
  *
  * @param netptr
- *      network interface device to open netRecv on
+ *      netRecvをオープンするネットワークインタフェースデバイス
  *
  * @return
- *      This thread never returns.
+ *      このスレッドは復帰しない
  */
 thread netRecv(struct netif *netptr)
 {
-    uint maxlen;                            /**< maximum packet length */
+    uint maxlen;                            /* maximum packet length */
     maxlen = netptr->linkhdrlen + netptr->mtu;
     struct packet *pkt;
     struct etherPkt *ether;
     struct netaddr dst;
 
-    /* Processing incoming packets */
+    /* 着信パケットを処理する */
     while (TRUE)
     {
         int len;
@@ -46,10 +46,10 @@ thread netRecv(struct netif *netptr)
             continue;
         }
 
-        /* Read in packet from the underlying network device.
-         * This thread will wait until there is a packet to read.
-         * It is the responsibility of the network driver to tell this
-         * thread to run, signifying that there is a packet to read
+        /* 下位のネットワークデバイスからパケットを読み込む。
+         * このスレッドは読み込むパケットが現れるまで待機する。
+         * 読み込むべきパケットが現れことを通知してこのスレッドを
+         * 実行するように告げるのはネットワークドライバの責任である。
          */
         len = read(netptr->dev, pkt->data, maxlen);
         if (ETH_HDR_LEN > len || SYSERR == len)
@@ -63,17 +63,17 @@ thread netRecv(struct netif *netptr)
         pkt->nif = netptr;
         netptr->nin++;
 
-        /* Point to packet location in the incoming packet buffer */
+        /* 着信パケットバッファ内のパケット位置をポイントする */
         pkt->linkhdr = pkt->curr;
         ether = (struct etherPkt *)pkt->curr;
 
-        /* Snoop if we are in promiscuous mode */
+        /* プロミスキャストモードならスヌープ */
         if (netptr->capture != NULL)
         {
             snoopCapture(netptr->capture, pkt);
         }
 
-        /* Obtain destination hardware address */
+        /* 宛先ハードウェアアドレスを取得する */
         dst.type = NETADDR_ETHERNET;
         dst.len = ETH_ADDR_LEN;
         memcpy(dst.addr, ether->dst, ETH_ADDR_LEN);
@@ -86,14 +86,14 @@ thread netRecv(struct netif *netptr)
         NET_TRACE("\tPacket proto 0x%04X", net2hs(ether->type));
 #endif
 
-        /* Verify that packet belongs to our mac or is broadcast mac */
+        /* パケットが自宛のものかチェックする */
         if ((netaddrequal(&dst, &netptr->hwaddr))
             || (netaddrequal(&dst, &netptr->hwbrc)))
         {
-            /* Move current pointer to network level header */
+            /* カレントぽ板をネットワーク層ヘッダーに移動する */
             pkt->curr = pkt->data + netptr->linkhdrlen;
 
-            /* Call necessary routine based on packet type */
+            /* パケット種別に基づいて必要な関数を呼び出す */
             switch (net2hs(ether->type))
             {
                 /* IP Packet */
@@ -108,14 +108,14 @@ thread netRecv(struct netif *netptr)
                 netptr->nproc++;
                 break;
 
-                /* Unknown ether packet type */
+                /* 未知の種別のパケットは破棄 */
             default:
                 netFreebuf(pkt);
                 break;
             }
 
         }
-        else
+        else    // 自宛でなければ破棄
         {
             netFreebuf(pkt);
         }
