@@ -1,9 +1,13 @@
 /**
  * @file dhcp.h
- * @ingroup dhcpc
+ *
  *
  */
 /* Embedded Xinu, Copyright (C) 2008, 2013.  All rights reserved. */
+
+/** @ingroup dhcpc
+ *  @{
+ */
 
 #ifndef _DHCP_H_
 #define _DHCP_H_
@@ -12,16 +16,16 @@
 #include <network.h>
 #include <dhcpc.h>
 
-/* DHCP Operations */
+/* DHCPオペレーション */
 #define DHCP_OP_REQUEST		1
 #define DHCP_OP_REPLY		2
 
 
-/* DHCP Timeout definitions */
+/* DHCPタイムアウト定義 */
 #define DHCP_RETRANSMIT_COUNT    4
 #define DHCP_RETRANSMIT_TIME     5000   /* in ms */
 
-/* DHCP Client States  */
+/* DHCPクライアントの状態  */
 #define DHCPC_STATE_INIT         0
 #define DHCPC_STATE_SELECTING    1
 #define DHCPC_STATE_REQUESTING   2
@@ -63,7 +67,7 @@
 /**
  * @ingroup dhcpc
  *
- * DHCPパケット構造体.
+ * @brief DHCPパケット構造体.
  *
  * \code
  * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -107,25 +111,25 @@
  */
 struct dhcpPkt
 {
-    uchar op;             /**< Operation (request or reply) */
-    uchar htype;          /**< Hardware type (ethernet)     */
-    uchar hlen;           /**< Hardware length              */
-    uchar hops;           /**< Hops                         */
+    uchar op;             /**< オペレーション（要求/応答）  */
+    uchar htype;          /**< ハードウェア種別 (ethernet)  */
+    uchar hlen;           /**< ハードウェア長               */
+    uchar hops;           /**< ホップ数                     */
 
-    uint xid;             /**< Transfer Identification      */
-    ushort secs;          /**< Seconds still start time     */
-    ushort flags;         /**< Flags                        */
+    uint xid;             /**< 転送識別子                   */
+    ushort secs;          /**< 開始時間からの秒数           */
+    ushort flags;         /**< フラグ                       */
 
-    uint ciaddr;          /**< Client ip address            */
-    uint yiaddr;          /**< Your ip address              */
-    uint siaddr;          /**< Server ip address            */
-    uint giaddr;          /**< Gateway ip address           */
-    uchar chaddr[16];     /**< Client hardware address      */
+    uint ciaddr;          /**< クライアントのIPアドレス     */
+    uint yiaddr;          /**< あなたのIPアドレス           */
+    uint siaddr;          /**< サーバのIPアドレス           */
+    uint giaddr;          /**< ゲートウェイのIPアドレス     */
+    uchar chaddr[16];     /**< クライアントのハードウェアアドレス */
 
-    char sname[64];       /**< Server name                  */
-    char file[128];       /**< File (for extension)         */
-    uint cookie;          /**< Magic cookie                 */
-    uchar opts[1];        /**< Options                      */
+    char sname[64];       /**< サーバ名                     */
+    char file[128];       /**< ファイル（拡張子用）         */
+    uint cookie;          /**< マジッククッキー             */
+    uchar opts[1];        /**< オプション                   */
 };
 
 
@@ -146,8 +150,10 @@ do                                                                    \
 #endif
 
 
-/* Note: dhcpClient() is declared in dhcpc.h  */
+/* Note: dhcpClient() は dhcpc.h で定義されている */
 syscall dhcpSendRequest(int descrp, struct dhcpData *data);
 syscall dhcpRecvReply(int descrp, struct dhcpData *data, uint timeout);
+
+/**  @} */
 
 #endif /* _DHCP_H_ */

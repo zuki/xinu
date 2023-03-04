@@ -1,5 +1,5 @@
 /**
- * @file     dhcpRecvReply.c
+ * @file dhcpRecvReply.c
  *
  */
 /* Embedded Xinu, Copyright (C) 2008, 2013.  All rights reserved. */
@@ -26,24 +26,25 @@ static thread do_dhcpRecvReply(int descrp, struct dhcpData *data,
                                struct packet *pkt);
 
 /**
- * Wait, with timeout, for a response from a DHCP server and update the DHCP
- * transfer data.  The exact behavior of this function depends on the current
- * DHCP client state:
+ * @ingroup dhcpc
  *
- * - If in DHCPC_STATE_SELECTING, the client waits until it gets a DHCPOFFER
- *   reply from any server.
- * - If in DHCPC_STATE_REQUESTING, the client waits until it gets a DHCPACK or
- *   DHCPNAK reply from the server to which it sent the DHCPREQUEST.
+ * DHCPサーバからの応答をタイムアウト付きで待機し、DHCP転送データを更新する.
+ * この関数の正確な動作は現在のDHCPクライアントの状態に依存する。
+ *
+ * - DHCPC_STATE_SELECTINGの場合, クライアントは任意のサーバからの
+ *   DHCPOFFER応答を取得するまで待機する.
+ * - DHCPC_STATE_REQUESTINGの場合, クライアントはDHCPREQUESTを送信した
+ *   サーバからのDHCPACK応答、またはDHCPNAK応答を取得するまで待機する.
  *
  * @param[in] descrp
- *      Network device on which to wait for a response.
+ *      応答を退位するネットワークデバイス
  * @param[in,out] data
- *      DHCP transfer data.
+ *      DHCP転送データ
  * @param[in] timeout
- *      Milliseconds to wait before timing out.
+ *      ミリ秒単位の待機タイムアウト時間
  *
  * @return
- *      OK if successful; TIMEOUT if timed out; SYSERR if other error occurred.
+ *      成功の場合は OK; タイムアウトの場合は TIMEOUT; エラーが発生した場合は SYSERR
  */
 syscall dhcpRecvReply(int descrp, struct dhcpData *data, uint timeout)
 {
@@ -57,8 +58,8 @@ syscall dhcpRecvReply(int descrp, struct dhcpData *data, uint timeout)
         return SYSERR;
     }
 
-    /* This somewhat of a hack to implement a timeout:  Wait for the reply in
-     * another thread to avoid blocking on read().  */
+    /* これはタイムアウトを実装するためのちょっとしたハックである:  read()でブロック
+     * するのを避けるために別のスレッドで応答を待機する  */
     tid = create(do_dhcpRecvReply, DHCP_RECV_STKSIZE, DHCP_RECV_PRIO,
                  "dhcpRecvReply", 3, descrp, data, pkt);
     if (isbadtid(tid))
@@ -69,8 +70,7 @@ syscall dhcpRecvReply(int descrp, struct dhcpData *data, uint timeout)
 
     ready(tid, RESCHED_YES, CORE_ZERO);
 
-    /* Wait at most @timeout milliseconds for the thread to terminate before
-     * returning TIMEOUT.  */
+    /* TIMEOUTを返す前にスレッドが終了するまで最大 @timeout ミリ秒待機する */
     if (TIMEOUT == recvtime(timeout))
     {
         kill(tid);
@@ -86,10 +86,10 @@ syscall dhcpRecvReply(int descrp, struct dhcpData *data, uint timeout)
 }
 
 /**
- * The comments for dhcpRecvReply() apply, but for do_dhcpRecvReply() there is
- * no timeout and it is executed in a separate thread; furthermore, since this
- * thread can be killed at any time, it must use the memory passed in the @p pkt
- * parameter rather than allocating its own memory.
+ * dhcpRecvReply()のコメントを適用するが、do_dhcpRecvReply()ではタイムアウトはなく、
+ * 別のスレッドで実行される。さらに、このスレッドはいつでも終了させることができるので、
+ * 独自のメモリを確保するのではなく、@p pkt パラメータで渡されたメモリを使用しなければ
+ * ならない。
  */
 static thread do_dhcpRecvReply(int descrp, struct dhcpData *data,
                                struct packet *pkt)
@@ -118,12 +118,12 @@ static thread do_dhcpRecvReply(int descrp, struct dhcpData *data,
 
     maxlen = linkhdrlen + mtu;
 
-    /* Receive packets until we find a response we're waiting for.  */
+    /* 待機している応答を見つけるまでパケットを受信する  */
 
 next_packet:
     do
     {
-        /* Receive next packet from the network device.  */
+        /* 1. ネットワークデバイスから次のパケットを受信する  */
         int len = read(descrp, pkt->data, maxlen);
         if (len == SYSERR || len <= 0)
         {
@@ -134,7 +134,7 @@ next_packet:
         pkt->len = len;
         DHCP_TRACE("Received packet (len=%u).", pkt->len);
 
-        /* Make sure packet is at least the minimum length of a DHCP packet.  */
+        /* 2. パケットが少なくとも最小DHCPパケット長はあるかチェックする */
         if (pkt->len < (ETH_HDR_LEN + IPv4_HDR_LEN +
                         UDP_HDR_LEN + DHCP_HDR_LEN))
         {
@@ -142,16 +142,17 @@ next_packet:
             goto next_packet;
         }
 
-        /* Set up header pointers  */
+        /* 3. ヘッダーポインタを設定する  */
         epkt = (const struct etherPkt *)pkt->data;
         ipv4 = (const struct ipv4Pkt *)epkt->data;
         udp = (const struct udpPkt *)ipv4->opts;
         dhcp = (const struct dhcpPkt *)udp->data;
 
-        /* DHCP packets must be type IPv4, protocol UDP, UDP dest port DHCPC,
-         * and UDP source port DHCPS.
+        /* 4. パケットの妥当性をチェックする。
+         * DHCPパケットは、種別はIPv4, プロトコルはUDP, UDP宛先ポートはDHCPC,
+         * UDP送信元ポートはDHCPSでなければならない。
          *
-         * Also check the DHCP header:  Is it actually a reply to this client?
+         * また、DHCPヘッダーも、実際にそれがこのクライアントへの応答であるかチェックする
          * */
         if ((ETHER_TYPE_IPv4 != net2hs(epkt->type))
             || (IPv4_PROTO_UDP != ipv4->proto)
@@ -175,9 +176,10 @@ next_packet:
         }
     #endif
 
-        /* We got a valid DHCP reply.  Now parse the DHCP options.  This needs
-         * to be done carefully to avoid overrunning the packet buffer if the
-         * options data is invalid.  */
+        /* 5. DHCPオプションをパースする
+         * 正しいDHCP応答を取得したのでDHCPオプションをパースする。オプションデータが
+         * 無効な場合にパケットバッファをオーバーランしないように慎重に行う必要がある。
+         */
         opts = dhcp->opts;
         maskptr = NULL;
         gatewayptr = NULL;
@@ -189,7 +191,7 @@ next_packet:
         {
             uchar opt, len;
 
-            /* Get the next option type.  */
+            /* a. 次のオプション種別を取得する */
             if (opts >= opts_end)
             {
                 DHCP_TRACE("Invalid DHCP options.");
@@ -197,14 +199,14 @@ next_packet:
             }
             opt = *opts++;
 
-            /* Break on DHCP_OPT_END (marks end of DHCP options).  */
+            /* DHCP_OPT_ENDの場合はbreak （DHCPオプションの終了マークを付ける） */
             if (DHCP_OPT_END == opt)
             {
                 DHCP_TRACE("Reached DHCP_OPT_END.");
                 break;
             }
 
-            /* Get length of the data for this option.  */
+            /* このオプションのデータ長を取得する */
             if (opts >= opts_end)
             {
                 DHCP_TRACE("Invalid DHCP options.");
@@ -218,8 +220,7 @@ next_packet:
                 goto next_packet;
             }
 
-            /* Process the specific DHCP option.  Ignore unrecognized options.
-             * */
+            /* 指定されたDHCPオプションを処理する。未知のオプションは無視する */
             switch (opt)
             {
             case DHCP_OPT_MSGTYPE:
@@ -262,7 +263,7 @@ next_packet:
                 break;
             }
 
-            /* Advance by the length of the option's data.  */
+            /* オプションのデータ帳だけすすめる */
             opts += len;
         }
     } while (found_msg < 0);
@@ -270,20 +271,19 @@ next_packet:
     /* We received a reply of at least the right type as one we were looking
      * for.  */
 
-    /* Don't consider a DHCPACK reply to be valid unless it provided a subnet
-     * mask.  */
+    /* サブネットマスクが提供されない限りDHCPACK応答を妥当だとはみなさない  */
     if (DHCPACK == found_msg && NULL == maskptr)
     {
         DHCP_TRACE("Ignoring DHCPACK (no subnet mask provided).");
         goto next_packet;
     }
 
-    /* Note: The server's IP address is supposed to be specified in the Server
-     * Identifier option, *not* in the siaddr (Server IP Address) field.  This
-     * is because, somewhat unintuitively, siaddr is used for the address of the
-     * next server in the bootstrap process, which may not be the same as the
-     * DHCP server.  But if the Server Identifier option wasn't present, use
-     * siaddr anyway.  */
+    /* 注意: サーバーのIPアドレスはServer Identifierオプションで指定することに
+     * なっており、siaddr（Server IP Address）フィールドでは*ない*。これは
+     * やや直感的ではないが、siaddrはブートストラッププロセスの次のサーバの
+     * アドレスに使用され、これはDHCPサーバと同じでない場合があるからである。
+     * ただし、Server Identifierオプションが存在しなかった場合はsiaddrを使用する。
+     */
     if (0 == serverIpv4Addr)
     {
         serverIpv4Addr = net2hl(dhcp->siaddr);
@@ -296,7 +296,7 @@ next_packet:
 
     if (DHCPOFFER == found_msg)
     {
-        /* DHCPOFFER:  Remember offer and server addresses.  */
+        /* DHCPOFFER:  オファーされたアドレスとサーバアドレスを記録する */
         data->serverIpv4Addr = serverIpv4Addr;
         data->offeredIpv4Addr = net2hl(dhcp->yiaddr);
         memcpy(data->serverHwAddr, epkt->src, ETH_ADDR_LEN);
@@ -304,8 +304,8 @@ next_packet:
     }
     else
     {
-        /* Received DHCPACK or DHCPNAK.  Ensure it's from the same server to
-         * which we sent the DHCPREQUEST; if not, ignore the packet.  */
+        /* DHCPACK または DHCPNAKを受信した。それがDHCPREQUESTを送信したサーバと
+         * 同じであるか確認して、そうでなければパケットを無視する。 */
         if (serverIpv4Addr != data->serverIpv4Addr)
         {
             DHCP_TRACE("Reply from wrong server.");
@@ -314,17 +314,17 @@ next_packet:
 
         if (DHCPNAK == found_msg)
         {
-            /* DHCPNAK:  Return error to make client try DHCPDISCOVER again  */
+            /* DHCPNAK: クライアントが再度DHCPDISCOVERを試行できるようにエラーを返す */
             retval = SYSERR;
         }
         else
         {
-            /* DHCPACK:  Set network interface addresses  */
+            /* DHCPACK:  ネットワークインタフェースアドレスをセットする */
             data->ip.type = NETADDR_IPv4;
             data->ip.len = IPv4_ADDR_LEN;
-            /* yiaddr in a DHCPACK should be the same as the yiaddr stored from
-             * the DHCPOFFER, but using the value in DHCPACK is preferable since
-             * it's the value the server thinks it assigned.  */
+            /* DHCPACKのyiaddrはDHCPOFFERから格納したyiaddrと同じはずであるが、
+             * DHCPACKの値を使うのが望ましい。それがサーバが付与したと考える
+             * 値だからである。 */
             memcpy(data->ip.addr, &dhcp->yiaddr, IPv4_ADDR_LEN);
             data->clientIpv4Addr = net2hl(dhcp->yiaddr);
 
@@ -339,8 +339,8 @@ next_packet:
                 memcpy(data->gateway.addr, gatewayptr, IPv4_ADDR_LEN);
             }
 
-            /* If provided in the DHCPACK, set the address of next server and
-             * the boot file (e.g. for TFTP).  */
+            /* DHCPACKで提供されていたら次のサーバのアドレスとbootファイル
+             * （たとえばTFTP用）をセットする */
             if (0 != dhcp->siaddr)
             {
                 data->next_server.type = NETADDR_IPv4;
