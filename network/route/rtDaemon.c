@@ -13,7 +13,8 @@
 /**
  * @ingroup route
  *
- * Route dameon to route packets
+ * パケットをルーティングするルートデーモンスレッド.
+ * @return このスレッドは復帰しない
  */
 thread rtDaemon(void)
 {
@@ -21,6 +22,7 @@ thread rtDaemon(void)
 
     while (TRUE)
     {
+        /* 1. rtqueueメールボックスからパケットを受信する */
         pkt = (struct packet *)mailboxReceive(rtqueue);
         RT_TRACE("Daemon received packet");
         if (SYSERR == (int)pkt)
@@ -28,8 +30,9 @@ thread rtDaemon(void)
             RT_TRACE("Daemon received packet has an error");
             continue;
         }
-
+        /* 2. パケットをルーティングする */
         rtSend(pkt);
+        /* 3. パケットを破棄する */
         if (SYSERR == netFreebuf(pkt))
         {
             RT_TRACE("Failed to free packet buffer");

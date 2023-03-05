@@ -1,6 +1,6 @@
 /**
  * @file rtLookup.c
- * 
+ *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
@@ -12,9 +12,10 @@
 /**
  * @ingroup route
  *
- * Looks up an entry in the routing table
- * @param addr the IP address that needs routing
- * @return a route table entry, NULL if none matches, SYSERR on error
+ * ルーティングテーブルを検索する
+ * @param addr ルーティングが必要なIPアドレス
+ * @return ルートテーブルエントリ; マッチするエントリがなかった場合はNULL;
+ *         エラーが発生した場合は SYSERR
  */
 struct rtEntry *rtLookup(const struct netaddr *addr)
 {
@@ -33,15 +34,16 @@ struct rtEntry *rtLookup(const struct netaddr *addr)
     {
         if (RT_USED == rttab[i].state)
         {
-            /* Mask off address */
+            /* 1. アドレスにマスクを適用 */
             netaddrcpy(&masked, addr);
             netaddrmask(&masked, &rttab[i].mask);
 
-            /* Check if match  */
+            /* 2. マッチするかチェック  */
             if (netaddrequal(&masked, &rttab[i].dst))
             {
                 RT_TRACE("Matched entry %d", i);
-                /* Remember match if no match so far or match is better */
+                /* これまでにマッチしたものがなかった、あるいはより良いものに
+                   マッチした場合は記憶する */
                 if ((NULL == rtptr)
                     || (rtptr->masklen < rttab[i].masklen))
                 {

@@ -1,4 +1,4 @@
-/** 
+/**
  * @file rtDefault.c
  *
  */
@@ -12,10 +12,10 @@
 /**
  * @ingroup route
  *
- * Set the default route.
- * @param gate gateway for default route
- * @param nif network interface for default route
- * @return OK if added/updated successfully, otherwise SYSERR
+ * デフォルトルートを設定する.
+ * @param gate デフォルトルートのゲートウェイ
+ * @param nif デフォルトルートのネットワークインタフェース
+ * @return 追加/更新に成功した場合は OK; そうでなければ SYSERR
  */
 syscall rtDefault(const struct netaddr *gate, struct netif *nif)
 {
@@ -23,19 +23,19 @@ syscall rtDefault(const struct netaddr *gate, struct netif *nif)
     int i;
     struct netaddr mask;
 
-    /* Error check pointers */
+    /* 1. 引数のエラーチェック */
     if ((NULL == gate) || (NULL == nif) || (gate->len > NET_MAX_ALEN))
     {
         RT_TRACE("Invalid args");
         return SYSERR;
     }
 
-    /* Setup mask for default route */
+    /* 2. デフォルトルートのマスクを設定 */
     mask.type = gate->type;
     mask.len = gate->len;
     bzero(mask.addr, mask.len);
 
-    /* Check if a default route already exists */
+    /* 3. デフォルトルートがすでに存在していないかチェック */
     rtptr = NULL;
     for (i = 0; i < RT_NENTRY; i++)
     {
@@ -47,7 +47,7 @@ syscall rtDefault(const struct netaddr *gate, struct netif *nif)
         }
     }
 
-    /* Allocate an entry in the route table */
+    /* 4. ルートテーブルエントリを割り当てる */
     rtptr = rtAlloc();
     if ((SYSERR == (int)rtptr) || (NULL == rtptr))
     {
@@ -55,13 +55,13 @@ syscall rtDefault(const struct netaddr *gate, struct netif *nif)
         return SYSERR;
     }
 
-    /* Populate the entry */
+    /* 5. エントリの情報をセットする */
     netaddrcpy(&rtptr->dst, &mask);
     netaddrcpy(&rtptr->gateway, gate);
     netaddrcpy(&rtptr->mask, &mask);
     rtptr->nif = nif;
 
-    /* Calculate mask length */
+    /* 6. マスク長をセットする */
     rtptr->masklen = 0;
 
     rtptr->state = RT_USED;

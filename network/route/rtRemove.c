@@ -1,6 +1,6 @@
 /**
  * @file rtRemove.c
- * 
+ *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
@@ -12,16 +12,16 @@
 /**
  * @ingroup route
  *
- * Removes any entry based on its destination.
- * @param dst destination IP address
- * @return OK if the entry is removed successfully, otherwise SYSERR
+ * 宛先に基づいてエントリを削除する.
+ * @param dst 宛先IPアドレス
+ * @return エントリの削除に成功した場合は OK; そうでなければ SYSERR
  */
 syscall rtRemove(const struct netaddr *dst)
 {
     int i;
     irqmask im;
 
-    /* Error check pointers */
+    /* 1. 引数のエラーチェック */
     if (NULL == dst)
     {
         return SYSERR;

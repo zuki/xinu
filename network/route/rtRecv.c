@@ -12,18 +12,21 @@
 
 /**
  * @ingroup route
+ * ルートパケットを受信する（ルートキューに入れる）.
+ * @param pkt ルートパケット
+ * @return 成功したら OK; それ以外は SYSRR
  */
 syscall rtRecv(struct packet *pkt)
 {
     irqmask im;
 
-    /* Error check pointers */
+    /* 1. 引数のエラーチェック */
     if (NULL == pkt)
     {
         return SYSERR;
     }
 
-    /* If route queue is full, then drop packet */
+    /* 2. ルートテーブルが満杯の場合はパケットを破棄する */
     im = disable();
     if (mailboxCount(rtqueue) >= RT_NQUEUE)
     {
@@ -33,7 +36,7 @@ syscall rtRecv(struct packet *pkt)
         return OK;
     }
 
-    /* Place packet in queue */
+    /* 3. パケットをキューに置く */
     if (SYSERR == mailboxSend(rtqueue, (int)pkt))
     {
         restore(im);

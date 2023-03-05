@@ -23,37 +23,58 @@
 #define RT_TRACE(...)
 #endif
 
-/* Route Table (Must include at least one entry for default route) */
-#define RT_NENTRY         32       /**< Number of ARP table entries     */
-#define RT_FREE           0        /**< Entry is free                   */
-#define RT_USED           1        /**< Entry is used                   */
-#define RT_PEND           2        /**< Entry is pending                */
+/** @ingroup route
+ * @def RT_NENTRY
+ * @brief ARPテーブルエントリ数 */
+#define RT_NENTRY         32
+/** @ingroup route
+ * @def RT_FREE
+ * @brief エントリは未使用 */
+#define RT_FREE           0
+/** @ingroup route
+ * @def RT_USED
+ * @brief エントリは使用中 */
+#define RT_USED           1
+/** @ingroup route
+ * @def RT_PEND
+ * @brief エントリは保留中 */
+#define RT_PEND           2
 
-/* Route thread constants */
-#define RT_THR_PRIO        NET_THR_PRIO   /**< Route thread priority    */
-#define RT_THR_STK         NET_THR_STK    /**< Route thread stack size  */
+/** @ingroup route
+ * @def RT_THR_PRIO
+ * @brief ルートスレッド優先度 */
+#define RT_THR_PRIO        NET_THR_PRIO
+/** @ingroup route
+ * @def RT_THR_STK
+ * @brief ルートスレッドスタックサイズ */
+#define RT_THR_STK         NET_THR_STK
 
-/* Route daemon info */
-#define RT_NQUEUE          32      /**< Number of pkts allowed in queue */
+/** @ingroup route
+ * @def RT_NQUEUE
+ * キューに許されるパケット数
+ */
+#define RT_NQUEUE          32
 
-/* Route Packet Structure */
+/** @ingroup route
+ * ルートパケット構造体
+ */
 struct rtEntry
 {
-    ushort state;
-    ushort masklen;
-    struct netaddr dst;
-    struct netaddr gateway;
-    struct netaddr mask;
-    struct netif *nif;
+    ushort state;               /**< 状態 */
+    ushort masklen;             /**< マスク長 */
+    struct netaddr dst;         /**< 宛先ネットワークアドレス */
+    struct netaddr gateway;     /**< ゲートウェイネットワークアドレス */
+    struct netaddr mask;        /**< サブネットマスク */
+    struct netif *nif;          /**< ネットワークインタフェース */
 };
 
-/* Route table */
+/* ルートテーブル */
 extern struct rtEntry rttab[RT_NENTRY];
 
-/* Route pakcet queue for packets requiring routing */
+/* ルーティングが必要なパケット用のルートパケットキュー */
 extern mailbox rtqueue;
 
-/* Function prototypes */
+/* 関数プロトタイプ */
 syscall rtAdd(const struct netaddr *dst, const struct netaddr *gate,
               const struct netaddr *mask, struct netif *nif);
 struct rtEntry *rtAlloc(void);

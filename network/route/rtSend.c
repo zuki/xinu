@@ -13,9 +13,9 @@
 /**
  * @ingroup route
  *
- * Attempt to route a packet.
- * @param pkt incoming packet to route
- * @return OK if packet is routed successfully, otherwise SYSERR
+ * パケットのルーティングを試みる.
+ * @param pkt ルーティングを行う着信パケット
+ * @return ルーティングに成功したら場合は OK; それ以外は SYSERR
  */
 syscall rtSend(struct packet *pkt)
 {
@@ -24,19 +24,21 @@ syscall rtSend(struct packet *pkt)
     struct rtEntry *route;
     struct netaddr *nxthop;
 
-    /* Error check pointers */
+    /* 1. 引数のエラーチェック */
     if (NULL == pkt)
     {
         return SYSERR;
     }
-
+    /* 2. 宛先ネットワークアドレスを作成 */
     ip = (struct ipv4Pkt *)pkt->nethdr;
     dst.type = NETADDR_IPv4;
     dst.len = IPv4_ADDR_LEN;
     memcpy(dst.addr, ip->dst, dst.len);
 
+    /* 3. ルートテーブルを検索する */
     route = rtLookup(&dst);
 
+    /* 4. 宛先へのルートがなかった場合は未達を通知する */
     if ((SYSERR == (ulong)route) || (NULL == (ulong)route))
     {
         RT_TRACE("Routed packet: Network unreachable.");
@@ -44,6 +46,7 @@ syscall rtSend(struct packet *pkt)
         return SYSERR;
     }
 
+    /* 6. ルートのネットワークインタフェースと同じ場合はリダイレクト */
     if (route->nif == pkt->nif)
     {
         // If outgoing interface is same as incoming, send ICMP redirect
@@ -57,21 +60,23 @@ syscall rtSend(struct packet *pkt)
         }
     }
 
-    /* Update IP header */
+    /* 7. IPヘッダーを更新する */
     ip->ttl--;
     if (0 == ip->ttl)
     {
-        // 11 - Time Exceeded
+        /* 7-1. 生存期間が過ぎたらその旨を通知 */
         icmpTimeExceeded(pkt, ICMP_TTL_EXC);
         return SYSERR;
     }
+
+    /* 8. チェックサムの計算 */
     ip->chksum = 0;
     ip->chksum = netChksum((uchar *)ip, IPv4_HDR_LEN);
 
-    /* Change packet to new network interface */
+    /* 9. パケットのネットワークインタフェースを変更 */
     pkt->nif = route->nif;
 
-    /* Determine if packet should be send to destination or gateway */
+    /* 10. パケットを宛先に送るか、ゲートウェイに送るか判断する */
     if (NULL == route->gateway.type)
     {
         nxthop = &dst;
@@ -81,6 +86,7 @@ syscall rtSend(struct packet *pkt)
         nxthop = &route->gateway;
     }
 
+    /* 11. パケットを送信 */
     if (SYSERR == ipv4SendFrag(pkt, nxthop))
     {
         RT_TRACE("Routed packet: Host unreachable.");

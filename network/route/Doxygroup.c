@@ -1,5 +1,5 @@
 /**
- * @defgroup route Routing
+ * @defgroup route ルーティング
  * @ingroup network
- * @brief IPv4 routing support
+ * @brief IPv4ルーティングサポートする
  */

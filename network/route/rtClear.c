@@ -1,6 +1,6 @@
 /**
  * @file rtClear.c
- * 
+ *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
@@ -12,16 +12,17 @@
 /**
  * @ingroup route
  *
- * Removes all entries for a network interface from the routing table. 
- * @param nif network interface 
- * @return OK if entries are removed successfully, otherwise SYSERR
+ * ルーティングテーブルから指定されたネットワークインタフェースの
+ * すべてのエントリを削除する.
+ * @param nif ネットワークインタフェース
+ * @return エントリの削除に成功した場合は OK; そうでなければ SYSERR
  */
 syscall rtClear(struct netif *nif)
 {
     int i;
     irqmask im;
 
-    /* Error check pointers */
+    /* 1. 引数のエラーチェック */
     if (NULL == nif)
     {
         return SYSERR;

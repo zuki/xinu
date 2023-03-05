@@ -11,8 +11,9 @@
 /**
  * @ingroup route
  *
- * Allocates an entry from the route table.
- * @return entry in route table, NULL if all used, SYSERR if error occurs
+ * ルートテーブルからエントリを割り当てる.
+ * @return ルートテーブルのエントリ; 全て四王済みの場合はNULL;
+ *         エラーが発生したら SYSERR
  */
 struct rtEntry *rtAlloc(void)
 {
@@ -24,7 +25,7 @@ struct rtEntry *rtAlloc(void)
     im = disable();
     for (i = 0; i < RT_NENTRY; i++)
     {
-        /* If entry is free, return entry */
+        /* 未使用のエントリだったら、そのエントリを返す */
         if (RT_FREE == rttab[i].state)
         {
             rttab[i].state = RT_PEND;

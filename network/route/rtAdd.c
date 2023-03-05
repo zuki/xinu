@@ -1,4 +1,4 @@
-/** 
+/**
  * @file rtAdd.c
  *
  */
@@ -10,6 +10,13 @@
 
 /**
  * @ingroup route
+ * ルートを追加する.
+ *
+ * @param dst 宛先ネットワークアドレス
+ * @param gate ゲートウェイネットワークアドレス
+ * @param mask サブネットマスク
+ * @param nif ネットワークインタフェース
+ * @return 成功したら OK; それ以外は SYSERR
  */
 syscall rtAdd(const struct netaddr *dst, const struct netaddr *gate,
               const struct netaddr *mask, struct netif *nif)
@@ -19,7 +26,7 @@ syscall rtAdd(const struct netaddr *dst, const struct netaddr *gate,
     ushort length;
     int i;
 
-    /* Error check pointers */
+    /* 1. 引数のエラーチェック */
     if ((NULL == dst) || (NULL == mask) || (NULL == nif))
     {
         return SYSERR;
@@ -33,14 +40,14 @@ syscall rtAdd(const struct netaddr *dst, const struct netaddr *gate,
                  gate->addr[2], gate->addr[3]);
     RT_TRACE("nif = %d", nif - netiftab);
 
-    /* Allocate an entry in the route table */
+    /* 2. ルートテーブルにエントリを割り当てる */
     rtptr = rtAlloc();
     if ((SYSERR == (int)rtptr) || (NULL == rtptr))
     {
         return SYSERR;
     }
 
-    /* Populate the entry */
+    /* 3. エントリに情報をセットする */
     netaddrcpy(&rtptr->dst, dst);
     netaddrmask(&rtptr->dst, mask);
     if (NULL == gate)
@@ -54,12 +61,12 @@ syscall rtAdd(const struct netaddr *dst, const struct netaddr *gate,
     netaddrcpy(&rtptr->mask, mask);
     rtptr->nif = nif;
 
-    /* Calculate mask length */
+    /* 4. マスク長を計算する */
     length = 0;
     for (i = 0; i < mask->len; i++)
     {
         octet = mask->addr[i];
-        // This totals non-zero bits
+        // 非ゼロのビット数を数える
         while (octet > 0)
         {
             if (octet & 0x01)
