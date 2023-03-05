@@ -14,9 +14,9 @@
 /**
  * @ingroup icmp
  *
- * Processes an incoming ICMP packet.
- * @param pkt pointer to the incoming packet
- * return OK if packet was processed succesfully, otherwise SYSERR
+ * 着信ICMPパケットを処理する.
+ * @param pkt 着信パケットへのポインタ
+ * @return パケットの処理に成功したら OK; それ以外は SYSERR
  */
 syscall icmpRecv(struct packet *pkt)
 {
@@ -24,14 +24,14 @@ syscall icmpRecv(struct packet *pkt)
     struct icmpEcho *echo;
     int id;
 
-    /* Error check pointers */
+    /* 1. 引数のエラーチェック */
     if (NULL == pkt)
     {
         return SYSERR;
     }
 
     icmp = (struct icmpPkt *)pkt->curr;
-
+    /* 2. パケットを処理する */
     switch (icmp->type)
     {
     case ICMP_ECHOREPLY:

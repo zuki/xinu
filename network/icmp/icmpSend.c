@@ -10,29 +10,28 @@
 /**
  * @ingroup icmp
  *
- * Send an ICMP (Internet Control Message Protocol) packet.
+ * ICMPパケットを送信する.
  *
  * @param pkt
- *      Packet containing the ICMP data.  pkt->curr must be positioned on the
- *      ICMP data, pkt->len must be the length of the ICMP data, and there must
- *      be at least enough space between pkt->data and pkt->curr for the ICMP,
- *      IPv4, and link-level headers to be attached.
+ *      ICMPデータを含むパケット。pkt->currはICMPデータを指し示し、
+ *      pkt->lenはICMPデータの長さであり、pkt->dataとpkt->currの間には
+ *      少なくともICMP、IPv4、リンクの各レベルのヘッダーを置くための
+ *      スペースがなければならない。
  * @param type
- *      ICMP type field to use.
+ *      ICMPタイプ
  * @param code
- *      ICMP code field to use.
+ *      ICMPコード
  * @param datalen
- *      Length of the ICMP data payload.
+ *      ICMPデータペイロード長
  * @param src
- *      Source network address.  If src->type == 0, then the source is
- *      automatically set to the address of the interface on which the packet is
- *      sent.
- * @paramr dst
- *      Destination network address.
+ *      送信元のネットワークアドレス.  src->type == 0 の場合、送信元には
+ *      自動的にパケットを送信するインタフェースのアドレスがセットされる
+ * @param dst
+ *      あて先のネットワークアドレス
  *
  * @return
- *      ::OK if packet was successfully sent; otherwise ::SYSERR or another
- *      error code returned by ipv4Send().
+ *      パケットの送信に成功したら ::OK; そうでなければ ::SYSERR; または、
+ *      ipv4Send()により返されたエラーコード
  */
 syscall icmpSend(struct packet *pkt, uchar type, uchar code,
                  uint datalen, struct netaddr *src, struct netaddr *dst)

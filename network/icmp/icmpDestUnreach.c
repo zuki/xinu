@@ -10,10 +10,10 @@
 /**
  * @ingroup icmp
  *
- * Compose ICMP Destination Unreachable message.
- * @param unreached packet that could not be sent
- * @param code      ICMP destination unreachable code number
- * @return OK if packet was sent, otherwise SYSERR
+ * ICMP宛先到達不可メッセージを作成する.
+ * @param unreached 送信できなかったパケット
+ * @param code      ICMP宛先到達不可コード番号
+ * @return パケットが送信されたら OK; それ以外は SYSERR
  */
 syscall icmpDestUnreach(const struct packet *unreached, uchar code)
 {
@@ -45,7 +45,7 @@ syscall icmpDestUnreach(const struct packet *unreached, uchar code)
     pkt->curr -= pkt->len;
 
     memcpy(pkt->curr, ip, ihl + ICMP_DEF_DATALEN);
-    /* First four octets of payload are unused.                   */
+    /* ペイロードの最初の4オクテットは使用しない */
     pkt->curr -= 4;
     pkt->len += 4;
     *((ulong *)pkt->curr) = 0;

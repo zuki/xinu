@@ -9,20 +9,21 @@
 #include <string.h>
 
 /**
- * Send an ICMP Echo Reply in response to the specified ICMP Echo Request.
+ * @ingroup icmp
  *
- * @param pkt
- *      Pointer to the packet for an ICMP echo request.  This packet buffer is
- *      re-used for sending the reply.  pkt->curr must point to the beginning of
- *      the the ICMP header, whereas pkt->len must be the length of the entire
- *      packet including link-level header.  These members will be updated by
- *      this function, and the ICMP type field and checksum will be modified;
- *      however, ownership of the packet is not taken and it still must be freed
- *      by the caller.
+ * 指定のICMPエコー要求に答えてICMPエコー応答を送信する.
+ *
+ * @param pkt ICMPエコー要求パケットへのポインタ.
+ *      このパケットバッファは応答の送信用に再利用される。pkt->currは
+ *      ICMPヘッダの先頭をポイントし、pkt->lenはリンクレベルヘッダを含む
+ *      パケット全体の長さでなければならない。これらのメンバーはこの関数に
+ *      よって更新され、ICMPタイプフィールドとチェックサムが変更される。
+ *      しかし、パケットの所有権は取得されないので、呼び出し元によって
+ *      解放されなければならない。
  *
  * @return
- *      ::OK if packet was successfully sent; otherwise ::SYSERR or another
- *      error code returned by icmpSend().
+ *      パケットの送信に成功したら ::OK; そうでなければ ::SYSERR; または
+ *      icmpSend()により返された別のエラーコード
  */
 syscall icmpEchoReply(struct packet *pkt)
 {
@@ -31,11 +32,11 @@ syscall icmpEchoReply(struct packet *pkt)
 
     ICMP_TRACE("Sending ICMP_ECHOREPLY");
 
-    /* RFC 792: "To form an echo reply message, the source and destination
-     * addresses are simply reversed, the type code changed to 0, and the
-     * checksum recomputed."  */
+    /* RFC 792: 「エコー応答メッセージを作成するには、送信元とあて先の
+     * アドレスを反転させ、タイプコードを0に変更し、チェックサムを再計算
+     * すればよい」  */
 
-    /* Retrieve destination and source addresses from the IPv4 header.  */
+    /* 宛先と発信元のアドレスをIPv4ヘッダーから抽出する */
     ip = (struct ipv4Pkt *)pkt->nethdr;
     dst.type = NETADDR_IPv4;
     dst.len = IPv4_ADDR_LEN;
@@ -45,11 +46,11 @@ syscall icmpEchoReply(struct packet *pkt)
     src.len = IPv4_ADDR_LEN;
     memcpy(src.addr, ip->src, src.len);
 
-    /* Set pkt->curr to point to ICMP data and set pkt->len to the length of
-     * the ICMP data.  This sets it up for sending with icmpSend().  */
+    /* Set pkt->currがICMPデータを指すようにセットし、pkt->lenにはICMP
+     * のデータ長をセットする。これでicmpSend()の送信用に設定される。 */
     pkt->curr += ICMP_HEADER_LEN;
     pkt->len -= (pkt->curr - pkt->data);
 
-    /* Send the ICMP Echo Reply.  */
+    /* ICMPエコー応答を送信する  */
     return icmpSend(pkt, ICMP_ECHOREPLY, 0, pkt->len, &dst, &src);
 }

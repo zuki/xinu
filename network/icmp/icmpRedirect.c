@@ -11,11 +11,11 @@
 /**
  * @ingroup icmp
  *
- * Compose ICMP Redirect message.
- * @param redir packet that should have gone somewhere else
- * @param code  ICMP redirect code number
- * @param route new gateway for packet
- * @return OK if packet was sent, otherwise SYSERR
+ * ICMPリダイレクトメッセージを作成する.
+ * @param redir どこか別の場所に行くべきパケット
+ * @param code  ICMPリダイレクトコード番号
+ * @param route パケットの新しいゲートウェイ
+ * @return パケットが送信されたら OK; それ以外は SYSERR
  */
 syscall icmpRedirect(struct packet *redir, uchar code,
                      struct rtEntry *route)
@@ -42,13 +42,14 @@ syscall icmpRedirect(struct packet *redir, uchar code,
     memcpy(dst.addr, ip->src, dst.len);
     ihl = (ip->ver_ihl & IPv4_IHL) * 4;
 
-    /* Message will contain at least ICMP_DEF_DATALEN             */
+    /* RFC792によれば、メッセージには少なくとも対象となるパケットの
+     * ICMP_DEF_DATALENが含まれている */
     /*  of packet in question, as per RFC 792.                    */
     pkt->len = ihl + ICMP_DEF_DATALEN;
     pkt->curr -= pkt->len;
 
     memcpy(pkt->curr, ip, ihl + ICMP_DEF_DATALEN);
-    /* First four octets of payload are gateway.                  */
+    /* ペイロードの最初の4オクテットはゲートウェイ */
     pkt->curr -= IPv4_ADDR_LEN;
     pkt->len += IPv4_ADDR_LEN;
 

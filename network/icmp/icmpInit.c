@@ -15,14 +15,14 @@ struct icmpEchoQueue echotab[NPINGQUEUE];
 /**
  * @ingroup icmp
  *
- * Initializes ICMP daemon.
- * @return OK if initialization is successful, otherwise SYSERR
+ * ICMPデーモンを初期化する.
+ * @return 初期化に成功したら OK; それ以外は SYSERR
  */
 syscall icmpInit(void)
 {
     int i;
 
-    /* Initialize ICMP queue */
+    /* 1. ICMPキューを初期化する */
     icmpqueue = mailboxAlloc(ICMP_NQUEUE);
     if (SYSERR == icmpqueue)
     {
@@ -35,7 +35,7 @@ syscall icmpInit(void)
         echotab[i].tid = BADTID;
     }
 
-    /* Spawn icmpDaemon thread */
+    /* 2. ICMPデーモンを起動する */
     ready(create
           ((void *)icmpDaemon, ICMP_THR_STK, ICMP_THR_PRIO, "icmpDaemon",
            0), RESCHED_NO, CORE_ZERO);

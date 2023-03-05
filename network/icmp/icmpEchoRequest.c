@@ -11,11 +11,11 @@
 /**
  * @ingroup icmp
  *
- * Send an ICMP Echo (Ping) Request.
- * @param dst destination address
- * @param id  ping stream identifier
- * @param seq sequence number
- * @return OK if packet was sent, otherwise SYSERR
+ * ICMPエコー要求 (ping) を送信する.
+ * @param dst あて先アドレス
+ * @param id  pingストリーム識別子
+ * @param seq シーケンス番号
+ * @return パケットが送信されたら OK; それ以外は SYSERR
  */
 syscall icmpEchoRequest(struct netaddr *dst, ushort id, ushort seq)
 {
@@ -39,9 +39,8 @@ syscall icmpEchoRequest(struct netaddr *dst, ushort id, ushort seq)
     echo = (struct icmpEcho *)pkt->curr;
     echo->id = hs2net(id);
     echo->seq = hs2net(seq);
-    /* Our optional data payload includes room for the departure */
-    /*  and arrival timestamps, in seconds, milliseconds, and    */
-    /*  clock cycles.                                            */
+    /* オプションのデータペイロードには発信と到着のタイムスタンプを
+     * 秒、ミリ秒、クロックサイクルで入力するスペースがある */
     im = disable();
     echo->timecyc = hl2net(clkcount());
     echo->timetic = hl2net(clkticks);

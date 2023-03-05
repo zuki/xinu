@@ -11,10 +11,10 @@
 /**
  * @ingroup icmp
  *
- * Compose ICMP Time Exceeded message.
- * @param unreached packet that could not be sent
- * @param code      ICMP destination unreachable code number
- * @return OK if packet was sent, otherwise SYSERR
+ * ICMP時間超過メッセージを作成する.
+ * @param unreached 送信できなかったパケット
+ * @param code      ICMP時間超過コード番号
+ * @return パケットが送信されたら OK; それ以外は SYSERR
  */
 syscall icmpTimeExceeded(struct packet *unreached, uchar code)
 {
@@ -36,7 +36,7 @@ syscall icmpTimeExceeded(struct packet *unreached, uchar code)
     ip = (struct ipv4Pkt *)unreached->nethdr;
     dst.type = NETADDR_IPv4;
     dst.len = IPv4_ADDR_LEN;
-    /* Send error message back to original source.                */
+    /* エラーメッセージを送信もとに送り返す */
     memcpy(dst.addr, ip->src, dst.len);
     ihl = (ip->ver_ihl & IPv4_IHL) * 4;
 
@@ -46,7 +46,7 @@ syscall icmpTimeExceeded(struct packet *unreached, uchar code)
     pkt->curr -= pkt->len;
 
     memcpy(pkt->curr, ip, ihl + ICMP_DEF_DATALEN);
-    /* First four octets of payload are unused.                   */
+    /* ペイロードの最初の4バイトは使用しない */
     pkt->curr -= 4;
     pkt->len += 4;
     *((ulong *)pkt->curr) = 0;
