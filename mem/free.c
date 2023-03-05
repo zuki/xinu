@@ -1,6 +1,6 @@
 /**
  * @file free.c
- * メモリをユーザスレッドから開放する
+ * メモリをユーザスレッドから解放する
  *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
@@ -13,7 +13,7 @@
 
 /**
  * 2ワード前に格納されているmalloc()の会計情報に基づいて
- * メモリブロックの開放を試みる。
+ * メモリブロックの解放を試みる。
  * @param *base メモリブロックへのポインタ
  */
 void free(void *base)
@@ -25,7 +25,7 @@ void free(void *base)
     uint top;
 
 
-    /* baseは開放するmemblockを指している */
+    /* baseは解放するmemblockを指している */
     block = (struct memblock *)base;
 
     /* 会計情報までポインタを戻す */

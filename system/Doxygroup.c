@@ -8,7 +8,7 @@
  *
  * @defgroup memory_mgmt メモリ管理
  * @ingroup system
- * @brief ヒープまたはバッファプールメモリの割当と開放
+ * @brief ヒープまたはバッファプールメモリの割当と解放
  *
  * @defgroup misc その他関数
  * @ingroup system
@@ -16,11 +16,11 @@
  *
  * @defgroup monitors モニター
  * @ingroup system
- * @brief モニターの作成、ロック、アンロック、開放
+ * @brief モニターの作成、ロック、アンロック、解放
  *
  * @defgroup semaphores セマフォ
  * @ingroup system
- * @brief セマフォの作成、待機、シグナル、開放
+ * @brief セマフォの作成、待機、シグナル、解放
  *
  * @defgroup timer タイマー
  * @ingroup system

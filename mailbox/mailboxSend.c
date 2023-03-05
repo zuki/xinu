@@ -21,7 +21,7 @@
  * @return メッセージのエンキューに成功した場合は ::OK 、
  *         @p box に正しいメールボックスが指定されていなかった、
  *         あるいは、キューに空きが出るまで待機中にメールボックスが
- *         開放された場合は ::SYSERR
+ *         解放された場合は ::SYSERR
  */
 syscall mailboxSend(mailbox box, int mailmsg)
 {
@@ -42,7 +42,7 @@ syscall mailboxSend(mailbox box, int mailmsg)
         /* メールボックキューに空きができるまで待機 */
         wait(mbxptr->sender);
 
-        /* メールボックスが開放されていない場合に限り処理を継続する  */
+        /* メールボックスが解放されていない場合に限り処理を継続する  */
         if (MAILBOX_ALLOC == mbxptr->state)
         {
             /* このメールボックスのmailmsgキューにメッセージを書き込む */

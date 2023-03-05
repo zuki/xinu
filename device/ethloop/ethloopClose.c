@@ -31,11 +31,11 @@ devcall ethloopClose(device *devptr)
         return SYSERR;
     }
 
-    /* セマフォを開放する */
+    /* セマフォを解放する */
     semfree(elpptr->sem);
     semfree(elpptr->hsem);
 
-    /* バッファプールを開放する */
+    /* バッファプールを解放する */
     bfpfree(elpptr->poolid);
 
     /* オープンされていないとマークする */

@@ -211,7 +211,7 @@ dwc_get_free_channel(void)
  * チャネルに秋マークを付ける.  秋チャネルを待っているスレッドに通知する。
  *
  * @param chan
- *      開放するDWC USBホストチャネルのインデックス.
+ *      解放するDWC USBホストチャネルのインデックス.
  */
 static void
 dwc_release_channel(uint chan)
@@ -1851,10 +1851,10 @@ hcd_stop(void)
     /* 転送スケジューラスレッドを停止する */
     kill(dwc_xfer_scheduler_tid);
 
-    /* USB転送リクエストメールボックスを開放する  */
+    /* USB転送リクエストメールボックスを解放する  */
     mailboxFree(hcd_xfer_mailbox);
 
-    /* 不要なセマフォを開放する  */
+    /* 不要なセマフォを解放する  */
     semfree(chfree_sema);
 
     /* USBハードウェアの電源を切る  */

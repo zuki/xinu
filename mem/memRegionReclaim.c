@@ -16,7 +16,7 @@ void memRegionReclaim(tid_typ tid)
 {
     struct memregion *region, *nextregion;
 
-    /* tidに割り当てた領域を開放する */
+    /* tidに割り当てた領域を解放する */
     region = regalloclist;
     while ((int)region != SYSERR)
     {

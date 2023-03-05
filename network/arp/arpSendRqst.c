@@ -68,7 +68,7 @@ syscall arpSendRqst(struct arpEntry *entry)
 
     ARP_TRACE("Sent packet");
 
-    /* パケット用のバッファを開放する */
+    /* パケット用のバッファを解放する */
     if (SYSERR == netFreebuf(pkt))
     {
         ARP_TRACE("Failed to free packet buffer");

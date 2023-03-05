@@ -390,7 +390,7 @@ port_attach_device(struct usb_port *port)
 }
 
 /** （もしあれば）USBポートに接続されていたUSBデバイスからドライバを
- * アンバインドしてデバイス構造体を開放する */
+ * アンバインドしてデバイス構造体を解放する */
 static void
 port_detach_device(struct usb_port *port)
 {
@@ -832,7 +832,7 @@ hub_unbind_device(struct usb_device *hub_device)
     hub_status_change_pending &= ~(1 << hub_id);
     restore(im);
 
-    /* 取り外されたハブ用のusb_hub構造体を開放する */
+    /* 取り外されたハブ用のusb_hub構造体を解放する */
     hub_free(hub_id);
 }
 

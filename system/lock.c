@@ -58,7 +58,7 @@ syscall lock(monitor mon)
         {
             (monptr->count)++;
         }
-        /* 別のスレッドが所有者の場合はモニターが開放されるまでセマフォを待つ */
+        /* 別のスレッドが所有者の場合はモニターが解放されるまでセマフォを待つ */
         else
         {
             wait(monptr->sem);

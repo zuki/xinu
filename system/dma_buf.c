@@ -38,10 +38,10 @@ void *dma_buf_alloc(uint size)
 }
 
 /**
- * dma_bufを開放する.
+ * dma_bufを解放する.
  *
  * @param ptr dma_bufへのポインタ
- * @param size 開放するサイズ
+ * @param size 解放するサイズ
  * @return 常にOK
 */
 syscall dma_buf_free(void *ptr, uint size)

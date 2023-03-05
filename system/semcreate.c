@@ -20,7 +20,7 @@ static semaphore semalloc(void);
  *
  * @return
  *      成功の場合、新しいセマフォを返す。そうでない場合、::SYSERR を返す。
- *      新しいセマフォは不要になったら、semfree()で開放されなければならない。
+ *      新しいセマフォは不要になったら、semfree()で解放されなければならない。
  *      この関数はシステムのセマフォが枯渇した場合、あるいは、 @p count が
  *      縁の場合のみ失敗する。
  */
@@ -87,7 +87,7 @@ void semtab_acquire(semaphore sem)
 }
 
 /**
- * semtabロックを開放する.
+ * semtabロックを解放する.
  *
  * @param sem セマフォ
  */

@@ -9,13 +9,13 @@
 /**
  * @ingroup mailbox
  *
- * 指定されたメールボックスを開放する
+ * 指定されたメールボックスを解放する
  *
  * @param box
- *      開放するメールボックスのインデックス
+ *      解放するメールボックスのインデックス
  *
  * @return
- *      メールボックスの開放に成功した場合、::OK 、
+ *      メールボックスの解放に成功した場合、::OK 、
  *      @p box に正しいメールボックスのインデックスが指定
  *      されなかった場合、::SYSERR
  */
@@ -39,11 +39,11 @@ syscall mailboxFree(mailbox box)
         /* メールボックスがもはや割り当てられていないとマークする  */
         mbxptr->state = MAILBOX_FREE;
 
-        /* このメールボックスに関係するセマフォを開放する */
+        /* このメールボックスに関係するセマフォを解放する */
         semfree(mbxptr->sender);
         semfree(mbxptr->receiver);
 
-        /* メッセージキューに使用したメモリを開放する */
+        /* メッセージキューに使用したメモリを解放する */
         memfree(mbxptr->msgs, sizeof(int) * (mbxptr->max));
 
         retval = OK;

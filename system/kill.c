@@ -61,7 +61,7 @@ syscall kill(tid_typ tid)
 
     // 親に通知
     send(thrptr->parent, tid);
-    // スタックを開放
+    // スタックを解放
     stkfree(thrptr->stkbase, thrptr->stklen);
 
     thrtab_acquire(tid);

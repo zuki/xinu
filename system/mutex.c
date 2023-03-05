@@ -32,9 +32,9 @@ mutex_t mutex_create(void)
 }
 
 /**
- * mutexを開放する.
+ * mutexを解放する.
  *
- * @param mux 開放するmutex
+ * @param mux 解放するmutex
  * @return 成功したら OK; 失敗したら SYSERR
 */
 syscall mutex_free(mutex_t mux)
@@ -67,7 +67,7 @@ syscall mutex_acquire(mutex_t mux)
 }
 
 /**
- * mutexを開放する.
+ * mutexを解放する.
  *
  * @param mux 解放するmutex
  * @return 成功したら OK; 失敗したら SYSERR

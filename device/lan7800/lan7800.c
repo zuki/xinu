@@ -221,7 +221,7 @@ lan7800_mdio_wait_for_bit(struct usb_device *udev,
 /**
  * @ingroup lan7800
  *
- * PHYが開放されるのを待つ.
+ * PHYが解放されるのを待つ.
  * @param udev  アダプタのUSBデバイス
  * @return 成功したら ::USB_STATUS_SUCCESS
  */

@@ -100,7 +100,7 @@ devcall etherOpen(device *devptr)
         }
     }
 
-    /* Rxリクエストを割り当て発行する。TODO: これは開放されていない */
+    /* Rxリクエストを割り当て発行する。TODO: これは解放されていない */
     for (i = 0; i < SMSC9512_MAX_RX_REQUESTS; i++)
     {
         struct usb_xfer_request *req;

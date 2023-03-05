@@ -28,7 +28,7 @@ thread arpDaemon(void)
 
         arpSendReply(pkt);
 
-        /* パケット用のバッファを開放する */
+        /* パケット用のバッファを解放する */
         if (SYSERR == netFreebuf(pkt))
         {
             ARP_TRACE("Failed to free packet buffer");

@@ -18,7 +18,7 @@
  *      成功した場合、デキューしたメッセージを返す。
  *      失敗した場合（@p box に割り当てられたメールボックスを指定
  *      されていない、または、メッセージの大気中にメールボックスが
- *      開放された）、::SYSERR を返す。::SYSERR と成功時の返り値を
+ *      解放された）、::SYSERR を返す。::SYSERR と成功時の返り値を
  *      曖昧なく区別することはできないことに注意。
  */
 syscall mailboxReceive(mailbox box)
@@ -40,7 +40,7 @@ syscall mailboxReceive(mailbox box)
         /* mailmsgキューにメッセージが来るまで待機する */
         wait(mbxptr->receiver);
 
-        /* メールボックスが開放されていない場合に限り処理を継続する  */
+        /* メールボックスが解放されていない場合に限り処理を継続する  */
         if (MAILBOX_ALLOC == mbxptr->state)
         {
             /* mailmsgキューの最初のメッセージを受信する */

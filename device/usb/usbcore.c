@@ -135,10 +135,10 @@ usb_alloc_xfer_request(uint bufsize)
 /**
  * @ingroup usbcore
  *
- * usb_alloc_xfer_request() で割り当てたusb_xfer_request構造体を開放する.
+ * usb_alloc_xfer_request() で割り当てたusb_xfer_request構造体を解放する.
  *
  * @param req
- *      開放するusb_xfer_request構造体へのポインタ。現在保留中であっては
+ *      解放するusb_xfer_request構造体へのポインタ。現在保留中であっては
  *      ならない。No-opとしてNULLを渡すことができる。
  */
 void usb_free_xfer_request(struct usb_xfer_request *req)
@@ -764,7 +764,7 @@ usb_alloc_device(struct usb_device *parent)
 /**
  * @ingroup usbcore
  *
- * USBデバイスを取り外し開放する.  デバイスドライバにバインドされていた
+ * USBデバイスを取り外し解放する.  デバイスドライバにバインドされていた
  * 場合はアンバインドする。そして、USBデバイス構造体を利用可能なデバイス
  * 構造体プールに返す。ハブドライバd怪我この関数を呼び出す必要がある。
  *
@@ -796,7 +796,7 @@ usb_free_device(struct usb_device *dev)
         dev->driver->unbind_device(dev);
     }
 
-    /* コンフィグレーションディスクリプタとデバイス構造体を開放する */
+    /* コンフィグレーションディスクリプタとデバイス構造体を解放する */
     usb_dev_debug(dev, "Releasing USB device structure.\n");
     if (dev->config_descriptor != NULL)
     {

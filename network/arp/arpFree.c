@@ -12,7 +12,7 @@
 /**
  * @ingroup arp
  *
- * ARPテーブルのエントリを開放する
+ * ARPテーブルのエントリを解放する
  * @return エラーが発生した場合は SYSERR、それ以外は OK
  */
 syscall arpFree(struct arpEntry *entry)
