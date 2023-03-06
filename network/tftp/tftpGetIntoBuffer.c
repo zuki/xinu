@@ -9,62 +9,67 @@
 
 static int tftpCopyIntoBufferCb(const uchar *data, uint len, void *ctx);
 
+/** @ingroup tftp
+ * @def TFTP_FILE_DATA_BLOCK_SIZE
+ * @brief リンクリストに格納するTFTPファイルデータブロックサイズ
+ */
 #define TFTP_FILE_DATA_BLOCK_SIZE 4096
 
+/** @ingroup tftp
+ * TFTPファイルデータブロック録構造体. リンクリストに一時的に格納する
+ * ファイルデータ。
+ */
 struct tftpFileDataBlock
 {
-    ulong bytes_filled;
-    struct tftpFileDataBlock *next;
-    uchar data[TFTP_FILE_DATA_BLOCK_SIZE - sizeof(ulong) - sizeof(void*)];
+    ulong bytes_filled;                 /** 設定済みバイト数 */
+    struct tftpFileDataBlock *next;     /**< 次のデータブロック */
+    uchar data[TFTP_FILE_DATA_BLOCK_SIZE - sizeof(ulong) - sizeof(void*)];  /**< データ */
 };
 
 /**
  * @ingroup tftp
  *
- * Download a file from a remote server using TFTP and allocates and return an
- * in-memory buffer containing the file contents.
+ * TFTPを使ってリモートサーバからファイルをダウンロードし、
+ * ファイルコンテンツを格納するインメモリバッファを割り当てて返す.
  *
  * @param[in] filename
- *      Name of the file to download.
+ *      ダウンロードするファイルの名前.
  * @param[in] local_ip
- *      Local protocol address to use for the connection.
+ *      コネクションに使用するローカルのプロトコルアドレス.
  * @param[in] server_ip
- *      Remote protocol address to use for the connection (address of TFTP
- *      server).
+ *      コネクションに使用するリモートのプロトコルアドレス（TFTPサーバのアドレス）.
  * @param[out] len_ret
- *      On success, the length of the file in bytes, which is also the length of
- *      the returned buffer, is written into this location.
+ *      成功の場合、バイト単位のファイル長、返されるバッファの長さでもあり、この場所に
+ *      書かれる.
  *
  * @return
- *      On success, returns a pointer (cast to an @c int) to a buffer containing
- *      the contents of the downloaded file.  This buffer is allocated with
- *      memget() and therefore can be freed using memfree().  On out-of-memory,
- *      timeout, file not found, or other error, returns ::SYSERR.
+ *      成功の場合、ダンロードしたファイルのコンテンツを含むバッファへのポインタ（
+ *      @c int にキャスト）を返す。このバッファはmemget()で割り当てられるので、
+ *      memfree()を使って解放することができる。メモリ不足、タイムアウト、ファイルが
+ *      見つからなかったなどのエラーの場合は、::SYSTEM を返す。
  */
 syscall tftpGetIntoBuffer(const char *filename, const struct netaddr *local_ip,
                           const struct netaddr *server_ip, uint *len_ret)
 {
-    /* Unfortunately, TFTP (without extensions) provides no way to get the final
-     * size of the resulting file.  Therefore, we allocate space block-by-block
-     * and link them into a linked list, then copy the data into a single buffer
-     * at the end.  Note: the sizes of the memory blocks stored in the linked
-     * list (TFTP_FILE_DATA_BLOCK_SIZE) need not correspond to the TFTP block
-     * size (which is, without extensions, always 512 bytes).  */
-
+    /* 残念ながら、TFTP（拡張機能なし）ではダウンロードするファイルの最終的なサイズを
+     * 取得する方法はない。そのため、ブロック単位で領域を確保し、それらをリンクリストに
+     * リンクし、最後にデータを1つのバッファにコピーする。注: リンクリストに格納される
+     * メモリブロックのサイズ (TFTP_FILE_DATA_BLOCK_SIZE) はTFTPブロックサイズ (拡張
+     * 機能がない場合は常に512バイト) と一致する必要はない。 */
     struct tftpFileDataBlock *head, *ptr, *next, *tail;
     int retval;
     uchar *finalbuf;
     uint totallen;
 
-    /* If the caller didn't ask for a place to store the length, then it would
-     * be impossible for them to free the returned memory with memfree().  */
+    /* 呼び出し側が長さを格納する場所を求めなかった場合、返されたメモリをmemfree()で
+     * 解放することができない */
     if (NULL == len_ret)
     {
         TFTP_TRACE("Length pointer not supplied.");
         return SYSERR;
     }
 
-    /* Allocate the head of the block list.  */
+    /* ブロックリストの戦闘を割り当てる */
     head = memget(TFTP_FILE_DATA_BLOCK_SIZE);
     if (SYSERR == (int)head)
     {
@@ -75,18 +80,18 @@ syscall tftpGetIntoBuffer(const char *filename, const struct netaddr *local_ip,
     head->next = NULL;
     tail = head;
 
-    /* Download the file.  The callback function tftpCopyIntoBufferCb() is
-     * responsible for building the block list with the received data.  */
+    /* ファイルをダウンロードする。受信したデータからブロックリストを構築するのは
+     * コールバック関数tftpCopyIntoBufferCb()の役目である */
     retval = tftpGet(filename, local_ip, server_ip, tftpCopyIntoBufferCb, &tail);
 
-    /* Check return status.  */
+    /* 返された状態をチェックする */
 
     TFTP_TRACE("tftpGet() returned %d", retval);
 
     if (OK == retval)
     {
-        /* Successfully downloaded the file.  Calculate the total length of the
-         * file, then allocate the resulting buffer.  */
+        /* ファイルのダウンロードに成功した。ファイルのサイズを計算し、結果として
+         * 返すバッファを割り当てる */
         totallen = 0;
         ptr = head;
         do
@@ -104,14 +109,14 @@ syscall tftpGetIntoBuffer(const char *filename, const struct netaddr *local_ip,
     }
     else
     {
-        /* Failed to download the file.  Return SYSERR, but first the block list
-         * needs to be freed.  */
+        /* ファイルのダウンロードに失敗した。SYSERRを返すが、その前にブロックリストを
+         * 解放する必要がある */
         TFTP_TRACE("File download failed.");
         finalbuf = (uchar*)SYSERR;
     }
 
-    /* Free the block list, and if the download was successful at the same time
-     * copy the file data into the final buffer.  */
+    /* ブロックリストを解放する。ダウンロードに成功した場合は、同時に、ファイルデータを
+     * バッファにコピーする */
     TFTP_TRACE("Freeing block list and copying data into final buffer.");
     totallen = 0;
     next = head;
@@ -127,7 +132,7 @@ syscall tftpGetIntoBuffer(const char *filename, const struct netaddr *local_ip,
         memfree(ptr, TFTP_FILE_DATA_BLOCK_SIZE);
     } while (NULL != next);
 
-    /* If successful, save the file length in the caller-provided location.  */
+    /* 成功の場合、ファイル長を呼び出し側が指定した場所に保存する */
     if (SYSERR != (int)finalbuf)
     {
         *len_ret = totallen;
@@ -135,16 +140,16 @@ syscall tftpGetIntoBuffer(const char *filename, const struct netaddr *local_ip,
                    "(address=0x%08x, length=%u)", finalbuf, totallen);
     }
 
-    /* Return either the buffer containing the file data, or SYSERR.  */
+    /* ファイルデータを含むバッファ、あるいはSYSERRを返す */
     return (int)finalbuf;
 }
 
 /*
- * Callback function given to tftpGet() that is passed blocks of TFTP data.
- * This implementation stores the TFTP data in memory (block list is described
- * earlier in this file).
+ * TFTPデータブロックを渡されるコールバック関数でtftpGet() に与えられる。
+ * この実装ではTFTPデータをメモリに保存する（ブロックリストについては
+ * このファイルの前のほうで説明されている）。
  *
- * This is expected to return OK on success, or SYSERR otherwise.
+ * 成功すればOK、そうでなければSYSERRを返すことが期待されている。
  */
 static int tftpCopyIntoBufferCb(const uchar *data, uint len, void *ctx)
 {
@@ -158,7 +163,7 @@ static int tftpCopyIntoBufferCb(const uchar *data, uint len, void *ctx)
 
         if (tail->bytes_filled == sizeof(tail->data))
         {
-            /* Tail block is full; append a new block.  */
+            /* ブロックは満杯: 新しいブロックを追加する */
             newtail = memget(TFTP_FILE_DATA_BLOCK_SIZE);
             if (SYSERR == (int)newtail)
             {
@@ -171,7 +176,7 @@ static int tftpCopyIntoBufferCb(const uchar *data, uint len, void *ctx)
             *tailptr = tail = newtail;
         }
 
-        /* Store as much data as possible.  */
+        /* できるだけ多くのデータを格納する */
         if (len > sizeof(tail->data) - tail->bytes_filled)
         {
             copylen = sizeof(tail->data) - tail->bytes_filled;

@@ -8,20 +8,21 @@
 #include <thread.h>
 
 /**
- * Thread procedure for a thread that repeatedly reads TFTP packets from a UDP
- * device and provides them in a buffer to another thread.  This is a workaround
- * for the lack of timeout support in read().  Not intended to be used outside
- * of the TFTP code.
+ * @ingroup tftp
+ *
+ * UDPデバイスからTFTPパケットを繰り返し読み取り、バッファに格納して他のスレッドに
+ * 提供するスレッドプロシージャ. これはread()にタイムアウトサポートがないことの
+ * 回避策である。TFTPコード以外での使用は想定していない。
  *
  * @param udpdev
- *      UDP device to read from.
+ *      読み込むUDPデバイス
  * @param pkt
- *      Buffer to use for reading.
+ *      読み込みに使用するバッファ
  * @param parent
- *      Thread to inform when a packet has been read.
+ *      パケットを読み込んだ時に通知するスレッド
  *
  * @return
- *      This thread never returns.
+ *      このスレッドは復帰しない
  */
 thread tftpRecvPackets(int udpdev, struct tftpPkt *pkt, tid_typ parent)
 {
@@ -29,17 +30,16 @@ thread tftpRecvPackets(int udpdev, struct tftpPkt *pkt, tid_typ parent)
 
     for (;;)
     {
-        /* Wait for parent thread to tell this thread to proceed.  */
+        /* 親スレッドがこのスレッドに処理を指示するのを待つ */
         receive();
 
-        /* Read the packet from the UDP device.  (Blocking.)  */
+        /* UDPデバイスからパケットを読み込む（ブロックする） */
         result = read(udpdev, pkt, TFTP_MAX_PACKET_LEN);
 
-        /* Send parent the length of the resulting packet (or SYSERR if an error
-         * occurred).  */
+        /* 読み込んだパケットの長さ（または、エラーが発生した場合はSYSEND）を親に送信する */
         send(parent, result);
     }
 
-    /* This thread is killed; it does not return.  */
+    /* このスレッドはkillされた。復帰しない */
     return SYSERR;
 }

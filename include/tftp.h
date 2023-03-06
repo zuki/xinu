@@ -10,26 +10,54 @@
 #include <network.h>
 #include <stdint.h>
 
+/** @ingroup tftp
+ * @def TFTP_OPCODE_RRQ
+ * @brief TFTPオプコード: 読み込み要求 */
 #define TFTP_OPCODE_RRQ   1
+/** @ingroup tftp
+ * @def TFTP_OPCODE_WRQ
+ * @brief TFTPオプコード: 書き込み要求 */
 #define TFTP_OPCODE_WRQ   2
+/** @ingroup tftp
+ * @def TFTP_OPCODE_DATA
+ * @brief TFTPオプコード: データ送信 */
 #define TFTP_OPCODE_DATA  3
+/** @ingroup tftp
+ * @def TFTP_OPCODE_ACK
+ * @brief TFTPオプコード: 確認応答 */
 #define TFTP_OPCODE_ACK   4
+/** @ingroup tftp
+ * @def TFTP_OPCODE_ERROR
+ * @brief TFTPオプコード: エラー */
 #define TFTP_OPCODE_ERROR 5
 
+/** @ingroup tftp
+ * @def TFTP_RECV_THR_STK
+ * @brief TFTP受信スレッドスタックサイズ */
 #define TFTP_RECV_THR_STK   NET_THR_STK
+/** @ingroup tftp
+ * @def TFTP_RECV_THR_PRIO
+ * @brief TFTP受信スレッド優先度 */
 #define TFTP_RECV_THR_PRIO  NET_THR_PRIO
 
-/* Maximum number of seconds to wait for a block, other than the first, before
- * aborting the TFTP transfer.  */
+/** @ingroup tftp
+ * @def TFTP_BLOCK_TIMEOUT
+ * @brief TFTP転送を中止する前に、最初のブロック以外のブロックを待機させる最大秒数 */
 #define TFTP_BLOCK_TIMEOUT      10
 
-/** Maximum number of seconds to wait for the first block before re-sending the
- * RREQ.  */
+/** @ingroup tftp
+ * @def TFTP_INIT_BLOCK_TIMEOUT
+ * @brief RREQを再送する前に最初のブロックを待機させる最大秒数。 */
 #define TFTP_INIT_BLOCK_TIMEOUT 1
 
-/** Maximum number of times to send the initial RREQ.  */
+/** @ingroup tftp
+ * @def TFTP_INIT_BLOCK_MAX_RETRIES
+ * @brief 最初のRREQを送信する最大回数。 */
 #define TFTP_INIT_BLOCK_MAX_RETRIES 10
 
+/** @ingroup tftp
+ * @def TFTP_BLOCK_SIZE
+ * @brief TFTPブロックサイズ */
 #define TFTP_BLOCK_SIZE     512
 
 //#define ENABLE_TFTP_TRACE
@@ -48,34 +76,43 @@ do                                                                    \
 #  define TFTP_TRACE(format, ...)
 #endif
 
+/**
+ * @ingroup tftp
+ * TFTPパケット構造体
+*/
 struct tftpPkt
 {
-    uint16_t opcode;
+    uint16_t opcode;        /**< オプコード */
     union
     {
         struct
         {
-            char filename_and_mode[2 + TFTP_BLOCK_SIZE];
+            char filename_and_mode[2 + TFTP_BLOCK_SIZE];    /**< ファイル名とモード */
         } RRQ;
         struct
         {
-            uint16_t block_number;
-            uint8_t data[TFTP_BLOCK_SIZE];
+            uint16_t block_number;          /**< ブロック番号 */
+            uint8_t data[TFTP_BLOCK_SIZE];  /**< データ */
         } DATA;
         struct
         {
-            uint16_t block_number;
+            uint16_t block_number;          /**< ブロック番号 */
         } ACK;
     };
 };
 
+/** @ingroup tftp
+ * @def TFTP_MAX_PACKET_LEN
+ * @brief TFTP最大パケットサイズ */
 #define TFTP_MAX_PACKET_LEN      516
 
 /**
  * @ingroup tftp
  *
- * Type of a caller-provided callback function that consumes data downloaded by
- * tftpGet().  See tftpGet() for more details.
+ * @var tftpRecvDataFunc
+ *
+ * tftpGet()でダウンロードしたデータを消費する、呼び出し元が提供する
+ * コールバック関数の型。 詳細は tftpGet() を参照。
  */
 typedef int (*tftpRecvDataFunc)(const uchar *data, uint len, void *ctx);
 

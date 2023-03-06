@@ -13,48 +13,43 @@
 #include <udp.h>
 #include <core.h>
 
-/* Stress testing--- randomly ignore this percent of valid received data
- * packets.  */
+/** @ingroup tftp
+ * @def TFTP_DROP_PACKET_PERCENT
+ * @brief ストレステスト---有効な受信データパケットのこのパーセントを
+ * ランダムに無視する。 */
 #define TFTP_DROP_PACKET_PERCENT 0
 
 /**
  * @ingroup tftp
  *
- * Download a file from a remote server using TFTP and passes its contents,
- * block-by-block, to a callback function.  This callback function can do
- * whatever it wants with the file data, such as store it all into a buffer or
- * write it to persistent storage.
+ * TFTPを使ってリモートサーバからファイルをダウンロードし、その内容を
+ * ブロック単位でコールバック関数に渡す。このコールバック関数は、
+ * ファイルデータをバッファに格納したり、永続的なストレージに書き込んだりと、
+ * 好きなように操作することができる。
  *
  * @param[in] filename
- *      Name of the file to download.
+ *      ダウンロードするファイルの名前
  * @param[in] local_ip
- *      Local protocol address to use for the connection.
+ *      接続に使用するローカルプロトコルアドレス
  * @param[in] server_ip
- *      Remote protocol address to use for the connection (address of TFTP
- *      server).
+ *      接続に使用するリモートプロトコルアドレス（TFTPサーバのアドレス）
  * @param[in] recvDataFunc
- *      Callback function that will be passed the file data block-by-block.  For
- *      each call of the callback function, the @p data (first) argument will be
- *      set to a pointer to the next block of data and the @p len (second)
- *      argument will be set to the block's length.  All data blocks will be the
- *      same size, except possibly the last, which can be anywhere from 0 bytes
- *      up to the size of the previous block(s) if any.
- *      <br/>
- *      In the current implementation, the block size (other than possibly for
- *      the last block) is fixed at 512 bytes.  However, implementations of this
- *      callback SHOULD handle larger block sizes since tftpGet() could be
- *      extended to support TFTP block size negotiation.
- *      <br/>
- *      This callback is expected to return ::OK if successful.  If it does not
- *      return ::OK, the TFTP transfer is aborted and tftpGet() returns this
- *      value.
+ *      ファイルデータがブロック単位で渡されるコールバック関数。コールバック関数が
+ *      呼ばれる際には、@p data （第1引数）には次のデータブロックへのポインタが、
+ *      @p len （第2引数）にはブロック長がセットされる。すべてのデータブロックは
+ *      同じサイズであるが、最後のデータブロックは0バイトから前のデータブロック
+ *      サイズ（もしあれば）までの間のサイズになる。<br/>現在の実装では、ブロック
+ *      サイズ（最後のブロックを除く）は512バイトに固定されている。ただし、TFTP
+ *      ブロックサイズネゴシエーションに対応するようにtftpGet()を拡張することが
+ *      できるようにこのコールバックの実装はより大きなブロックサイズを処理できる
+ *      ようにするべきである。<br/>このコールバックは成功した場合、:OKを返すことが
+ *      期待される。OKを返さない場合は、TFTP転送は中止され、tftpGet()はこの値を返す。
  * @param[in] recvDataCtx
- *      Extra parameter that will be passed literally to @p recvDataFunc.
+ *      @p recvDataFunc にそのまま渡される追加パラメータ
  *
  * @return
- *      ::OK on success; ::SYSERR if the TFTP transfer times out or fails, or if
- *      one of several other errors occur; or the value returned by @p
- *      recvDataFunc, if it was not ::OK.
+ *      成功した場合は ::OK; TFTP転送がタイムアウトまたは失敗、またはエラーが発生
+ *      した場合は ::SYSERR; または、@p recvDataFunc により返された ::OK 以外の値
  */
 syscall tftpGet(const char *filename, const struct netaddr *local_ip,
                 const struct netaddr *server_ip, tftpRecvDataFunc recvDataFunc,
@@ -70,12 +65,11 @@ syscall tftpGet(const char *filename, const struct netaddr *local_ip,
     uint block_recv_tries;
     uint next_block_number;
     ushort localpt;
-    uint block_max_end_time = 0;  /* This value is not used, but
-                                     gcc fails to detect it.  */
+    uint block_max_end_time = 0;  /* この値は使用されないがgccが発見できないので  */
     uint block_attempt_time;
     struct tftpPkt pkt;
 
-    /* Make sure the required parameters have been specified.  */
+    /* 引数のエラーチェック */
     if (NULL == filename || NULL == local_ip ||
         NULL == server_ip || NULL == recvDataFunc)
     {
@@ -94,30 +88,29 @@ syscall tftpGet(const char *filename, const struct netaddr *local_ip,
     }
 #endif
 
-    /* Allocate and open a UDP device (socket) to communicate with the TFTP
-     * server on.  The local and remote protocol addresses are specified as
-     * required parameters to this function.  The local port, which corresponds
-     * to the client's TFTP Transfer Identifier (TID) as per RFC 1350, must be
-     * allocated randomly; the UDP code handles this if 0 is passed as the local
-     * port.  The remote port is always initially the well-known TFTP port (69),
-     * but after receiving the first data packet it must be changed to the port
-     * on which the server actually responded.
+    /* TFTPサーバーと通信するためのUDPデバイス（ソケット）を割り当てて
+     * オープンする。ローカルとリモートのプロトコルアドレスは、この関数の
+     * 必須パラメータとして指定される。RFC1350のクライアントのTFTP転送
+     * 識別子（TID）に対応するローカルポートはランダムに割り当てる必要が
+     * ある。ローカルポートとして0が渡された場合、UDPこd−がこれを処理する。
+     * リモートポートは最初はTFTPのウェルノウンポート（69）であるが、最初の
+     * データパケットを受信した後、サーバーが実際に応答したポートに変更する
+     * 必要がある。
      *
-     * However... the last point about the server responding on a different port
-     * (which is unavoidable; it's how TFTP is designed) complicates things
-     * significantly.  This is because the UDP code will *not* route the
-     * server's response to the initial UDP device, as this device will be bound
-     * to port 69, not the actual port the server responded on.  To work around
-     * this problem without manually dealing with UDP headers, we create a
-     * *second* UDP device, which initially listens on the port from which the
-     * client sends the initial RRQ, but is initially *not* bound to any remote
-     * port or address.  We then set UDP_FLAG_BINDFIRST on this second UDP
-     * device so that the remote port and address are automatically filled in
-     * when the response from the server is received.  Further packets sent from
-     * the server are then received on this second UDP device, while further
-     * packets sent from the client are then sent over this second UDP device
-     * rather than the first since the second has the remote port correctly set.
-     * */
+     * しかし...サーバーが異なるポートで応答するという最後の点（これは避けられ
+     * ない。TFTPがそのように設計されているので）は事態を著しく複雑にしている。
+     * UDPコードはサーバの応答を最初のUDPデバイスにルーティング*しない*からである。
+     * このデバイスはポート69にバインドされ、サーバが実際に応答したポートではない。
+     * UDPヘッダをマニュアルで処理することなくこの問題を回避するために*2番目の*
+     * UDPデバイスを作成している。これは最初はクライアントが最初のRRQを送信した
+     * ポートをリッスンするが、当初はどのリモートポートやアドレスにバインド
+     * *されない*。その後、この2番目のUDPデバイスにUDP_FLAG_BINDFIRSTをセットする
+     * ことでサーバからの応答を受信した際にリモートポートとアドレスが自動的に
+     * セットされるようにしている。サーバから送信された追加のパケットはこの2番目の
+     * UDPデバイスで受信され、クライアントから送信されたパケットは1番目のUDP
+     * デバイスではなく、この2番目のUDPデバイスで送信される。なぜなら、2番目の
+     * UDPデバイスにリモートポートが正しく設定されているからである。
+     */
 
     udpdev = udpAlloc();
 
@@ -162,9 +155,9 @@ syscall tftpGet(const char *filename, const struct netaddr *local_ip,
                "and UDP%d (for binding reply), client port %u",
                send_udpdev - UDP0, recv_udpdev - UDP0, localpt);
 
-    /* Create receive thread.  This is a workaround to avoid having the
-     * currently executing thread call read() on the UDP device, which can block
-     * indefinitely.  */
+    /* 受信スレッドを作成する。これは、現在実行中のスレッドがUDPデバイス上で
+     * read()を呼び出すと無限にブロックされる可能性があるため、それを避ける
+     * ための回避策である */
     recv_tid = create(tftpRecvPackets, TFTP_RECV_THR_STK,
                       TFTP_RECV_THR_PRIO, "tftpRecvPackets", 3,
                       recv_udpdev, &pkt, gettid());
@@ -176,7 +169,7 @@ syscall tftpGet(const char *filename, const struct netaddr *local_ip,
     }
     ready(recv_tid, RESCHED_NO, CORE_ZERO);
 
-    /* Begin the download by requesting the file.  */
+    /* ファイルを要求することでダウンロードを開始する */
     retval = tftpSendRRQ(send_udpdev, filename);
     if (SYSERR == retval)
     {
@@ -186,12 +179,13 @@ syscall tftpGet(const char *filename, const struct netaddr *local_ip,
     num_rreqs_sent = 1;
     next_block_number = 1;
 
-    /* Loop until file is fully downloaded or an error condition occurs.  The
-     * basic idea is that the client receives DATA packets one-by-one, each of
-     * which corresponds to the next block of file data, and the client ACK's
-     * each one before the server sends the next.  But the actual code below is
-     * a bit more complicated as it must handle timeouts, retries, invalid
-     * packets, etc.  */
+    /* ファイルが完全にダウンロードされるか、エラー状態が発生するまでループする。
+     * 基本的な考え方は、クライアントはDATAパケットを1つずつ受け取るが、それぞれが
+     * ファイルデータの次のブロックに対応し、サーバーが次のパケットを送信する前に
+     * クライアントはそれぞれのパケットにACKすることである。ただし、以下の実際の
+     * コードは、タイムアウト、再試行、無効なパケットなどを処理しなければならない
+     * ので、もう少し複雑である。
+     */
     block_recv_tries = 0;
     for (;;)
     {
@@ -221,9 +215,9 @@ syscall tftpGet(const char *filename, const struct netaddr *local_ip,
 
         if (block_attempt_time <= block_max_end_time)
         {
-            /* Try to receive the block using the appropriate timeout.  The
-             * actual receive is done by another thread, executing
-             * tftpRecvPacket(s).  */
+            /* 適当なタイムアウトを使ってブロックの受信を試みる。
+             * 実際の受信はtftpRecvPacket(s)を実行している別の
+             * スレッドで行われる */
             TFTP_TRACE("Waiting for block %u", next_block_number);
             block_recv_tries++;
             send(recv_tid, 0);
@@ -232,18 +226,18 @@ syscall tftpGet(const char *filename, const struct netaddr *local_ip,
         }
         else
         {
-            /* Timeout was reached.  */
+            /* タイムアウト */
             retval = TIMEOUT;
         }
 
-        /* Handle timeout.  */
+        /* タイムアウトを処理する */
         if (TIMEOUT == retval)
         {
             TFTP_TRACE("Receive timed out.");
 
-            /* If the client is still waiting for the very first reply from the
-             * server, don't fail on the first timeout; instead wait until the
-             * client has had the chance to re-send the RRQ a few times.  */
+            /* クライアントがサーバからの最初の応答を依然として待っている場合、
+             * 最初のタイムアウトでは失敗せず、クライアントがRRQを数回再送する
+             * 機会を持つまで待機する */
             if (next_block_number == 1 &&
                 num_rreqs_sent < TFTP_INIT_BLOCK_MAX_RETRIES)
             {
@@ -259,29 +253,28 @@ syscall tftpGet(const char *filename, const struct netaddr *local_ip,
                 continue;
             }
 
-            /* Timed out for real; clean up and return failure status.  */
+            /* 実際にタイムアウトとする。クリーンアップして失敗ステータスを返す */
             retval = SYSERR;
             break;
         }
 
-        /* Return failure status if packet was not otherwise successfully
-         * received for some reason.  */
+        /* 何らかの理由でパケットを正常に受信できなかった場合、失敗
+         * ステータスを返す */
         if (SYSERR == retval)
         {
             TFTP_TRACE("UDP device or message passing error; aborting.");
             break;
         }
 
-        /* Otherwise, 'retval' is the length of the received TFTP packet.  */
+        /* そうでなければ'retval'は受信したTFTPパケットの長さである */
 
-        /* Begin extracting information from and validating the received packet.
-         * What we're looking for is a well-formed TFTP DATA packet from the
-         * correct IP address, where the block number is either that of the next
-         * block or that of the previous block.  The very first block needs some
-         * special handling, however; in particular, there is no previous block
-         * in that case, and the remote network address needs to be checked to
-         * verify the socket was actually bound to the server's network address
-         * as expected.
+        /* 受信したパケットから情報を抽出し、検証を開始する。探すものは正しい
+         * IPアドレスからの正しいTFTPデータパケットであり、そのブロック番号は
+         * 次のブロック番号か前のブロック番号のいずれかである。しかし、一番最初の
+         * ブロックにはとっく別な処理が必要である。特に、この場合、前のブロックは
+         * 存在せず、リモートネットワークアドレスをチェックして、実際にソケットが期待
+         * 通りにサーバーのネットワークアドレスにバインドされていることを確認
+         * する必要がある。
          */
         remote_address = &udptab[recv_udpdev - UDP0].remoteip;
         opcode = net2hs(pkt.opcode);
@@ -302,9 +295,8 @@ syscall tftpGet(const char *filename, const struct netaddr *local_ip,
             }
             TFTP_TRACE("Received invalid or unexpected packet.");
 
-            /* If we're still waiting for the first valid reply from the server
-             * but the bound connection is *not* from the server, reset the
-             * BINDFIRST flag.  */
+            /* サーバからの最初の有効な応答を待っているが、バインドされた接続が
+             * サーからのものもでは*ない*場合は、BINDFIRSTフラグをリセットする */
             if (wrong_source && next_block_number == 1)
             {
                 irqmask im;
@@ -316,12 +308,12 @@ syscall tftpGet(const char *filename, const struct netaddr *local_ip,
                 restore(im);
             }
 
-            /* Ignore the bad packet and try receiving again.  */
+            /* 不正なパケットは無視して、受信を再度試みる */
             continue;
         }
 
-        /* Received packet is a valid TFTP DATA packet for either the next block
-         * or the previous block.  */
+        /* 受信したパケットは次のブロックか前のブロックのいずれかの
+         * 正しいTFTPデータパケット */
 
 
     #if TFTP_DROP_PACKET_PERCENT != 0
@@ -333,8 +325,7 @@ syscall tftpGet(const char *filename, const struct netaddr *local_ip,
         }
     #endif
 
-        /* If this is the first response from the server, set the actual port
-         * that it responded on.  */
+        /* これがサーバからの最初の応答の場合、応答した実際のポートをセットする */
         if (next_block_number == 1)
         {
             send_udpdev = recv_udpdev;
@@ -342,7 +333,7 @@ syscall tftpGet(const char *filename, const struct netaddr *local_ip,
                        udptab[recv_udpdev - UDP0].remotept);
         }
 
-        /* Handle receiving the next data block.  */
+        /* 次のデータブロックの受信を処理する  */
         block_nbytes = TFTP_BLOCK_SIZE;
         if (recv_block_number == (ushort)next_block_number)
         {
@@ -350,10 +341,10 @@ syscall tftpGet(const char *filename, const struct netaddr *local_ip,
             TFTP_TRACE("Received block %u (%u bytes)",
                        recv_block_number, block_nbytes);
 
-            /* Feed received data into the callback function.  */
+            /* 受信したデータをコールバック関数に与える */
             retval = (*recvDataFunc)(pkt.DATA.data, block_nbytes,
                                      recvDataCtx);
-            /* Return if callback did not return OK.  */
+            /* コールバック関数がOKを返さなかった場合は復帰する */
             if (OK != retval)
             {
                 break;
@@ -362,22 +353,21 @@ syscall tftpGet(const char *filename, const struct netaddr *local_ip,
             block_recv_tries = 0;
         }
 
-        /* Acknowledge the block received.  */
+        /* ブロックの受信をACKする */
         retval = tftpSendACK(send_udpdev, recv_block_number);
 
-        /* A TFTP Get transfer is complete when a short data block has been
-         * received.   Note that it doesn't really matter from the client's
-         * perspective whether the last data block is acknowledged or not;
-         * however, the server would like to know so it doesn't keep re-sending
-         * the last block.  For this reason we did send the final ACK packet but
-         * will ignore failure to send it.  */
+        /* TFTP Get転送は短いデータブロックを受信したときに完了する。
+         * クライアントの観点からは、最後のデータブロックがACKされるか
+         * 否かは重要でないことに注意されたい。しかし、サーバは最後の
+         * ブロックを再送し続けないようにこれを知りたい。このため
+         * 最後のACKパケットを送信したが、送信に失敗した場合は無視する */
         if (block_nbytes < TFTP_BLOCK_SIZE)
         {
             retval = OK;
             break;
         }
 
-        /* Break if sending the ACK failed.  */
+        /* ACKの送信に失敗した場合はBreak */
         if (SYSERR == retval)
         {
             break;

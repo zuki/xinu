@@ -7,18 +7,20 @@
 #include <device.h>
 
 /**
- * Send a TFTP ACK (Acknowledge) packet over a UDP connection to the TFTP
- * server.  For TFTP Get transfers, this informs the TFTP server that a given
- * data packet (having a specific block number) has been received.  Not intended
- * to be used outside of the TFTP code.
+ * @ingroup tftp
+ *
+ * TFTP ACK（Acknowledge）パケットをUDP接続経由でTFTPサーバーに送信する.
+ * TFTP Get転送の場合、これは指定したデータパケット（特定のブロック番号を
+ * 持つ）を受信したことをTFTPサーバーに通知する。TFTPコード以外での使用は
+ * 意図していない。
  *
  * @param udpdev
- *      Device descriptor for the open UDP device.
+ *      UDPデバイスをオープンするためのデバイスディスクリプタ
  * @param block_number
- *      Block number to acknowledge.
+ *      ackするブロック番号
  *
  * @return
- *      OK if packet sent successfully; SYSERR otherwise.
+ *      パケットの送信に成功したら OK; そうでなければ SYSERR
  */
 syscall tftpSendACK(int udpdev, ushort block_number)
 {

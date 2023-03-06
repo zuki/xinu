@@ -1,5 +1,5 @@
 /**
- * @defgroup tftp TFTP client
+ * @defgroup tftp TFTPクライアント
  * @ingroup network
- * @brief Trivial File Transfer Protocol client
+ * @brief tftp (Trivial File Transfer Protocol) クライアント
  */

@@ -8,17 +8,19 @@
 #include <string.h>
 
 /**
- * Send a TFTP RRQ (Read Request) packet over a UDP connection to the TFTP
- * server.  This instructs the TFTP server to begin sending the contents of the
- * specified file.  Not intended to be used outside of the TFTP code.
+ * @ingroup tftp
+ *
+ * TFTP RRQ（Read Request）パケットをUDP接続経由でTFTPサーバに送信する.
+ * これはTFTPサーバに指定されたファイルの内容の送信を開始するよう指示する。
+ * TFTPコード以外での使用は想定していない。
  *
  * @param udpdev
- *      Device descriptor for the open UDP device.
+ *      UDPデバイスをオープンするためのデバイスディスクリプタ
  * @param filename
- *      Name of the file to request.
+ *      要求するファイルの名前
  *
  * @return
- *      OK if packet sent successfully; SYSERR otherwise.
+ *      パケットの送信に成功したら OK; そうでなければ SYSERR
  */
 syscall tftpSendRRQ(int udpdev, const char *filename)
 {
@@ -27,7 +29,7 @@ syscall tftpSendRRQ(int udpdev, const char *filename)
     uint pktlen;
     struct tftpPkt pkt;
 
-    /* Do sanity check on filename.  */
+    /* ファイル名のサニティチェック  */
     filenamelen = strnlen(filename, 256);
     if (0 == filenamelen || 256 == filenamelen)
     {
@@ -37,17 +39,17 @@ syscall tftpSendRRQ(int udpdev, const char *filename)
 
     TFTP_TRACE("RRQ \"%s\" (mode: octet)", filename);
 
-    /* Set TFTP opcode to RRQ (Read Request).  */
+    /* TFTP opcodeにRRQ（読み込み要求）をセット  */
     pkt.opcode = hs2net(TFTP_OPCODE_RRQ);
 
-    /* Set up filename and mode.  */
+    /* ファイル名とモードをセット */
     p = pkt.RRQ.filename_and_mode;
     memcpy(p, filename, filenamelen + 1);
     p += filenamelen + 1;
     memcpy(p, "octet", 6);
     p += 6;
 
-    /* Write the resulting packet to the UDP device.  */
+    /* 作成したパケットをUDPデバイスに書き込む */
     pktlen = p - (char*)&pkt;
     if (pktlen != write(udpdev, &pkt, pktlen))
     {
