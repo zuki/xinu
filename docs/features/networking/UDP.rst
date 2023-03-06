@@ -44,7 +44,7 @@ XINU（バージョン2.0以降）のUDPネットワーク機能の利用法を�
    としてシェルディレクトリに追加する。
 -  ``system/shell.c`` と ``include/shell.h`` を変更して
    udpclientコマンドとudpserverコマンドを含める。
--  Modify ``shell/Makerules`` を変更して ``xsh_udpclient.c`` と
+-  ``shell/Makerules`` を変更して ``xsh_udpclient.c`` と
    ``xsh_udpserver.c`` を追加して, compileディレクトリでXINUをmakeする。
 -  XIMUコンソールを2つ起動する。
 -  両コンソールのshellで **netup** を実行する。

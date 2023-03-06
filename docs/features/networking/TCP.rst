@@ -33,10 +33,10 @@ TCPモジュールにはデバッグのための :doc:`Trace statements </develo
 送ると、サーバはまったく同じメッセージをエコーバックします。
 
 利用方法
-~~~~~~~~~~っｍ
+~~~~~~~~~~
 
 -  以下のソースファイルを ``shell/xsh_echotest.c`` として追加する。
--  ``shell/shell.c`` と ``include/shell.h`` を変更して **echotest** に
+-  ``shell/shell.c`` と ``include/shell.h`` を変更して **echotest** を
    含める。
 -  ``shell/Makerules`` を変更して ``xsh_echotest.c`` を追加して、
    compileディレクトリでXINUをmakeする。
