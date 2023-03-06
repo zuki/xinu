@@ -15,5 +15,6 @@ Embedded Xinuドキュメント: 目次
    teaching/index
    projects/index
    development/index
+   NetworkBoot
    README_ldb
    Install_memo
