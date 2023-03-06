@@ -85,7 +85,7 @@ syscall dhcpSendRequest(int descrp, struct dhcpData *data)
             return SYSERR;
     }
 
-    /* オプションを終了させるんは少なくとも1つleast one DHCP_OPT_ENDバイトを
+    /* オプションを終了させるには少なくとも1つleast one DHCP_OPT_ENDバイトを
      * 追加するが、オプションのサイズが4バイトの倍数に成るよう必要に応じて
      * 更に追加する。  */
     do

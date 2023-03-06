@@ -11,27 +11,29 @@
 #include <stddef.h>
 #include <network.h>
 
-/** DHCP transfer data */
+/**
+ * @ingroup dhcpc
+ * DHCP転送データ構造体. */
 struct dhcpData
 {
     /* DHCP client output */
-    struct netaddr ip;
-    struct netaddr gateway;
-    struct netaddr mask;
-    char bootfile[128];
-    struct netaddr next_server;
+    struct netaddr ip;              /**< クライアントIPアドレス */
+    struct netaddr gateway;         /**< ゲートウェイアドレス */
+    struct netaddr mask;            /**< サブネットマスク */
+    char bootfile[128];             /**< ブートファイル名 */
+    struct netaddr next_server;     /**< 次のサーバのIPアドレス */
 
     /* DHCP client internal variables */
-    int state;
-    uint cxid;
-    uint starttime;
-    int recvStatus;
-    ushort discoverSecs;
-    uint offeredIpv4Addr;
-    uint clientIpv4Addr;
-    uint serverIpv4Addr;
-    uchar clientHwAddr[ETH_ADDR_LEN];
-    uchar serverHwAddr[ETH_ADDR_LEN];
+    int state;                          /**< 状態 */
+    uint cxid;                          /**< コンテキストID */
+    uint starttime;                     /**< 開始時間 */
+    int recvStatus;                     /**< 受信状態 */
+    ushort discoverSecs;                /**< 発見時間 */
+    uint offeredIpv4Addr;               /**< 提案IPv4アドレス */
+    uint clientIpv4Addr;                /**< クライアントIPv4アドレス */
+    uint serverIpv4Addr;                /**< サーバIPV4アドレス */
+    uchar clientHwAddr[ETH_ADDR_LEN];   /**< クライアントハードウェアアドレス */
+    uchar serverHwAddr[ETH_ADDR_LEN];   /**< サーバハードウェアアドレス */
 };
 
 syscall dhcpClient(int descrp, uint timeout, struct dhcpData *data);
