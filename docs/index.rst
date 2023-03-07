@@ -18,3 +18,4 @@ Embedded Xinuドキュメント: 目次
    NetworkBoot
    README_ldb
    Install_memo
+   Implement_memo
