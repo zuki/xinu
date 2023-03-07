@@ -51,9 +51,10 @@ syscall dhcpSendRequest(int descrp, struct dhcpData *data)
             *opts++ = DHCPDISCOVER;         // 1: メッセージ種別: Discover
 
             *opts++ = DHCP_OPT_PARAMREQ;    // Opt 55: パラメタリクエストリスト
-            *opts++ = 2;                    // 長さ: 2
+            *opts++ = 3;                    // 長さ: 3
             *opts++ = DHCP_OPT_SUBNET;      // 1: サブネットマスクの払い出し
             *opts++ = DHCP_OPT_GATEWAY;     // 3: ゲートウェイIPアドレス
+            *opts++ = DHCP_OPT_DNS;         // 6: DNSサーバIPアドレス
             break;
 
         case DHCPC_STATE_SELECTING:
@@ -76,9 +77,10 @@ syscall dhcpSendRequest(int descrp, struct dhcpData *data)
              * そのリストを含めなければならない（MUST）」
              */
             *opts++ = DHCP_OPT_PARAMREQ;
-            *opts++ = 2;
+            *opts++ = 3;
             *opts++ = DHCP_OPT_SUBNET;
             *opts++ = DHCP_OPT_GATEWAY;
+            *opts++ = DHCP_OPT_DNS;
             break;
 
         default:

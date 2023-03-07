@@ -104,6 +104,7 @@ static thread do_dhcpRecvReply(int descrp, struct dhcpData *data,
     int retval;
     const uchar *gatewayptr;
     const uchar *maskptr;
+    const uchar *dnsptr;
     const uchar *opts_end;
     uint serverIpv4Addr;
     int mtu;
@@ -183,6 +184,7 @@ next_packet:
         opts = dhcp->opts;
         maskptr = NULL;
         gatewayptr = NULL;
+        dnsptr = NULL;
         serverIpv4Addr = 0;
         opts_end = opts + (pkt->len - (ETH_HDR_LEN + IPv4_HDR_LEN +
                                        UDP_HDR_LEN + DHCP_HDR_LEN));
@@ -248,6 +250,13 @@ next_packet:
                 if (len >= IPv4_ADDR_LEN)
                 {
                     gatewayptr = opts;
+                }
+                break;
+
+            case DHCP_OPT_DNS:
+                if (len >= IPv4_ADDR_LEN)
+                {
+                    dnsptr = opts;
                 }
                 break;
 
@@ -339,6 +348,13 @@ next_packet:
                 memcpy(data->gateway.addr, gatewayptr, IPv4_ADDR_LEN);
             }
 
+            if (NULL != dnsptr)
+            {
+                data->dns.type = NETADDR_IPv4;
+                data->dns.len  = IPv4_ADDR_LEN;
+                memcpy(data->dns.addr, dnsptr, IPv4_ADDR_LEN);
+            }
+
             /* DHCPACKで提供されていたら次のサーバのアドレスとbootファイル
              * （たとえばTFTP用）をセットする */
             if (0 != dhcp->siaddr)
@@ -368,6 +384,15 @@ next_packet:
                 else
                 {
                     DHCP_TRACE("No gateway.");
+                }
+                if (NULL != dnsptr)
+                {
+                    netaddrsprintf(str_addr, &data->dns);
+                    DHCP_TRACE("Set dns=%s", str_addr);
+                }
+                else
+                {
+                    DHCP_TRACE("No dns.");
                 }
 
                 netaddrsprintf(str_addr, &data->next_server);

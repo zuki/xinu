@@ -20,6 +20,7 @@ struct dhcpData
     struct netaddr ip;              /**< クライアントIPアドレス */
     struct netaddr gateway;         /**< ゲートウェイアドレス */
     struct netaddr mask;            /**< サブネットマスク */
+    struct netaddr dns;             /**< DNSサーバアドレス */
     char bootfile[128];             /**< ブートファイル名 */
     struct netaddr next_server;     /**< 次のサーバのIPアドレス */
 
