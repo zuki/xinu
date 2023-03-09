@@ -84,6 +84,7 @@ static const unsigned char nvram_crc_tab[256] = {
 
 /* Defined NVRAM lookup strings for networking components in Xinu */
 #define NET_GATEWAY     "gateway_ipaddr"
+#define NET_DNS         "dns_ipaddr"
 /* Below strings have the device number prefixed on them        */
 /* In Embedded Xinu string lookup format: DEVNUM_STRINGBELOW    */
 /*    e.g. ETH0_hostname                                        */

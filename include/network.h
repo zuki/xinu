@@ -122,6 +122,7 @@ struct netif
     struct netaddr mask;              /**< プロトコルアドレスのサブネットマスク */
     struct netaddr gateway;           /**< ゲートウェイのプロトコルアドレス     */
     struct netaddr ipbrc;             /**< ブロードキャストプロトコルアドレス   */
+    struct netaddr dns;               /**< DNSサーバアドレス            */
     struct netaddr hwaddr;            /**< ハードウェアアドレス         */
     struct netaddr hwbrc;             /**< ハードウェアブロードキャストアドレス */
     tid_typ recvthr[NET_NTHR];        /**< 受信スレッドids              */
@@ -169,7 +170,7 @@ thread netRecv(struct netif *);
 syscall netSend(struct packet *, const struct netaddr *, const struct netaddr *,
                 ushort);
 syscall netUp(int, const struct netaddr *, const struct netaddr *,
-              const struct netaddr *);
+              const struct netaddr *, const struct netaddr *);
 
 /**  @} */
 

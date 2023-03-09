@@ -220,7 +220,7 @@ shellcmd xsh_voip(int nargs, char *args[])
         dot2ipv4("127.0.0.1", &host);
         localhost = &host;
         dot2ipv4("255.255.255.0", &mask);
-        if (SYSERR == netUp(ELOOP, &host, &mask, NULL))
+        if (SYSERR == netUp(ELOOP, &host, &mask, NULL, NULL))
         {
             close(ELOOP);
             fprintf(stderr,

@@ -108,6 +108,7 @@ struct ipv4Pkt
 
 /** 関数プロトタイプ */
 syscall dot2ipv4(const char *, struct netaddr *);
+syscall int2ipv4(const uint32_t, struct netaddr *);
 syscall ipv4Recv(struct packet *);
 bool ipv4RecvValid(struct ipv4Pkt *);
 bool ipv4RecvDemux(struct netaddr *);

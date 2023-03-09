@@ -76,7 +76,7 @@ thread test_ip(bool verbose)
     }
     else
     {
-        if (SYSERR == netUp(ELOOP, &src, &mask, &dst))
+        if (SYSERR == netUp(ELOOP, &src, &mask, &dst, NULL))
         {
             failif(TRUE, "netUp returned SYSERR");
         }
@@ -173,7 +173,7 @@ thread test_ip(bool verbose)
         failif(TRUE, "Open returned SYSERR");
     }
 
-	
+
 
 	if (OK != ipv4Recv(pktA))
 	{

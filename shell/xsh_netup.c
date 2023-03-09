@@ -39,8 +39,10 @@ shellcmd xsh_netup(int nargs, char *args[])
     struct netaddr ip;
     struct netaddr mask;
     struct netaddr gateway;
+    struct netaddr dns;
     struct netaddr *gatewayptr;
-    const char *str_ip, *str_mask, *str_gateway;
+    struct netaddr *dnsptr;
+    const char *str_ip, *str_mask, *str_gateway, *str_dns;
 #if NVRAM
     char nvramLookup[DEVMAXNAME + NVRAM_STRMAX];
 #endif
@@ -77,6 +79,7 @@ shellcmd xsh_netup(int nargs, char *args[])
     str_ip = NULL;
     str_mask = NULL;
     str_gateway = NULL;
+    str_dns = NULL;
 
     /* IP address specified?  */
     if (nargs >= 3)
@@ -92,6 +95,12 @@ shellcmd xsh_netup(int nargs, char *args[])
             if (nargs >= 5)
             {
                 str_gateway = args[4];
+
+                /* DNS specified?  */
+                if (nargs >= 6)
+                {
+                    str_dns = args[5];
+                }
             }
         }
     }
@@ -124,6 +133,15 @@ shellcmd xsh_netup(int nargs, char *args[])
         if (NULL == str_gateway)
         {
             str_gateway = nvramGet("lan_gateway");
+        }
+    }
+
+    if (NULL == str_dns)
+    {
+        str_dns = nvramGet(NET_DNS);
+        if (NULL == str_dns)
+        {
+            str_dns = nvramGet("lan_dns");
         }
     }
 #endif  /* NVRAM */
@@ -186,6 +204,24 @@ shellcmd xsh_netup(int nargs, char *args[])
             fprintf(stderr, "WARNING: defaulting to no gateway\n");
             gatewayptr = NULL;
         }
+
+        /* Parse dns if specified.  Note: a dns is not required so it
+         * has no default value; we only warn that no gateway is being set.  */
+        if (NULL != str_dns)
+        {
+            if (SYSERR == dot2ipv4(str_dns, &dns))
+            {
+                fprintf(stderr, "ERROR: %s is not a valid "
+                        "IPv4 address.\n", str_dns);
+                return SHELL_ERROR;
+            }
+            dnsptr = &dns;
+        }
+        else
+        {
+            fprintf(stderr, "WARNING: defaulting to no dns\n");
+            dnsptr = NULL;
+        }
     }
     else
     {
@@ -223,6 +259,18 @@ shellcmd xsh_netup(int nargs, char *args[])
             /* No gateway provided.  */
             gatewayptr = NULL;
         }
+
+        if (0 != data.dns.len)
+        {
+            /* DNS was provided.  */
+            netaddrcpy(&dns, &data.dns);
+            dnsptr = &dns;
+        }
+        else
+        {
+            /* No dns provided.  */
+            dnsptr = NULL;
+        }
     #else
         fprintf(stderr,
             "ERROR: DHCP not supported!  Either recompile Embedded Xinu with\n"
@@ -232,26 +280,37 @@ shellcmd xsh_netup(int nargs, char *args[])
     #endif
     }
 
-    result = netUp(descrp, &ip, &mask, gatewayptr);
+    result = netUp(descrp, &ip, &mask, gatewayptr, dnsptr);
 
     if (OK == result)
     {
         char str_ip[20];
         char str_mask[20];
         char str_gateway[20];
+        char str_dns[20];
 
         netaddrsprintf(str_ip, &ip);
         netaddrsprintf(str_mask, &mask);
         if (NULL != gatewayptr)
         {
             netaddrsprintf(str_gateway, gatewayptr);
-            printf("%s is %s with netmask %s (gateway %s)\n",
+            printf("%s is %s with netmask %s (gateway %s)",
                    devname, str_ip, str_mask, str_gateway);
         }
         else
         {
-            printf("%s is %s with netmask %s (no gateway)\n",
+            printf("%s is %s with netmask %s (no gateway)",
                    devname, str_ip, str_mask);
+        }
+
+        if (NULL != dnsptr)
+        {
+            netaddrsprintf(str_dns, dnsptr);
+            printf("(dns %s)\n", str_dns);
+        }
+        else
+        {
+            printf("(no dns)\n");
         }
 
         return SHELL_OK;
@@ -268,7 +327,7 @@ static void usage(const char *command)
 {
     printf(
 "Usage:\n"
-"\t%s [<DEVICE> [<IP> [<MASK> [<GATEWAY>]]]]\n"
+"\t%s [<DEVICE> [<IP> [<MASK> [<GATEWAY> [<DNS>]]]]]\n"
 "Description:\n"
 "\tStarts a network interface on the specified underlying\n"
 "\tdevice.\n"
@@ -287,6 +346,8 @@ static void usage(const char *command)
 "\t  value if present, otherwise 255.255.255.0.\n"
 "\tIf not specified and not using DHCP, GATEWAY defaults to the\n"
 "\t  nvram value if present, otherwise no gateway.\n"
+"\tIf not specified and not using DHCP, DNS defaults to the\n"
+"\t  nvram value if present, otherwise no DNS.\n"
     , command);
 }
 

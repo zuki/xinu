@@ -118,12 +118,14 @@ static void kexec_from_network(int netdev)
     struct dhcpData data;
     int result;
     const struct netaddr *gatewayptr;
+    const struct netaddr *dnsptr;
     struct netif *nif;
     void *kernel;
     uint size;
     char str_ip[20];
     char str_mask[20];
     char str_gateway[20];
+    char str_dns[20];
     const char *netdevname = devtab[netdev].name;
 
     /* Bring network interface (if any) down.  */
@@ -154,17 +156,29 @@ static void kexec_from_network(int netdev)
     if (0 != data.gateway.len)
     {
         netaddrsprintf(str_gateway, &data.gateway);
-        printf("Bringing up %s as %s with mask %s (gateway %s)\n",
+        printf("Bringing up %s as %s with mask %s (gateway %s)",
                netdevname, str_ip, str_mask, str_gateway);
         gatewayptr = &data.gateway;
     }
     else
     {
-        printf("Bringing up %s as %s with mask %s (no gateway)\n",
+        printf("Bringing up %s as %s with mask %s (no gateway)",
                netdevname, str_ip, str_mask);
         gatewayptr = NULL;
     }
-    result = netUp(netdev, &data.ip, &data.mask, gatewayptr);
+    if (0 != data.dns.len)
+    {
+        netaddrsprintf(str_dns, &data.dns);
+        printf("(dns %s)\n", str_dns);
+        dnsptr = &data.dns;
+    }
+    else
+    {
+        printf("(no dns)\n");
+        dnsptr = NULL;
+    }
+
+    result = netUp(netdev, &data.ip, &data.mask, gatewayptr, dnsptr);
     if (OK != result)
     {
         fprintf(stderr, "ERROR: failed to bring up %s.\n", netdevname);

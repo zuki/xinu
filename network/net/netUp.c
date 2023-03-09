@@ -29,13 +29,16 @@ static int netAlloc(void);
  * @param gateway
  *      ゲートウェイのプロトコルアドレス, 指定しない場合は NULL. 指定しない
  *      場合は「ゲーウェイなし」と解釈される。
+ * @param dns
+ *      DNSのプロトコルアドレス, 指定しない場合は NULL. 指定しない
+ *      場合は「DNSなし」と解釈される。
  *
  * @return
  *      ネットワークインタフェースが成功裏に開始されたら OK; そうでなければ SYSERR
  */
 syscall
 netUp(int descrp, const struct netaddr *ip, const struct netaddr *mask,
-              const struct netaddr *gateway)
+              const struct netaddr *gateway, const struct netaddr *dns)
 {
     irqmask im;
     int nif;
@@ -52,9 +55,9 @@ netUp(int descrp, const struct netaddr *ip, const struct netaddr *mask,
     }
 
     if (ip->len > NET_MAX_ALEN || mask->len > NET_MAX_ALEN ||
-        (NULL != gateway && gateway->len > NET_MAX_ALEN))
+        (NULL != gateway && gateway->len > NET_MAX_ALEN) || (NULL != dns && dns->len > NET_MAX_ALEN))
     {
-        NET_TRACE("IP, mask, and/or gateway are longer than maximum "
+        NET_TRACE("IP, mask, gateway and/or dns are longer than maximum "
                   "network address length.");
         goto out;
     }
@@ -109,6 +112,10 @@ netUp(int descrp, const struct netaddr *ip, const struct netaddr *mask,
     {
         netaddrcpy(&netptr->gateway, gateway);
     }
+    if (NULL != dns)
+    {
+        netaddrcpy(&netptr->dns, dns);
+    }
     /* 次のループは、たとえば、IPv4マスクが255.255.255.0、
      * IPv4アドレスが192.168.0.50の場合、IPv4ブロードキャスト
      * アドレスが192.168.0.255となるようにする */
@@ -128,6 +135,8 @@ netUp(int descrp, const struct netaddr *ip, const struct netaddr *mask,
     NET_TRACE("\tMask %s", str);
     netaddrsprintf(str, &netptr->gateway);
     NET_TRACE("\tGateway %s", str);
+    netaddrsprintf(str, &netptr->dns);
+    NET_TRACE("\tDNS %s", str);
     netaddrsprintf(str, &netptr->hwaddr);
     NET_TRACE("\tHw Addr %s", str);
     netaddrsprintf(str, &netptr->hwbrc);

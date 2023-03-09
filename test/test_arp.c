@@ -111,7 +111,7 @@ thread test_arp(bool verbose)
     }
     else
     {
-        failif((SYSERR == netUp(ELOOP, &ip, &mask, NULL)), "");
+        failif((SYSERR == netUp(ELOOP, &ip, &mask, NULL, NULL)), "");
     }
     if (!passed)
     {

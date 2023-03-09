@@ -56,6 +56,7 @@ struct centry commandtab[] = {
 #endif
     {"netstat", FALSE, xsh_netstat},
     {"netup", FALSE, xsh_netup},
+    {"nslookup", FALSE, xsh_nslookup},
 #endif
 #if NVRAM
     {"nvram", FALSE, xsh_nvram},

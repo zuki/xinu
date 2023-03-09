@@ -121,7 +121,7 @@ static int test_arp(bool verbose)
 	}
 	else
 	{
-		failif((SYSERR == netUp(ELOOP, &ip, &mask, NULL)), "");
+		failif((SYSERR == netUp(ELOOP, &ip, &mask, NULL, NULL)), "");
 	}
 	if (!passed)
 	{
@@ -884,4 +884,3 @@ void testPass(bool verbose, const char *msg)
 		kprintf("\033[60G[\033[1;32mPASS\033[0;39m] %s\n", msg);
 	}
 }
-

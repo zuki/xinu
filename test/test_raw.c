@@ -75,7 +75,7 @@ thread test_raw(bool verbose)
     }
     else
     {
-        if (SYSERR == netUp(ELOOP, &lip, &mask, NULL))
+        if (SYSERR == netUp(ELOOP, &lip, &mask, NULL, NULL))
         {
             close(ELOOP);
             failif(TRUE, "");

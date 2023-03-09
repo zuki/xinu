@@ -17,6 +17,7 @@
         "__availability": "c",
         "new": "c",
         "typeinfo": "c",
-        "__threading_support": "c"
+        "__threading_support": "c",
+        "__locale": "c"
     }
 }

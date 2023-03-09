@@ -36,6 +36,7 @@ thread test_netif(bool verbose)
     struct netaddr ip;
     struct netaddr mask;
     struct netaddr gate;
+    struct netaddr dns;
     struct netaddr hw;
     struct pcap_file_header pcap;
     struct pcap_pkthdr phdr;
@@ -64,11 +65,18 @@ thread test_netif(bool verbose)
     gate.addr[2] = 1;
     gate.addr[3] = 1;
 
+    dns.type = NETADDR_IPv4;
+    dns.len = IPv4_ADDR_LEN;
+    dns.addr[0] = 192;
+    dns.addr[1] = 168;
+    dns.addr[2] = 1;
+    dns.addr[3] = 1;
+
     testPrint(verbose, "Open loopback ethernet device");
     failif((SYSERR == open(ELOOP)), "");
 
     testPrint(verbose, "Start network interface");
-    if (SYSERR == netUp(ELOOP, &ip, &mask, &gate))
+    if (SYSERR == netUp(ELOOP, &ip, &mask, &gate, &dns))
     {
         failif(TRUE, "Returned SYSERR");
     }
@@ -115,7 +123,7 @@ thread test_netif(bool verbose)
     failif((SYSERR == netDown(ELOOP)), "");
 
     testPrint(verbose, "Start network interface (no gateway)");
-    failif((SYSERR == netUp(ELOOP, &ip, &mask, NULL)), "");
+    failif((SYSERR == netUp(ELOOP, &ip, &mask, NULL, NULL)), "");
     for (i = 0; i < NNETIF; i++)
     {
         if ((NET_ALLOC == netiftab[i].state)

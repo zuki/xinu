@@ -139,7 +139,7 @@ thread test_snoop(bool verbose)
     mask.addr[3] = 1;
 
     open(ELOOP);
-    netUp(ELOOP, &src, &dst, &mask);
+    netUp(ELOOP, &src, &dst, &mask, NULL);
 
     testPrint(verbose, "Open capture all");
     if (SYSERR == snoopOpen(&cap, "ALL"))

@@ -86,11 +86,14 @@ static void netStat(struct netif *netptr)
     netaddrsprintf(strA, &netptr->ip);
     netaddrsprintf(strB, &netptr->mask);
     printf("\t");
-    printf("IP Addr: %-15s   Mask: %-15s\n", strA, strB);
+    printf("IP Addr: %-15s   Mask    : %-15s\n", strA, strB);
     netaddrsprintf(strA, &netptr->gateway);
     netaddrsprintf(strB, &netptr->ipbrc);
     printf("\t");
     printf("Gateway: %-15s   Bcast IP: %-15s\n", strA, strB);
+    netaddrsprintf(strA, &netptr->dns);
+    printf("\t");
+    printf("DNS    : %-15s\n", strA);
     printf("\t");
     printf("MTU: %-19d   Link Hdr Len: %d\n", netptr->mtu,
            netptr->linkhdrlen);
