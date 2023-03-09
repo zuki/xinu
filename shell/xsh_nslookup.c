@@ -55,7 +55,7 @@ shellcmd xsh_nslookup(int nargs, char *args[])
     }
 
 
-    if (dnsResolve(&netiftab[0], args[1], &ipaddr) == SYSERR) {
+    if (dnsLookup(&netiftab[0], args[1], &ipaddr) == SYSERR) {
         fprintf(stderr, "ERROR: Failed to resolve domain name %s.\n", args[1]);
         return SHELL_ERROR;
     }

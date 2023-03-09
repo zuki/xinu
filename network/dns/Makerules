@@ -6,7 +6,7 @@ COMP = network/dns
 # Source files for this component
 
 # Important network components
-C_FILES = dnsClient.c
+C_FILES = dnsUtils.c dnsResolveA.c dnsResolveCNAME.c dnsClient.c
 S_FILES =
 
 # Add the files to the compile source path

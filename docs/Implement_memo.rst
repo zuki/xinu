@@ -113,7 +113,7 @@ uint16_t 追加RR数   0000                             追加RRは0
 uint16_t 照会タイプ 0001                             A: IPアドレス
 uint16_t 照会クラス 0001                             Internetアドレス
 uint16_t            c00c                             ドメイン名はオフセット0x0c
-uint32_t タイプ     0001                             A
+uint16_t タイプ     0001                             A
 uint16_t クラス     0001                             IN
 uint32_t TTL        0000012c                         300
 uint16_t データ長   0004                             4バイト
@@ -202,3 +202,74 @@ TODO
 ====
 
 CNAMEに対応する
+
+*****************
+CNAME対応
+*****************
+
+CNAMEの照会タイプは ``5``
+
+Macで実行
+=========
+
+.. code-block:: none
+
+    printf "\0\0\1\0\0\1\0\0\0\0\0\0\3www\5yahoo\2co\2jp\0\0\5\0\1" | nc -u -w 1 192.168.10.1 53 | xxd
+    00000000: 0000 8180 0001 0001 0000 0000 0377 7777  .............www
+    00000010: 0579 6168 6f6f 0263 6f02 6a70 0000 0500  .yahoo.co.jp....
+    00000020: 01c0 0c00 0500 0100 0001 8f00 1006 6564  ..............ed
+    00000030: 6765 3132 0167 0479 696d 67c0 19         ge12.g.yimg..
+
+
+実装
+====
+
+
+
+.. code-block:: none
+
+    $ git status
+    On branch rpi3
+    Changes to be committed:
+    (use "git restore --staged <file>..." to unstage)
+        modified:   docs/Implement_memo.rst
+        modified:   include/dns.h
+        modified:   network/dns/Makerules
+        modified:   network/dns/dnsClient.c
+        new file:   network/dns/dnsResolveA.c
+        new file:   network/dns/dnsResolveCNAME.c
+        new file:   network/dns/dnsUtils.c
+        modified:   shell/xsh_nslookup.c
+
+実行
+====
+
+CNAMEからAレコードの取得はできたが、最初のAレコードしか見てないので、複数ある場合は
+結果が一定しない。オリジナルソースには最適のアドレスを決めるロジックがあったので検討する。
+
+.. code-block:: none
+
+    xsh$ nslookup yahoo.co.jp
+    RESOLVED: domain yahoo.co.jp -> ip address 183.79.219.252.
+    xsh$ nslookup www.yahoo.co.jp
+    RESOLVED: domain www.yahoo.co.jp -> ip address 183.79.219.252.
+    xsh$ nslookup edge12.g.yimg.jp
+    RESOLVED: domain edge12.g.yimg.jp -> ip address 182.22.25.124.
+    xsh$ nslookup yahoo.co.jp
+    RESOLVED: domain yahoo.co.jp -> ip address 183.79.219.252.
+    xsh$ nslookup www.yahoo.co.jp
+    RESOLVED: domain www.yahoo.co.jp -> ip address 183.79.250.251.
+    xsh$ nslookup edge12.g.yimg.jp
+    RESOLVED: domain edge12.g.yimg.jp -> ip address 183.79.217.124.
+
+    # macで実行
+    $ dig yahoo.co.jp any
+    ;; ANSWER SECTION:
+    yahoo.co.jp.		75	IN	A	183.79.250.123
+    yahoo.co.jp.		75	IN	A	183.79.250.251
+    yahoo.co.jp.		75	IN	A	182.22.25.124
+    yahoo.co.jp.		75	IN	A	183.79.219.252
+    yahoo.co.jp.		75	IN	A	182.22.25.252
+    yahoo.co.jp.		75	IN	A	182.22.28.252
+    yahoo.co.jp.		75	IN	A	183.79.217.124
+    yahoo.co.jp.		75	IN	A	182.22.16.251

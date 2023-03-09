@@ -80,6 +80,10 @@ struct    dnspkt {
  * @def DNS_QT_NS
  * @brief QType値: DNSネームサーバタイプ */
 #define DNS_QT_NS       2
+/** @ingroup dns
+ * @def DNS_QT_CNAME
+ * @brief QType値: CNAMEタイプ */
+#define DNS_QT_CNAME    5
 
 /* QClass values */
 /** @ingroup dns
@@ -108,6 +112,12 @@ struct    dns_rr {
     char        *rdata;         /* Resource Record Data area    */
 };
 
-syscall dnsResolve(const struct netif *netptr, char *dname, struct netaddr *addr);
+int32_t dnsQuery(char *dname, char *data, uint16_t type);
+syscall dnsGetA(char *dname, struct dnspkt *rpkt, uint32_t *addr);
+syscall dnsGetCNAME(char *dname, struct dnspkt *rpkt, char *cname);
+
+syscall dnsLookup(const struct netif *netptr, char *dname, struct netaddr *addr);
+syscall dnsResolveA(const struct netif *netptr, char *dname, struct netaddr *addr);
+syscall dnsResolveCNAME(const struct netif *netptr, char *dname, char *cname);
 
 #endif
