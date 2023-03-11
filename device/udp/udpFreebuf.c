@@ -11,6 +11,11 @@
 
 /**
  * @ingroup udpinternal
+ *
+ * UDPパケットを解放する.
+ *
+ * @param 解放するUDPパケット
+ * @return 成功したら OK, そうでなければ SYSERR
  */
 syscall udpFreebuf(struct udpPkt *udppkt)
 {

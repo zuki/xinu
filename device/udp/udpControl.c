@@ -13,12 +13,12 @@
 /**
  * @ingroup udpexternal
  *
- * Control function for udp devices.
- * @param devptr udp device table entry
- * @param func control function to execute
- * @param arg1 first argument for the control function
- * @param arg2 second argument for the control function
- * @return the result of the control function
+ * UDPデバイスの制御関数.
+ * @param devptr UDPデバイステーブルエントリ
+ * @param func 実行する制御関数
+ * @param arg1 制御関数への第1引数
+ * @param arg2 制御関数への第2引数
+ * @return 制御関数の結果
  */
 devcall udpControl(device *devptr, int func, long arg1, long arg2)
 {
@@ -30,7 +30,7 @@ devcall udpControl(device *devptr, int func, long arg1, long arg2)
     switch (func)
     {
     case UDP_CTRL_ACCEPT:
-        /* arg1 is port and arg2 is pointer to netaddr */
+        /* arg1はポート番号、arg2はnetaddrへのポインタ */
         udpptr->localpt = arg1;
         if (NULL == arg2)
         {
@@ -42,7 +42,7 @@ devcall udpControl(device *devptr, int func, long arg1, long arg2)
         }
         return OK;
     case UDP_CTRL_BIND:
-        /* arg1 is port and arg2 is pointer to netaddr */
+        /* arg1はポート番号、arg2はnetaddrへのポインタ */
         udpptr->remotept = arg1;
         if (NULL == arg2)
         {
@@ -54,12 +54,12 @@ devcall udpControl(device *devptr, int func, long arg1, long arg2)
         }
         return OK;
     case UDP_CTRL_CLRFLAG:
-        /* arg1 is the flag we are clearing */
+        /* arg1はクリアするフラグ */
         old = udpptr->flags & arg1;
         udpptr->flags &= ~arg1;
         return old;
     case UDP_CTRL_SETFLAG:
-        /* arg1 is the flag we are setting */
+        /* arg1はセットするフラグ */
         old = udpptr->flags & arg1;
         udpptr->flags |= arg1;
         return old;

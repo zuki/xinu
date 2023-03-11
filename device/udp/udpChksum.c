@@ -13,12 +13,12 @@
 /**
  * @ingroup udpinternal
  *
- * Calculate the checksum of a UDP packet based on UDP and IP information
- * @param udppkt UDP packet to calculate checksum for
- * @param len Length of UDP packet
- * @param src Source IP Address
- * @param dst Destination IP Address
- * @return The checksum of the UDP packet
+ * UDPとIPの情報に基づいてUDPパケットのチェックサムを計算する.
+ * @param udppkt チェックサムを計算するUDPパケット
+ * @param len UDPパケット長
+ * @param src 送信元IPアドレス
+ * @param dst あて先IPアドレス
+ * @return UDPパケットのチェックサム
  */
 ushort udpChksum(struct packet *pkt, ushort len, const struct netaddr *src,
                  const struct netaddr *dst)

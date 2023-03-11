@@ -9,36 +9,37 @@
 /**
  * @ingroup udpexternal
  *
- * Write data to a UDP device, thereby sending it over the network in one or
- * more UDP packets using the address/port parameters with which the UDP device
- * is configured.
+ * UDPデバイスにデータを書き込むことにより、UDPデバイスを構成した
+ * アドレス/ポートを使用して、1つ以上のUDPパケットとしてネットワーク上に
+ * 送信する。
  *
- * Note: depending on the lower levels of the network stack, this function
- * likely only buffers the UDP packet(s) to be sent at some later time.
- * Therefore, they may not have actually been transmitted on the wire when this
- * function returns.
+ * 注意: ネットワークスタックの下位レベルによっては、この関数は
+ * UDPパケットをバッファするだけで、送信は後で行われる可能性がある。
+ * したがって、この関数が復帰咲いた際は実際にはUDPパケットはまだ
+ * 送信されていない可能性がある。
  *
- * The UDP device MUST be open and MUST remain open throughout the execution of
- * this function.
+ * UDPデバイスはオープンされており、この関数の実行中もオープンしている
+ * 必要がある。
  *
  * @param devptr
- *      Device entry for the UDP device.
+ *      UDPデバイス用のデバイスエントリ
  * @param buf
- *      Buffer of data to be sent.  If the UDP device is in the default mode,
- *      this is interpreted as the UDP payload to send, which will be split up
- *      among multiple UDP packets if its size exceeds ::UDP_MAX_DATALEN bytes.
- *      Alternatively, if the UDP device is in @ref UDP_FLAG_PASSIVE "passive
- *      mode", the data is intepreted as a single UDP packet including the UDP
- *      pseudo-header, followed by the UDP header, followed by the UDP payload.
+ *      送信するデータを収めたバッファ。UDPデバイスがデフォルト
+ *      モードの場合、これは送信すべきUDPペイロードであると解釈され、
+ *      そのサイズが ::UDP_MAX_DATALEN バイトを超える場合は複数の
+ *      UDPパッケージに分割される。一方、UDPデバイスが @ref
+ *      UDP_FLAG_PASSIVE "パッシブモード"の場合、データはUDP疑似
+ *      ヘッダーを含む1つのUDPパケットであり、直後にUDPヘッダーと
+ *      UDPペイロードが続くものと解釈される。
  * @param len
- *      Number of bytes of data to send (length of @p buf).
+ *      送信するデータのバイト数（@p buf の長さ).
  *
  * @return
- *      If any packets were successfully sent, returns the number of bytes of
- *      data successfully sent, which may be less than @p len in the case of an
- *      error.  If the UDP device is not in passive mode and @p len was 0, no
- *      packets will be sent and 0 will be returned.  Otherwise, returns
- *      ::SYSERR.
+ *      いずれかのパケットの送信に成功した場合は、送信に成功した
+ *      データ数を返す。エラーの場合、これは @p len より小さい場合が
+ *      ある。UDPデバイスがパッシブモードではなく、 @p lenが0であった
+ *      場合は、パケットは送信されず、0が返される。それ以外は ::SYSERR
+ *      を返す。
  */
 devcall udpWrite(device *devptr, const void *buf, uint len)
 {
@@ -49,7 +50,8 @@ devcall udpWrite(device *devptr, const void *buf, uint len)
 
     if (udpptr->flags & UDP_FLAG_PASSIVE)
     {
-        /* If passive UDP device, pass in pseudoheader + header + payload */
+        /* パッシブUDPデバイスの場合、pseudoheader + header + payload
+         * が渡される */
         if (len > sizeof(struct udpPseudoHdr) + UDP_HDR_LEN + UDP_MAX_DATALEN ||
             len < sizeof(struct udpPseudoHdr) + UDP_HDR_LEN)
         {
@@ -71,14 +73,14 @@ devcall udpWrite(device *devptr, const void *buf, uint len)
         uint pktsize;
         uint count;
 
-        /* Check if we have a specified remote port and ip */
+        /* リモートのポートとipが指定されているかチェックする */
         if (0 == udpptr->remotept || 0 == udpptr->remoteip.type)
         {
             UDP_TRACE("No specified remote port or IP address.");
             return SYSERR;
         }
 
-        /* Carry out the actual writing */
+        /* 実際の書き出しを実行する */
         for (count = 0; count < len; count += pktsize)
         {
             uint bytes_remaining = len - count;

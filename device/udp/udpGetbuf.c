@@ -12,6 +12,10 @@
 
 /**
  * @ingroup udpinternal
+ *
+ * UDPパケット用のバッファを取得する
+ * @param バッファプールを持つUDPデバイス
+ * @return UDPパケットバッファへのポインタ、バッファが取得できなかった場合は SYSERR
  */
 struct udpPkt *udpGetbuf(struct udp *udpptr)
 {

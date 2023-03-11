@@ -14,11 +14,11 @@
 /**
  * @ingroup udpinternal
  *
- * Receive a UDP packet and place it in the UDP device's input buffer
- * @param pkt Incoming UDP packet
- * @param src Source address
- * @param dst Destination address
- * @return OK if UDP packet is received properly, otherwise SYSERR
+ * UDPパケットを受信してUDPデバイスの入力バッファに置く.
+ * @param pkt 着信UDPパケット
+ * @param src 送信元アドレス
+ * @param dst あて先アドレス
+ * @return UDPパケットを正しく受信できたら OK; それ以外は SYSERR
  */
 syscall udpRecv(struct packet *pkt, const struct netaddr *src,
                 const struct netaddr *dst)
@@ -34,7 +34,7 @@ syscall udpRecv(struct packet *pkt, const struct netaddr *src,
 
     irqmask im;
 
-    /* Point to the start of the UDP header */
+    /* UDPヘッダーの開始点をポイントする */
     udppkt = (struct udpPkt *)pkt->curr;
 
     if (NULL == udppkt)
@@ -44,7 +44,7 @@ syscall udpRecv(struct packet *pkt, const struct netaddr *src,
         return SYSERR;
     }
 
-    /* Calculate optional checksum */
+    /* オプションのチェックサムを計算する */
     if ((udppkt->chksum)
         && (0 != udpChksum(pkt, net2hs(udppkt->len), src, dst)))
     {
@@ -53,14 +53,14 @@ syscall udpRecv(struct packet *pkt, const struct netaddr *src,
         return SYSERR;
     }
 
-    /* Convert UDP header fields to host order */
+    /* UDPヘッダーフィールドをホストオーダに変換する */
     udppkt->srcPort = net2hs(udppkt->srcPort);
     udppkt->dstPort = net2hs(udppkt->dstPort);
     udppkt->len = net2hs(udppkt->len);
 
     im = disable();
 
-    /* Locate the UDP socket (device) for the UDP packet */
+    /* UDPパケット用のUDPソケット（デバイス）を探す */
     udpptr = udpDemux(udppkt->dstPort, udppkt->srcPort, dst, src);
 
     if (NULL == udpptr)
@@ -74,13 +74,13 @@ syscall udpRecv(struct packet *pkt, const struct netaddr *src,
 #endif                          /* TRACE_UDP */
         restore(im);
 
-        // TODO: Validate packet byte ordering.
-        /* Convert UDP header fields to net order */
+        // TODO: パケットバイトオーダを確認する。
+        /* UDPヘッダーフィールドをネットワークオーダに変換する */
         udppkt->srcPort = hs2net(udppkt->srcPort);
         udppkt->dstPort = hs2net(udppkt->dstPort);
         udppkt->len = hs2net(udppkt->len);
 
-        /* Send ICMP port unreachable message */
+        /* ICMPポート到達不能メッセージを送信する */
         icmpDestUnreach(pkt, ICMP_PORT_UNR);
         netFreebuf(pkt);
         return SYSERR;
@@ -93,8 +93,8 @@ syscall udpRecv(struct packet *pkt, const struct netaddr *src,
         return SYSERR;
     }
 
-    /* Check "bind first" flag and update connection if set,
-     * and clear the flag */
+    /* "bind first"フラグをチェックして、セットされていたら
+     * コネクションを更新して、フラグをクリアする */
     if (UDP_FLAG_BINDFIRST & udpptr->flags)
     {
         udpptr->remotept = udppkt->srcPort;
@@ -103,7 +103,7 @@ syscall udpRecv(struct packet *pkt, const struct netaddr *src,
         udpptr->flags &= ~UDP_FLAG_BINDFIRST;
     }
 
-    /* Get some buffer space to store the packet */
+    /* パケットを格納するバッファを取得する */
     tpkt = udpGetbuf(udpptr);
 
     if (SYSERR == (int)tpkt)
@@ -114,8 +114,7 @@ syscall udpRecv(struct packet *pkt, const struct netaddr *src,
         return SYSERR;
     }
 
-    /* Copy the data of the packet into the input buffer at the current 
-     * position */
+    /* パケットのデータを入力バッファのカレント位置にコピーする */
     pseudo = (struct udpPseudoHdr *)tpkt;
     memcpy(pseudo->srcIp, src->addr, IPv4_ADDR_LEN);
     memcpy(pseudo->dstIp, dst->addr, IPv4_ADDR_LEN);
@@ -125,7 +124,7 @@ syscall udpRecv(struct packet *pkt, const struct netaddr *src,
 
     memcpy((pseudo + 1), udppkt, udppkt->len);
 
-    /* Store the temporary UDP packet in a FIFO buffer */
+    /* 一時的なUDPパケットをFIFOバッファに格納する */
     udpptr->in[(udpptr->istart + udpptr->icount) % UDP_MAX_PKTS] = tpkt;
     udpptr->icount++;
 

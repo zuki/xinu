@@ -11,29 +11,29 @@
 /**
  * @ingroup udpexternal
  *
- * Read the next UDP packet from a UDP device and place its data into the
- * provided buffer.
+ * UDPデバイスから次のUDPパケットを読み込み、そのデータを
+ * 提供されたバッファに配置する。
  *
- * In the default mode, the resulting data will be the UDP payload.  If instead
- * the UDP is in @ref UDP_FLAG_PASSIVE "passive mode", the resulting data will
- * be the UDP pseudo-header, directly followed by the UDP header, directly
- * followed by the UDP payload.
+ * デフォルトモードでは、結果のデータはUDPペイロードとなる。UDPが
+ * @ref UDP_FLAG_PASSIVE "パッシブモード"の場合、結果のデータは
+ * UDP疑似ヘッダとなり、直後にUDPヘッダが続き、さらに直後にUDP
+ * ペイロードが続く。
  *
  * @param devptr
- *      Device table entry for the UDP device.
+ *      UDPデバイス用のデバイステーブルエントリ.
  * @param buf
- *      Buffer into which to read the data.
+ *      読み込んだデータを置くバッファ.
  * @param len
- *      Maximum amount of data to read (length of @p buf).
+ *      読み込むデータの最大量（ @p buf の長さ).
  *
  * @return
- *      On success, returns the number of bytes read.  This is normally the size
- *      of the UDP packet (see note about passive mode above), but as special
- *      cases it will be 0 if the UDP is in non-blocking mode and no packets are
- *      available, or it will be @p len if the actual amount of data that was
- *      available was greater than @p len.  Alternatively, if the UDP device was
- *      not initially open or was closed while attempting to read a packet,
- *      ::SYSERR is returned.
+ *      成功の場合、読み込んだバイト数を返す。通常、これはUDPパケットの
+ *      サイズである（上記のパッシブモードについての注意を参照）が、
+ *      特別なケースとして、UDPがノンブロッキングモードでパケットが
+ *      利用できない場合は0になり、実際に利用できたデータ量が @p len
+ *      より大きい場合は @p lenになる。また、UDPデバイスがまだ開かれて
+ *      いなかったり、パケットを読み込む際に閉じらていた場合は
+ *      ::SYSERR が返される。
  */
 devcall udpRead(device *devptr, void *buf, uint len)
 {
@@ -48,46 +48,45 @@ devcall udpRead(device *devptr, void *buf, uint len)
 
     im = disable();
 
-    /* Make sure the UDP device is open.  */
+    /* UDPデバイスはオープンされていること  */
     if (UDP_OPEN != udpptr->state)
     {
         restore(im);
         return SYSERR;
     }
 
-    /* If the UDP device is in non-blocking mode, require that at least one UDP
-     * packet be available without waiting.  */
+    /* UDPデバイスがノンブロッキングモードの場合、待機することなく
+     * 少なくとも1つパケットが利用できることが必要である */
     if ((udpptr->flags & UDP_FLAG_NOBLOCK) && (udpptr->icount < 1))
     {
         restore(im);
         return 0;
     }
 
-    /* Wait for a UDP packet to be available.  */
+    /* UDPパケットが利用可能になるまで待機する */
     wait(udpptr->isem);
 
-    /* Make sure the UDP device wasn't closed while waiting for a packet.  */
+    /* パケットの待機中にUDPデバイスがクローズされないこと  */
     if (UDP_OPEN != udpptr->state)
     {
         restore(im);
         return SYSERR;
     }
 
-    /* Get the next UDP packet from the circular buffer, then remove it.
-     * Beware: normally it would be safe to restore interrupts after doing this,
-     * but we need to prevent a race with udpClose().  */
+    /* 循環バッファから次のUDPパケットを取得した後、それを削除する。
+     * Get the next UDP packet from the circular buffer, then remove it.
+     * 注意: 通常、これを行った後に割り込みを復元することは安全であるが、
+     *  udpClose()との競合を避ける必要がある。 */
     pseudo = (const struct udpPseudoHdr *)udpptr->in[udpptr->istart];
     udpptr->istart = (udpptr->istart + 1) % UDP_MAX_PKTS;
     udpptr->icount--;
 
-    /* Set pointer to the UDP header, which directly follows the pseudo-header.
-     */
+    /* UDPヘッダーへのポインタをセットする。これは疑似ヘッダーの直後である */
     udppkt = (const struct udpPkt *)(pseudo + 1);
 
-    /* Copy the UDP data into the caller's buffer.  As documented, the exact
-     * data that's copied depends on the current mode of the UDP device.
-     * Furthermore, be careful to copy at most the number of bytes the caller
-     * requested.  */
+    /* UDPデータを指定されたバッファにコピーする。ドキュメントのとおり、
+     * コピーされる実際のデータはUDPデバイスの現在のモードによる。さらに、
+     * 最大でも呼び出し元が要求したデータ量だけをコピーするよう注意する。 */
     if (UDP_FLAG_PASSIVE & udpptr->flags)
     {
         count = udppkt->len + sizeof(struct udpPseudoHdr);
@@ -104,8 +103,8 @@ devcall udpRead(device *devptr, void *buf, uint len)
     }
     memcpy(buf, data, count);
 
-    /* Free the packet buffer, restore interrupts, and return the number of
-     * bytes read.  */
+    /* パケットバッファを解放し、割り込みを復元し、読み込んだバイト数を
+     * 返す。 */
     udpFreebuf((struct udpPkt *)pseudo);
     restore(im);
     return count;

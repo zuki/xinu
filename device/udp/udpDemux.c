@@ -15,14 +15,14 @@
 /**
  * @ingroup udpinternal
  *
- * Locate the UDP socket for a UDP packet
- * @param dstpt destination port of the UDP packet
- * @param srcpt source port of the UDP packet
- * @param dstip destination IP of the UDP packet
- * @param srcip source IP of the UDP packet
- * @return most completely matched socket, NULL if no match
- * @pre-condition interrupts are already disabled
- * @post-condition interrupts are still disabled
+ * UDPパケットのUDPソケットを探す
+ * @param dstpt UDPパケットのあて先ポート
+ * @param srcpt UDPパケットの送信元ポート
+ * @param dstip UDPパケットのあて先IPアドレス
+ * @param srcip UDPパケットの送信元IPアドレス
+ * @return もっと完全に一致するソケット、一致するものがなかった場合はNULL
+ * @pre-condition 割り込みはすでに無効になっている
+ * @post-condition 割り込みは依然として無効である
  */
 struct udp *udpDemux(ushort dstpt, ushort srcpt, const struct netaddr *dstip,
                      const struct netaddr *srcip)
@@ -31,7 +31,7 @@ struct udp *udpDemux(ushort dstpt, ushort srcpt, const struct netaddr *dstip,
     uint i;
     uint match = NO_MATCH;
 
-    /* Cycle through all udp devices to find the best match */
+    /* ベストマッチを見つけるためにすべてのUDPデバイスを走査 */
     for (i = 0; i < NUDP; i++)
     {
         if (udptab[i].state == UDP_FREE)
@@ -41,11 +41,11 @@ struct udp *udpDemux(ushort dstpt, ushort srcpt, const struct netaddr *dstip,
         }
         if (!netaddrequal(&udptab[i].localip, dstip))
         {
-            /* entry is not bound to the destination */
+            /* エントリはあて先にバインドされていない */
             continue;
         }
 
-        /* Full match is the best */
+        /* 完全に一致するものがベスト */
         if (match < FULL_MATCH
             && (udptab[i].localpt == dstpt)
             && (udptab[i].remotept == srcpt)
@@ -53,11 +53,11 @@ struct udp *udpDemux(ushort dstpt, ushort srcpt, const struct netaddr *dstip,
         {
             udpptr = &udptab[i];
             match = FULL_MATCH;
-            /* you can't beat a full match */
+            /* 完全一致以上のベストはない */
             break;
         }
 
-        /* Src and dst ports match is second */
+        /* 送信元とあて先のポートが一致する場合が2番目のマッチ */
         if (match < PARTIAL_MATCH
             && (udptab[i].localpt == dstpt)
             && (udptab[i].remotept == srcpt)
@@ -67,7 +67,7 @@ struct udp *udpDemux(ushort dstpt, ushort srcpt, const struct netaddr *dstip,
             match = PARTIAL_MATCH;
         }
 
-        /* Dst ports match is last */
+        /* あて先のポートだけが一致する場合が最低限のマッチ */
         if (match < DEST_MATCH
             && (udptab[i].localpt == dstpt)
             && (udptab[i].remotept == NULL)

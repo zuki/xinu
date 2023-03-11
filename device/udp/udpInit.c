@@ -14,8 +14,8 @@ struct udp udptab[NUDP];
 /**
  * @ingroup udpexternal
  *
- * Set aside some space for a UDP device to be opened on
- * @param devptr UDP device table entry
+ * UDPデバイスを開くためのスペースを確保する.
+ * @param devptr UDPデバイステーブルエントリ
  * @return OK
  */
 devcall udpInit(device *devptr)

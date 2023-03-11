@@ -12,20 +12,19 @@
 /**
  * @ingroup udpexternal
  *
- * Closes a UDP device.
+ * UDPデバイスを閉じる.
  *
- * Caveat:  There must not be any threads executing udpWrite() on the UDP device
- * when it is closed.  On the other hand, it is safe to close the UDP device
- * while threads are executing udpRead(), and they will return ::SYSERR.
- * However, you still must not re-open the UDP device before all udpRead()
- * threads have returned.
+ * 注意: UDPデバイスを閉じる際にUDPデバイス上でudpWrite()を実行する
+ * スレッドが存在してはならない。一方、スレッドがudpRead()を実行中は
+ * UDPデバイスを閉じても安全であり、::SYSERR を返す。ただし、すべての
+ * udpRead()スレッドが復帰する前にそのUDPデバイスを再オープンしては
+ * ならない。
  *
- * @param devptr
- *      Device entry for the UDP device.
+ * @param devptr UDPデバイス用のデバイスエントリ.
  * @return
- *      ::OK if the UDP device was closed successfully; ::SYSERR otherwise.
- *      Currently this function can only fail if the UDP device was not actually
- *      open.
+ *      UDPデバイスが成功裏に閉じたら ::OK; それ以外は ::SYSERR.
+ *      現在のところ、この関数が失敗するのはUDPデバイスがオープンされて
+ *      いなかった場合だけである。
  */
 devcall udpClose(device *devptr)
 {

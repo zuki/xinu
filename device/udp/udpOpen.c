@@ -18,20 +18,21 @@ static ushort allocPort(void);
 /**
  * @ingroup udpexternal
  *
- * Associate a UDP socket with local and remote IP addresses and ports, and
- * prepare it for receiving and sending data with udpRead() and udpWrite().
+ * UDPをオープンする. UDPソケットにローカルIPアドレス、
+ * リモートIPアドレス、ポートを関連付け、udpRead()とudpWrite()で
+ * データの送受信受信する準備をする。
  *
- * @param devptr
- *      Device table entry for the UDP device.
+ * @param devptr UDPデバイス用のデバイステーブルエントリ
  *
- * @param ap Four additional arguments, specifying the following in order:
- *     - The local IP address.
- *     - The remote IP address.  May be @c NULL to create an initially
- *       unbound socket.
- *     - The local port.  May be 0 to auto-assign a port number.
- *     - The remote port.  May be 0 if creating an initially unbound socket.
+ * @param ap 4つの追加引数で、以下をこの順に指定する:
+ *     - ローカルIPアドレス.
+ *     - リモートIPアドレスアドレス.  はじめにバインドなしのソケットを
+ *       作成する場合は @c NULL.
+ *     - ローカルポート.  ポート番号を自動付与する場合は 0.
+ *     - リモートポート.  はじめにバインドなしのソケットを
+ *       作成する場合は 0.
  *
- * @return ::OK if the UDP device was opened successfully; otherwise ::SYSERR.
+ * @return UDPデバイスのオープンに成功した場合は ::OK; それ以外は ::SYSERR.
  */
 devcall udpOpen(device *devptr, va_list ap)
 {
@@ -46,7 +47,7 @@ devcall udpOpen(device *devptr, va_list ap)
     udpptr = &udptab[devptr->minor];
 
     im = disable();
-    /* Check if UDP is already open */
+    /* UDPがすでにオープンされていないかチェックする */
     if (UDP_OPEN == udpptr->state)
     {
         UDP_TRACE("udp%d has already been opened.", devptr->minor);
@@ -57,11 +58,11 @@ devcall udpOpen(device *devptr, va_list ap)
     udpptr->state = UDP_OPEN;
     udpptr->dev = devptr;
 
-    /* Initialize incoming packet buffer */
+    /* 着信パケットバッファを初期化する */
     udpptr->icount = 0;
     udpptr->istart = 0;
 
-    /* Initialize the semaphore */
+    /* セマフォを初期化する */
     udpptr->isem = semcreate(0);
 
     if (SYSERR == (int)udpptr->isem)
@@ -70,15 +71,15 @@ devcall udpOpen(device *devptr, va_list ap)
         goto out_udp_close;
     }
 
-    /* Retrieve port and address arguments */
+    /* 引数からポートとアドレスを抽出する */
     localip = va_arg(ap, const struct netaddr *);
     remoteip = va_arg(ap, const struct netaddr *);
     localpt = va_arg(ap, int);
     remotept = va_arg(ap, int);
 
-    /* Initialize ports and addresses */
+    /* ポートとアドレスを初期化する */
 
-    /* Local IP address is required */
+    /* ローカルIPアドレスは必須 */
     if (NULL == localip)
     {
         retval = SYSERR;
@@ -87,7 +88,7 @@ devcall udpOpen(device *devptr, va_list ap)
 
     netaddrcpy(&udpptr->localip, localip);
 
-    /* Remote IP address is not required */
+    /* リモートIPアドレスは必須ではない */
     if (NULL == remoteip)
     {
         bzero(&udpptr->remoteip, sizeof(struct netaddr));
@@ -97,7 +98,7 @@ devcall udpOpen(device *devptr, va_list ap)
         netaddrcpy(&udpptr->remoteip, remoteip);
     }
 
-    /* Allocate a local port if none is specified */
+    /* ローカルポートが指定されていなかった場合は割り当てる */
     if (0 == localpt)
     {
         localpt = allocPort();
@@ -106,7 +107,7 @@ devcall udpOpen(device *devptr, va_list ap)
     udpptr->localpt = localpt;
     udpptr->remotept = remotept;
 
-    /* Allocate received UDP packet buffer pool */
+    /* 受信用のUDPパケットバッファプールを割り当てる */
     udpptr->inPool = bfpalloc(NET_MAX_PKTLEN, UDP_MAX_PKTS);
     if (SYSERR == (int)udpptr->inPool)
     {
@@ -133,8 +134,8 @@ out_restore:
 }
 
 /**
- * Allocates an unused UDP port to use as a local port
- * @return UDP port
+ * ローカルポートとして使用する未使用のUDPポートを割り当てる
+ * @return UDPポート
  */
 static ushort allocPort(void)
 {

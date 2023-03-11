@@ -11,10 +11,10 @@
 /**
  * @ingroup udpexternal
  *
- * Allocate an available UDP device.
+ * 利用可能なUDPデバイスを割り当てる.
  *
  * @return
- *      Device number for a UDP device, or ::SYSERR if none are free.
+ *      UDPデバイスのデバイス番号, 利用可能なデバイスがない場合は ::SYSERR.
  */
 ushort udpAlloc(void)
 {
