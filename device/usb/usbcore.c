@@ -308,7 +308,7 @@ usb_complete_xfer(struct usb_xfer_request *req)
     (*req->completion_cb_func)(req);
 
     /* デバイスが取り外し中で、最後の保留中の転送を完了させた場合は
-     * usb_free_device() で待機中おスレッドに通知する */
+     * usb_free_device() で待機中のスレッドに通知する */
     if (req->dev->state == USB_DEVICE_DETACHMENT_PENDING &&
         req->dev->xfer_pending_count == 0)
     {

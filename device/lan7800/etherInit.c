@@ -83,8 +83,9 @@ lan7800_bind_device(struct usb_device *udev)
 
     udev->last_error = USB_STATUS_SUCCESS;
 
-    ethptr->csr = udev;
-    udev->driver_private = ethptr;
+    /* udevとethptrの相互参照 */
+    ethptr->csr = udev;                 // ethptr から udev
+    udev->driver_private = ethptr;      // udev から ethptr
     signal(lan7800_attached[ethptr - ethertab]);
     return USB_STATUS_SUCCESS;
 }

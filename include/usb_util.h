@@ -76,7 +76,9 @@ void usb_log(int priority, const char *func,
 #define usb_info(format, ...)  usb_dev_info (NULL, format, ##__VA_ARGS__)
 #define usb_debug(format, ...) usb_dev_debug(NULL, format, ##__VA_ARGS__)
 
-/** USBサブシステムの多くの関数が返すステータスコード. 汎用的なXinu SYSERRでは
+/** @ingroup usbcore
+ * @enum usb_status
+ * USBサブシステムの多くの関数が返すステータスコード. 汎用的なXinu SYSERRでは
  * 十分な情報が得られない場合が数多くある。  */
 typedef enum usb_status {
 

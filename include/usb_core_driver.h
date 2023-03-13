@@ -17,11 +17,12 @@
 
 extern struct usb_device *usb_root_hub;
 
-
 struct usb_xfer_request;
 
 /**
  * @ingroup usbcore
+ *
+ * @def usb_xfer_completed_t
  *
  * 非同期（割り込み駆動）USB転送が完了、または失敗したときに呼び出される
  * 関数の型.
@@ -34,11 +35,13 @@ typedef void (*usb_xfer_completed_t)(struct usb_xfer_request *req);
 /**
  * @ingroup usbcore
  *
- * 非同期（割り込み駆動）USB 転送要求の仕様.
+ * @struct usb_xfer_request
+ *
+ * 非同期（割り込み駆動）USB転送要求構造体.
  * コントロール、バルク、インターラプトのいずれかの転送要求である。
- * これらの構造体を取得するには usb_alloc_xfer_request() を呼び出すか、
+ * この構造体を取得するには usb_alloc_xfer_request() を呼び出すか、
  * 別の方法で手動でメモリを割り当てて usb_init_xfer_request() を呼び
- * 出し、以下のメンバーを設定した後、usb_submit_xfer_request() を使って
+ * 出す。以下のメンバーを設定した後、usb_submit_xfer_request() を使って
  * USBコアに送信する。
  * @ref usb_xfer_request::dev "dev",
  * @ref usb_xfer_request::endpoint_desc "endpoint_desc",
@@ -52,22 +55,17 @@ typedef void (*usb_xfer_completed_t)(struct usb_xfer_request *req);
  */
 struct usb_xfer_request
 {
-
-    /*********************
-     * 入力変数      *
-     *********************/
-
-    /** 通信相手のUSBデバイス  */
+    /**  [in] 通信するUSBデバイス */
     struct usb_device *dev;
 
-    /** 通信相手となるエンドポイントのディスクリプタへのポインタ。
+    /**  [in] 通信するエンドポイントのディスクリプタへのポインタ。
      * このポインタを取得するには struct usb_device の endpoints 配列を
      * 検索する。デフォルトのコントロールエンドポイントを指定する場合は
      * @c NULL を使用する。
      */
     const struct usb_endpoint_descriptor *endpoint_desc;
 
-    /** データバッファ: endpoint_number が INエンドポイント、
+    /**  [in] データバッファ: endpoint_number が INエンドポイント、
      * OUTエンドポイントのいずれを指定するかにより sendbufか
      * recvbufのいずれかが使用される。
      */
@@ -78,73 +76,83 @@ struct usb_xfer_request
         void *recvbuf;
     };
 
-    /** sendbufまたはrecvbufのサイズ。INエンドポイントの場合、これは
+    /** [in] sendbufまたはrecvbufのサイズ。INエンドポイントの場合、これは
      * 受信するデータの最大バイト数である。OUTエンドポイントの場合は
      * 送信するデータの正確なバイト数である。
      */
     uint size;
 
-    /** USBコントロール要求のためのデータを設定する。コントロール転送では
+    /** [in] USBコントロール要求のためのデータを設定する。コントロール転送では
      * 必ず設定する必要がある。その他の場合は、無視される。注: コントロール
      * 転送では代わりに usb_control_msg() の仕様を検討されたい。
      */
     struct usb_control_setup_data setup_data;
 
-    /** このUSB転送が成功裏に完了した、または、失敗した場合に呼び出される
+    /** [in] このUSB転送が成功裏に完了した、または、失敗した場合に呼び出される
      * コールバック関数。
      */
     usb_xfer_completed_t completion_cb_func;
 
-    /** 完了コールバック用に保存されるUSBデバイスドライバプライベートデータ。
+    /** [in] 完了コールバック用に保存されるUSBデバイスドライバのプライベートデータ。
      * このメンバの設定はオプションである。
      */
     void *private;
 
-    /*********************
-     * 出力変数          *
-     *********************/
-
-    /** 転送のステータス: 転送に成功した場合は ::USB_STATUS_SUCCESS、
+    /** [out] 転送のステータス: 転送に成功した場合は ::USB_STATUS_SUCCESS
      * 失敗した場合は別の ::usb_status_t エラーコード。
-     * ::USB_STATUS_SUCCESS が設定されるのは、正確に要求されたバイト数が
+     * ::USB_STATUS_SUCCESS が設定されるのは、要求されたバイト数が正確に
      * エラーなく転送された場合、またはデバイスからホストへの (IN) 転送で
      * エラーなく完了したが要求より少ないバイト数で返された場合である。
      */
     usb_status_t status;
 
-    /** 転送されたデータの実際のサイズ。デバイスからホストへの (IN) 転送が
+    /** [out] 転送された実際のデータサイズ。デバイスからホストへの (IN) 転送が
      * 成功した場合、これはテストされるべきである。何らかの理由でデバイスが
      * フルサイズを提供できなかった場合、要求されたバイト数よりも少ない
      * バイト数で転送を完了するが、これは正当な結果だからである。
      */
     uint actual_size;
 
-    /*****************************************************************
+    /*
      * プライベート変数（主にホストコントローラドライバ用でデバイス  *
-     * ドライバからは触れない）。                                    *
+     * ドライバからは触れたはならない）                              *
      * TODO: デザインを良くすればHCDが使用できる変数をカスタマイズ   *
-     * することを可能にするかもしれない、おそらくusb_xfer_requestを  *
-     * 別の構造体に埋め込めば。                                      *
-     *****************************************************************/
+     * することを可能できるかもしれない、おそらくusb_xfer_requestを  *
+     * 別の構造体に埋め込めばいけるのではないか。                    *
+     */
+    /** [private] 現在のデータ位置 */
     void *cur_data_ptr;
+    /** [private] 分割完了フラグ */
     uint8_t complete_split : 1;
+    /** [private] 分割転送か */
     uint8_t short_attempt  : 1;
+    /** [private] SOFが必要か */
     uint8_t need_sof       : 1;
+    /** [private] コントロール転送のフェーズ */
     uint8_t control_phase  : 2;
+    /** [private] 次に送信するデータのpid */
     uint8_t next_data_pid  : 2;
+    /** [private] 転送サイズ */
     uint attempted_size;
+    /** [private] 未転送のパケット数 */
     uint attempted_packets_remaining;
+    /** [private] 未転送のバイト数 */
     uint attempted_bytes_remaining;
+    /** [private] 分割リトライ数 */
     uint csplit_retries;
+    /** [private] 遅延転送スレッドのtid */
     tid_typ deferer_thread_tid;
+    /** [private] 遅延転送のためのセマフォ */
     semaphore deferer_thread_sema;
 };
 
 /**
  * @ingroup usbcore
  *
- * USBデバイスドライバに関する情報.  これはドライバにより静的に宣言され、
- * その後 usb_register_device_driver() を使用してUSBコアドライバに
+ * @struct usb_device_driver
+ *
+ * USBデバイスドライバ構造体.  これはドライバにより静的に宣言され、
+ * その後 usb_register_device_driver() を使ってUSBコアドライバに
  * 登録する必要がある。この構造体で指定されているコールバック関数は
  * USBコアドライバから適切なタイミングで自動的に呼び出される。
  */
@@ -154,27 +162,27 @@ struct usb_device_driver
     const char *name;
 
     /**
-     * このUSBデバイスドライバをUSBデバイスにバインドするために呼び出される関数である。
-     * すべてのUSBデバイスドライバはこの関数を実装する必要があるため、@c NULL を指定
+     * このUSBデバイスドライバをUSBデバイスにバインドするために呼び出される関数.
+     * すべてのUSBデバイスドライバはこの関数を実装する必要があるため @c NULL を指定
      * することはできない。
      *
      * この関数の実装では、まずUSBデバイスがドライバによってサポートされているかを
      * チェックし、サポートされていない場合は ::USB_STATUS_DEVICE_UNSUPPORTED を
      * 返さなければならない。USBデバイスがサポートされているかどうかを判断するために
-     * 実装は @ref usb_device::descriptor ”device descriptor" の
-     * @ref usb_device_descriptor::idVendor "vendor" と
-     * @ref usb_device_descriptor::idProduct "product" ID、または利用可能な
-     * @ref usb_device::interfaces "interfaces" と
-     * @ref usb_device::endpoints "endpoints" を調べることができる。
+     * 実装は @ref usb_device::descriptor "デバイスディスクリプタ" の
+     * @ref usb_device_descriptor::idVendor "製造者" と
+     * @ref usb_device_descriptor::idProduct "製品" ID、または利用可能な
+     * @ref usb_device::interfaces "インタフェース" と
+     * @ref usb_device::endpoints "エンドポイント" を調べることができる。
      *
      * USBデバイスがドライバによってサポートされている場合、この関数は、デバイス固有
      * またはクラス固有のコントロールメッセージでデバイスを構成するなど、必要な
      * デバイス固有の設定を行い、デバイスをサポートするために必要なリソース（たとえば、
      * @ref ::usb_xfer_request "USB transfer requests" など) を割り当てなければならない。
      * 完全に成功した場合は、USB_STATUS_SUCCESS を返さなければならない。そうでない場合は、
-     * デバイスに割り当てられたリソースをすべて解放し、別の usb_status_t エラーコードを
+     * デバイスに割り当てられたリソースをすべて解放し、 usb_status_t エラーコードを
      * 返さなければならない。必要であれば、デバイスドライバはUSBデバイス構造体の
-     * @ref usb_device::driver_private "driver_private" メンバにドライバ特有のデータを
+     * @ref usb_device::driver_private "driver_private" メンバにドライバ固有のデータを
      * デバイス毎に格納することができる。
      *
      * この関数はドライバがあるUSBデバイスに正常にバインドされた後であっても
@@ -185,18 +193,18 @@ struct usb_device_driver
      * @ref usb_device_driver::unbind_device "unbind_device" の呼び出しと
      * @a 同時に 呼び出されることはない。
      *
-     * この関数が呼ばれたとき、USBデバイスは最初にリストされた構成ですでに
-     * 構成されている。現在のところ、デバイスドライバが別の構成を選択する方法は
-     * ない。
+     * この関数が呼ばれたとき、USBデバイスはリストの先頭にあるコンフィグレーションで
+     * 構成されている。現在のところ、デバイスドライバが別のコンフィグレーションを選択
+     * する方法はない。
      */
     usb_status_t (*bind_device)(struct usb_device *dev);
 
     /**
      * デバイスがUSBから取り外されたために、USBデバイスドライバの
-     * バインドを解除するために呼び出される関数。これは、
+     * バインドを解除するために呼び出される関数.  これは、
      * @ref usb_device_driver::bind_device "bind_device" が正常に
      * 復帰した後は、USBコアから任意の時点で呼び出される可能性がある。
-     * この関数は @ref usb_device_driver::bind_device "bind_device " で
+     * この関数は @ref usb_device_driver::bind_device "bind_device" で
      * USBデバイスに割り当てられたリソースを解放する役割を担っている。
      * デバイスドライバはこの関数の実装を厳密には要求されておらず、
      * ここでは @c NULL を指定することができる。ただし、その場合、
@@ -204,17 +212,17 @@ struct usb_device_driver
      * リソースはデバイスが切り離された場合にリークする。
      *
      * この関数が呼ばれた時には、対応するUSBデバイスへの保留中の転送は
-     * ないことが保証される。これを実現するために、この関数が呼ばれる前の
+     * ないことが保証されている。これを実現するために、この関数が呼ばれる前の
      * 一定期間、USBコアは usb_submit_xfer_request()、または、
      * usb_control_msg() でそのデバイスに転送を行おうとしても
-     * ::USB_STATUS_DEVICE_DETACHED で失敗するようにする。
+     * ::USB_STATUS_DEVICE_DETACHED で失敗するようにしている。
      * usb_submit_xfer_request() の場合、完了コールバックは呼び出されない。
      * さらに、すべての保留中の転送で完了コールバックが呼び出され、
-     * それらのステータスが ::USB_STATUS_DEVICE_DETACHED に設定される。
-     * この結果、このアンバインドコールバックが呼ばれると、割り当てられた
-     * すべての ::usb_xfer_request 構造体はドライバにより所有されることに
-     * なり、ドライバがそれらの参照を追加で保持しない限り、そのような構造体は
-     * すぐに解放することが可能である。
+     * それらのステータスには ::USB_STATUS_DEVICE_DETACHED が設定される。
+     * この結果、このアンバインドコールバックが呼ばれる際には、割り当てられた
+     * すべての ::usb_xfer_request 構造体はドライバが所有することに
+     * なる。したがって、これらの構造体はドライバがそれらの参照を追加で
+     * 保持しない限り、直ちに解放することが可能である。
      *
      * この関数は、常にIRQが有効の状態で呼び出され、同じドライバにバインド
      * されている @a 別の デバイスのバインドを解除するために連続して複数回
@@ -225,16 +233,22 @@ struct usb_device_driver
     void (*unbind_device)(struct usb_device *dev);
 };
 
-/** デバイスあたりの最大インタフェース数  */
+/** @ingroup usbcore
+ * @def USB_DEVICE_MAX_INTERFACES
+ * デバイスあたりの最大インタフェース数  */
 #define USB_DEVICE_MAX_INTERFACES 8
 
-/** インタフェース足りの最大エンドポイント数  */
+/** @ingroup usbcore
+ * @def USB_DEVICE_MAX_ENDPOINTS
+ * インタフェースあたりの最大エンドポイント数  */
 #define USB_DEVICE_MAX_ENDPOINTS  8
 
 /**
  * @ingroup usbcore
  *
- * USBデバイスに関する情報. これは、USBコアからデバイスドライバの
+ * @struct usb_device
+ *
+ * USBデバイス構造体. これは、USBコアからデバイスドライバの
  * @ref usb_device_driver::bind_device "bind_device" コールバックと
  * @ref usb_device_driver::unbind_device "unbind_device" コールバックに
  * 提供される。（ハブドライバを除く）デバイスドライバはこの構造体の
@@ -246,14 +260,14 @@ struct usb_device
      * 場合は FALSE。USBコアによりセットされる。 */
     bool inuse;
 
-    /** 今デバイスのアドレス。USBコアによりセットされる。  */
+    /** このデバイスのアドレス。USBコアによりセットされる。  */
     uint address;
 
-    /** このデバイスの深さ（ルートハブは0、次のレベルのハブは1, ...）。
+    /** このデバイスが接続されているハブの深さレベル（ルートハブは0、次のレベルのハブは1, ...）。
      * USBコアによりセットされる  */
     uint depth;
 
-    /** このデバイスが接続された親ハブ上のUSBポートの1始まりのインデックス。
+    /** このデバイスが接続されている親ハブ上のUSBポートの1始まりのインデックス。
      * または、これがルートハブの場合は0。USBコアによりセットされる  */
     uint port_number;
 
@@ -264,7 +278,7 @@ struct usb_device
      * USBコアによりセットされる  */
     struct usb_device *parent;
 
-    /** このUSBデバイスの現在の構成インデックス。USBコアによりセットされる  */
+    /** このUSBデバイスの現在のコンフィグレーションのインデックス。USBコアによりセットされる  */
     uint8_t configuration;
 
     /** このデバイスのデバイスディスクリプタ。USBコアによりセットされる  */
@@ -278,7 +292,7 @@ struct usb_device
      * USBコアによりセットされる  */
     struct usb_interface_descriptor *interfaces[USB_DEVICE_MAX_INTERFACES];
 
-    /** インタフェースにより用意されたこのデバイスのすべてのエンドポイント
+    /** インタフェースにより用意されているこのデバイスのすべてのエンドポイント
      * ディスクリプタへのポインタ。USBコアによりセットされる  */
     struct usb_endpoint_descriptor *endpoints[
                             USB_DEVICE_MAX_INTERFACES][USB_DEVICE_MAX_ENDPOINTS];
@@ -293,9 +307,9 @@ struct usb_device
      * USBコアによりセットされる  */
     char manufacturer[128];
 
-    /** このUSBデバイスのドライバ用のプライベートデータ。USBデバイスドライバは
-     * @ref usb_device_driver::bind_device "bind_device" 関数のここにプライベート
-     * データ構造体を置くことができる。  */
+    /** このUSBデバイスのドライバ用のプライベートデータ。USBデバイスドライバは自身の
+     * @ref usb_device_driver::bind_device "bind_device" 関数でプライベートデータ構造体を
+     * このフィールドに設定することができる。  */
     void *driver_private;
 
     /** もしあれば、このデバイスにバインドされたドライバ。 USBコアによりセットされる */
@@ -304,17 +318,19 @@ struct usb_device
     /** このデバイスで失敗状態で完了したUSB転送の数  */
     ulong error_count;
 
-    /** このデバイスで行った最新のエラー  */
+    /** このデバイスで起きた最新のエラー  */
     usb_status_t last_error;
 
-    /** USBコアのみ使用  */
+    /** デバイスの接続状態; USBコアのみ使用  */
     enum {
         USB_DEVICE_ATTACHED,
         USB_DEVICE_DETACHMENT_PENDING,
     } state;
-    /** USBコアのみ使用  */
+
+    /** 保留中の転送数: USBコアのみ使用  */
     uint xfer_pending_count;
-    /** USBコアのみ使用  */
+
+    /** 転送完了を待機中のタスク: USBコアのみ使用  */
     tid_typ quiescent_state_waiter;
 };
 
@@ -349,6 +365,7 @@ usb_get_descriptor(struct usb_device *dev, uint8_t bRequest,
 		   void *buf, uint16_t buflen);
 
 /* 以下の関数は非組み込みのUSBコードでのみ利用可能  */
+
 #if !USB_EMBEDDED
 usb_status_t
 usb_get_string_descriptor(struct usb_device *dev, uint8_t index, uint16_t lang_id,
@@ -389,7 +406,11 @@ usb_free_device(struct usb_device *dev);
 /* 以下の関数はUSBホストコントローラドライバだけが使用することを意図している。  */
 
 /**
- * 指定されたUSB転送要求がコントロール要求の場合は TRUE; そうでなければ FALSE
+ * @ingroup usbcore
+ *
+ * 指定されたUSB転送要求がコントロール要求か. USBホストコントローラドライバだけが使用。
+ * @param req USB転送要求へのポインタ
+ * @return コントロール要求の場合は TRUE; そうでなければ FALSE
  */
 static inline bool
 usb_is_control_request(const struct usb_xfer_request *req)
@@ -399,7 +420,10 @@ usb_is_control_request(const struct usb_xfer_request *req)
 }
 
 /**
- * R指定されたUSB転送要求がインターラプト要求の場合は TRUE; そうでなければ FALSE
+ * @ingroup usbcore
+ * 指定されたUSB転送要求がインターラプト要求か. USBホストコントローラドライバだけが使用。
+ * @param req USB転送要求へのポインタ
+ * @return インターラプト転送の場合は TRUE; そうでなければ FALSE.
  */
 static inline bool
 usb_is_interrupt_request(const struct usb_xfer_request *req)
@@ -415,12 +439,15 @@ void usb_lock_bus(void);
 
 void usb_unlock_bus(void);
 
-/** 以下の関数はUSBホストコントローラドライバとハブドライバシユすることを
+/** 以下の関数はUSBホストコントローラドライバとハブドライバが使用することを
  * 主に意図している。その他のドライバにはおそらく必要がない。
  * */
 
 /**
- * USBデバイスがルートハブの場合は TRUE; そうでなければ FALSE
+ * @ingroup usbcore
+ * USBデバイスがルートハブか. USBホストコントローラドライバとハブドライバが使用。
+ * @param dev USBデバイス
+ * @return ルートハブの場合は TRUE; そうでなければ FALSE
  */
 static inline bool is_root_hub(const struct usb_device *dev)
 {
@@ -428,7 +455,10 @@ static inline bool is_root_hub(const struct usb_device *dev)
 }
 
 /**
- * USBデバイスがハブの場合は TRUE; そうでなければ FALSE
+ * @ingroup usbcore
+ * USBデバイスがハブか. USBホストコントローラドライバとハブドライバが使用。
+ * @param dev USBデバイス
+ * @return ハブの場合は TRUE; そうでなければ FALSE
  */
 static inline bool is_hub(const struct usb_device *dev)
 {

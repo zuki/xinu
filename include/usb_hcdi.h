@@ -29,7 +29,7 @@ struct usb_xfer_request;
  * コントローラドライバインタフェース関数を呼び出す前に呼び出す必要がある。
  *
  * @return
- *      成功した場合は ::USB_STATUS_SUCCESS; そうでない場合は、::usb_status_t の
+ *      成功した場合は ::USB_STATUS_SUCCESS; そうでない場合は ::usb_status_t の
  *      エラーコード
  */
 usb_status_t hcd_start(void);
@@ -57,8 +57,8 @@ void hcd_stop(void);
  *      USBコアドライバの usb_submit_xfer_request() の実装を参照されたい。
  *
  * @return
- *      リクエストのエンキュー（必ずしも実行が化膿したわけではない、
- *      まだ開始もしていないかもしれない）が成功した場合は ::USB_STATUS_SUCCESS;
+ *      リクエストのエンキュー（必ずしも実行が完了したわけではなく、まだ
+ *      開始されてもいないかもしれない）が成功した場合は ::USB_STATUS_SUCCESS;
  *      ホストコントローラドライバまたはホストコントローラハードウェアが
  *      指定されたリクエストのタイプまたはスピードをサポートしていない場合は
  *      ::USB_STATUS_INVALID_PARAMETER
