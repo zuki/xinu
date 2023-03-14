@@ -23,7 +23,7 @@
  *
  * @return
  *      ::OK on success, ::SYSERR on failure.  This function can only fail if @p
- *      成功の場合は ::OK、失敗の場合は ::SYSERR。
+ *      成功の場合は ::OK; 失敗の場合は ::SYSERR。
  *      この関数は @p sem に正しいセマフォが指定されなかった、または、
  *      @p count が正値でなかった場合に失敗する。
  */

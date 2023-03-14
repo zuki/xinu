@@ -20,7 +20,7 @@
  *
  * @return
  *      @p mon に正しい、割り当て済みのモニターが指定された場合、
- *      そのカウントが返される。それ以外は、::SYSERRが返される。
+ *      そのカウントが返される。それ以外は ::SYSERRが返される。
  */
 syscall moncount(monitor mon)
 {

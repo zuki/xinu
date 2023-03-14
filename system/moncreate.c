@@ -14,7 +14,7 @@ static monitor monalloc(void);
  *
  * @return
  *      成功の場合は、新しいモニターを返す。失敗の場合（システムのモニター、
- *      またはセマフォが枯渇）は、::SYSERR を返す。
+ *      またはセマフォが枯渇）は ::SYSERR を返す。
  */
 monitor moncreate(void)
 {

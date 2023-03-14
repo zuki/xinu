@@ -14,7 +14,7 @@ semaphore mboxtabsem;
  * メールボックス構造体を初期化する
  *
  * @return
- *      すべてのメールボックスの初期化に成功した場合は ::OK　、
+ *      すべてのメールボックスの初期化に成功した場合は ::OK;
  *      それ以外は ::SYSERR.
  */
 syscall mailboxInit(void)

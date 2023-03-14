@@ -65,7 +65,7 @@ struct platform
     uint8_t uart_dll;
 
     /**
-     * UART IRQラインの番号.  UARTドライバが必要とする場合だけ 　* * * platforminit() は設定する必要がある。
+     * UART IRQラインの番号.  UARTドライバが必要とする場合だけ  * * * platforminit() は設定する必要がある。
      */
     uint8_t uart_irqnum;
 

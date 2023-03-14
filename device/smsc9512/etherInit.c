@@ -204,7 +204,7 @@ smsc9512_wait_device_attached(ushort minor)
  * @details
  *
  * SMSC LAN9512-固有の注記:  この関数はEthernetドライバがUSBコアに
- * 正常に登録された場合は ::OK、そうでない場合は ::SYSERR を返す。
+ * 正常に登録された場合は ::OK; そうでない場合は ::SYSERR を返す。
  * これはUSBの動的デバイスモデルとXinuの静的デバイスモデルを同時に
  * 使用するための回避策であり、この関数が復帰した時に実際にデバイスが
  * 存在する保証はない(存在しない場合、etherOpen() で実際にデバイスを

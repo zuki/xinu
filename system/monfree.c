@@ -18,7 +18,7 @@
  *      解放するモニター
  *
  * @return
- *      成功の場合は、::OK; 失敗の場合（@p mon が正しい、割り当て済みの
+ *      成功の場合は ::OK; 失敗の場合（@p mon が正しい、割り当て済みの
  *      モニターでない）は、:SYSERR
  */
 syscall monfree(monitor mon)

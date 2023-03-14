@@ -18,7 +18,7 @@
  *      解放するセマフォ（semcreate()で割り当てられた）
  *
  * @return
- *      @p sem が有効なセマフォを指定していない場合は、::SYSERR, そうでなければ ::OK
+ *      @p sem が有効なセマフォを指定していない場合は ::SYSERR, そうでなければ ::OK
  */
 syscall semfree(semaphore sem)
 {

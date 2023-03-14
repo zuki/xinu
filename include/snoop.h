@@ -1,4 +1,4 @@
-/*
+/**
  * @file snoop.h
  *
  */
@@ -28,43 +28,83 @@
 #define SNOOP_TRACE(...)
 #endif
 
-/* Dump constants */
+/** @ingroup snoop
+ * @def SNOOP_DUMP_NONE
+ * SNOOPダンプ: なし */
 #define SNOOP_DUMP_NONE     0
+/** @ingroup snoop
+ * @def SNOOP_DUMP_HEX
+ * SNOOPダンプ: Hex表記 */
 #define SNOOP_DUMP_HEX      1
+/** @ingroup snoop
+ * @def SNOOP_DUMP_CHAR
+ * SNOOPダンプ: 文字表記 */
 #define SNOOP_DUMP_CHAR     2
 
 /* Verbose constants */
+/** @ingroup snoop
+ * @def SNOOP_VERBOSE_NONE
+ * SNOOP VERBOSE: なし */
 #define SNOOP_VERBOSE_NONE  0
+/** @ingroup snoop
+ * @def SNOOP_VERBOSE_ONE
+ * SNOOP VERBOSE: レベル1 */
 #define SNOOP_VERBOSE_ONE   1
+/** @ingroup snoop
+ * @def SNOOP_VERBOSE_TWO
+ * SNOOP VERBOSE: レベル2 */
 #define SNOOP_VERBOSE_TWO   2
 
 /* Filter constants */
+/** @ingroup snoop
+ * @def SNOOP_FILTER_ALL
+ * SNOOPフィルター: すべて */
 #define SNOOP_FILTER_ALL	0
+/** @ingroup snoop
+ * @def SNOOP_FILTER_ARP
+ * SNOOPフィルター:  ARP */
 #define SNOOP_FILTER_ARP	1
+/** @ingroup snoop
+ * @def SNOOP_FILTER_IPv4
+ * SNOOPフィルター: IPv4 */
 #define SNOOP_FILTER_IPv4   2
+/** @ingroup snoop
+ * @def SNOOP_FILTER_UDP
+ * SNOOPフィルター: UDP */
 #define SNOOP_FILTER_UDP    3
+/** @ingroup snoop
+ * @def SNOOP_FILTER_TCP
+ * SNOOPフィルター: TCP */
 #define SNOOP_FILTER_TCP    4
+/** @ingroup snoop
+ * @def SNOOP_FILTER_ICMP
+ * SNOOP フィルター: ICMP */
 #define SNOOP_FILTER_ICMP   5
-
+/** @ingroup snoop
+ * @def SNOOP_QLEN
+ * SNOOPキューのサイズ */
 #define SNOOP_QLEN          100
 
+/** @ingroup snoop
+ * @struct snoop
+ * snoop構造体
 struct snoop
 {
-    uint caplen;                          /**< bytes of packet to capture   */
+    uint caplen;                /**< キャプチャするパケットバイト長  */
 
-    bool promisc;                         /**< promiscous mode enabled      */
-    uchar type;                           /**< type of packets to capture   */
-    struct netaddr srcaddr;               /**< source address of packets    */
-    ushort srcport;                       /**< source port of packets       */
-    struct netaddr dstaddr;               /**< destination address of pkts  */
-    ushort dstport;                       /**< destination port of packets  */
+    bool promisc;               /**< promiscousモードが有効か     */
+    uchar type;                 /**< キャプチャするパケットのタイプ  */
+    struct netaddr srcaddr;     /**< パケットの送信元アドレス     */
+    ushort srcport;             /**< パケットの送信元ポート       */
+    struct netaddr dstaddr;     /**< パケットのあて先アドレス     */
+    ushort dstport;             /**< パケットのあて先ポート       */
 
-    mailbox queue;                        /**< mailbox for queueing packets */
+    mailbox queue;              /**< パケットをキューイングするメールボックス */
 
-    uint ncap;
-    uint nmatch;
-    uint novrn;
-    uint nprint;
+    uint ncap;                  /**< キャプチャ回数 */
+    uint nmatch;                /**< フィルターマッチ回数 */
+    uint novrn;                 /**< キャプチャキューのオーバーラン回数 */
+    uint nprint;                /**< プリント回数 */
 };
 
 /* Function prototypes */
