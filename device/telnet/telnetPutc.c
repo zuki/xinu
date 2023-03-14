@@ -9,16 +9,16 @@
 /**
  * @ingroup telnet
  *
- * Write a single character to TELNET.
+ * telnetに1文字書き出す.
  *
  * @param devptr
- *      TELNET device table entry
+ *      TELNETデバイステーブルエントリ
  * @param ch
- *      character to output
+ *      書き出す文字
  *
  * @return
- *      @p ch as an <code>unsigned char</code> cast to an @c int on success; @c
- *      SYSERR on failure.
+ *      成功の場合は @p ch を <code>unsigned char</code> から @c int に
+ *      キャストして返す; 失敗の場合は ::SYSERR.
  */
 devcall telnetPutc(device *devptr, char ch)
 {

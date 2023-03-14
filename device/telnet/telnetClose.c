@@ -12,9 +12,9 @@
 /**
  * @ingroup telnet
  *
- * Close a TELNET device.
- * @param devptr TELNET device table entry
- * @return OK if TELNET is closed properly, otherwise SYSERR
+ * telnetデバイスをクローズする
+ * @param devptr TELNETデバイステーブルエントリ
+ * @return telnetを正しくクローズできた場合は ::OK; それ以外は ::SYSERR
  */
 devcall telnetClose(device *devptr)
 {

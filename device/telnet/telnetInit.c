@@ -9,14 +9,18 @@
 #include <telnet.h>
 #include <stdlib.h>
 
+/** @ingroup telnet
+ * @var telnettab
+ * @brief Telnetテーブル変数
+ */
 struct telnet telnettab[NTELNET];
 
 /**
  * @ingroup telnet
  *
- * Initialize TELNET structures.
- * @param devptr TELNET device table entry
- * @return OK if device is initialized
+ * TELNET構造体を初期化する.
+ * @param devptr TELNETデバイステーブルエントリ
+ * @return デバイスが初期化されたら ::OK
  */
 devcall telnetInit(device *devptr)
 {

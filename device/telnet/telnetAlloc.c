@@ -13,8 +13,8 @@
 /**
  * @ingroup telnet
  *
- * Allocate an available telnet device.
- * @return device number for a telnet device, SYSERR if none are free
+ * 利用可能なtelnetデバイスを割り当てる.
+ * @return telnetデバイスのデバイス番号; 利用可能なデバイスがない場合は ::SYSERR
  */
 int telnetAlloc(void)
 {

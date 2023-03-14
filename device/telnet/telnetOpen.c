@@ -15,10 +15,10 @@
 /**
  * @ingroup telnet
  *
- * Associate TELNET with a hardware device.
- * @param devptr TELNET device table entry
- * @param ap 2nd argument is the device number for the hardware device
- * @return OK if TELNET is opened properly, otherwise SYSERR
+ * TELNETをハードウェアデバイスに関連付ける.
+ * @param devptr TELNETデバイステーブルエントリ
+ * @param ap ハードウェアデバイスのデバイス番号
+ * @return TELNETが正しくオープンできたら ::OK; それ以外は ::SYSERR
  */
 devcall telnetOpen(device *devptr, va_list ap)
 {
@@ -29,7 +29,7 @@ devcall telnetOpen(device *devptr, va_list ap)
 
     im = disable();
 
-    /* Second arg should be device index for physical hardware */
+    /* 引数apは物理ハードウェアのデバイスインデックスのはず */
     dvnum = va_arg(ap, int);
     TELNET_TRACE("Open(%d) dvnum = %d", devptr->minor, dvnum);
     if (isbaddev(dvnum))
@@ -38,10 +38,10 @@ devcall telnetOpen(device *devptr, va_list ap)
         return SYSERR;
     }
 
-    /* Setup pointer to telnet */
+    /* telnetへのポインタを設定する */
     tntptr = &telnettab[devptr->minor];
 
-    /* Check if TELNET is already open */
+    /* telnetがオープン済みでないかチェックする */
     if ((TELNET_STATE_FREE != tntptr->state) &&
         (TELNET_STATE_ALLOC != tntptr->state))
     {
@@ -51,21 +51,21 @@ devcall telnetOpen(device *devptr, va_list ap)
     }
     tntptr->state = TELNET_STATE_OPEN;
 
-    /* Initialize input buffer */
+    /* 入力バッファを初期化する */
     tntptr->istart = 0;
     tntptr->icount = 0;
     tntptr->idelim = FALSE;
 
-    /* Initialize output buffer */
+    /* 出力バッファを初期化する */
     tntptr->ocount = 0;
     tntptr->ostart = 0;
 
-    /* Initialize flags */
+    /* フラグを初期化する */
     tntptr->flags = 0;
     tntptr->ieof = FALSE;
     tntptr->phw = (device *)&devtab[dvnum];
 
-    /* Initialize states and mutex semaphoress */
+    /* 状態とmutexセマフォを初期化する */
     tntptr->echoState = TELNET_ECHO_SENT_WILL;
     tntptr->isem = semcreate(1);
     tntptr->osem = semcreate(1);

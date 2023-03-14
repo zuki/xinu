@@ -12,12 +12,12 @@
 /**
  * @ingroup telnet
  *
- * Control function for TELNET pseudo devices.
- * @param devptr TELNET device table entry
- * @param func control function to execute
- * @param arg1 first argument for the control function
- * @param arg2 second argument for the control function
- * @return the result of the control function
+ * telnet疑似デバイス用の制御関数.
+ * @param devptr TELNETデバイステーブルエントリ
+ * @param func 実行する制御関数
+ * @param arg1 制御関数に渡す第1引数
+ * @param arg2 制御関数に渡す第2引数
+ * @return 制御関数の結果
  */
 devcall telnetControl(device *devptr, int func, long arg1, long arg2)
 {
@@ -38,11 +38,11 @@ devcall telnetControl(device *devptr, int func, long arg1, long arg2)
         telnetFlush(devptr);
         return OK;
     case TELNET_CTRL_CLRFLAG:
-        /* arg1 is the flag we are clearing */
+        /* 第1引数がクリアするフラグ */
         tntptr->flags &= ~arg1;
         return OK;
     case TELNET_CTRL_SETFLAG:
-        /* arg1 is the flag we are setting */
+        /* 第1引数がセットするフラグ */
         tntptr->flags |= arg1;
         return OK;
     case TTY_CTRL_SET_IFLAG:

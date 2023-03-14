@@ -12,9 +12,9 @@
 /**
  * @ingroup telnet
  *
- * Flushes the telnet server's output buffer
- * @param devptr TELNET device table entry
- * @return OK if flush is successful, SYSERR on failure
+ * telnetサーバの出力バッファをフラッシュする
+ * @param devptr TELNETデバイステーブルエントリ
+ * @return フラッシュが成功したら ::OK; 失敗したら ::SYSERR
  */
 devcall telnetFlush(device *devptr)
 {
@@ -28,11 +28,13 @@ devcall telnetFlush(device *devptr)
 
     if (NULL == phw)
     {
+        restore(im);
         return SYSERR;
     }
 
     if (TELNET_STATE_OPEN != tntptr->state)
     {
+        restore(im);
         return SYSERR;
     }
 

@@ -11,9 +11,10 @@
 /**
  * @ingroup telnet
  *
- * Read a single character from TELNET.
- * @param devptr TELNET device table entry
- * @return character read from TELNET, or EOF
+ * telnetから1文字読み込む.
+ * @param devptr TELNETデバイステーブルエントリ
+ * @return character read from TELNETから読み込んだ文字, それ以外は
+ *          telnetRead()の結果
  */
 devcall telnetGetc(device *devptr)
 {

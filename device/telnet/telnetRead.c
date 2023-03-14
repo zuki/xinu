@@ -20,11 +20,12 @@ static void telnetSendOption(device *, uchar, uchar);
 /**
  * @ingroup telnet
  *
- * Read characters from a telnet connection
- * @param devptr pointer to a telnet device
- * @param buf buffer for reading characters
- * @param len size of the buffer
- * @return number of characters read, EOF if end of file was reached
+ * telnet接続から文字を読み込む
+ * @param devptr telnetデバイスへのポインタ
+ * @param buf 文字を読み込むためのバッファ
+ * @param len バッファサイズ
+ * @return 読み込んだ文字数; ファイルの終わりに達したら ::EOF;
+ *          それ以外は ::SYSERR
  */
 devcall telnetRead(device *devptr, void *buf, uint len)
 {
@@ -48,7 +49,7 @@ devcall telnetRead(device *devptr, void *buf, uint len)
         return SYSERR;
     }
 
-    /* If the EOF flag is set, clear the flag and return the EOF */
+    /* If the EOFフラグがセットされていたらフラグをクリアしてEOFを返す */
     if (tntptr->ieof)
     {
         TELNET_TRACE("EOF");
@@ -56,19 +57,19 @@ devcall telnetRead(device *devptr, void *buf, uint len)
         return EOF;
     }
 
-    /* Is the input buffer being modified already by something else? */
+    /* 他の誰かが入力バッファをお更新中? */
     wait(tntptr->isem);
 
     TELNET_TRACE("Have input semaphore");
-    /* Check if there is any data in the input buffer */
+    /* 入力バッファにデータが有るかチェックする */
     if (0 == tntptr->icount)
     {
         while ((tntptr->icount < TELNET_IBLEN) && !(tntptr->idelim))
         {
-            /* Set index value to icount + istart values of input buffer */
+            /* index値を icount + istart にセット */
             index = tntptr->icount + tntptr->istart;
 
-            /* Read character */
+            /* 1文字読み込む */
             ch = (*phw->getc) (phw);
             if (SYSERR == ch)
             {
@@ -76,7 +77,7 @@ devcall telnetRead(device *devptr, void *buf, uint len)
                 return SYSERR;
             }
 
-            /* Handle special characters and put others in the in buffer */
+            /* 特殊文字を処理して、それ以外は文字のバッファへ追加する */
             switch (ch)
             {
             case '\r':
@@ -86,7 +87,7 @@ devcall telnetRead(device *devptr, void *buf, uint len)
                 index = tntptr->icount + tntptr->istart;
                 telnetEcho(devptr, ch);
                 telnetFlush(devptr);
-                /* Get the next char to determine if idelim should be set */
+                /* 次の文字を取得して、idelimをセットすべきか判断する */
                 ch = (*phw->getc) (phw);
                 if (SYSERR == ch)
                 {
@@ -95,18 +96,17 @@ devcall telnetRead(device *devptr, void *buf, uint len)
                 }
                 switch (ch)
                 {
-                    /* Must be followed by either NUL or LF */
+                    /* 次にNULかLFが続かなくてはならない */
                 case '\0':
                 case '\n':
-                    /* Put char in input buffer and set idelim to TRUE */
+                    /* バッファに文字を追加して、idelimにTRUEをセットする */
                     tntptr->in[index % TELNET_IBLEN] = ch;
                     tntptr->icount++;
                     tntptr->idelim = TRUE;
                     telnetEcho(devptr, ch);
                     break;
                 default:
-                    /* Default to NUL, since apparently only the carriage
-                     * return is desired */
+                    /* デフォルトはNULとする。明らかにCRだけが望ましいからである */
                     tntptr->in[index % TELNET_IBLEN] = '\0';
                     tntptr->icount++;
                     index = tntptr->icount + tntptr->istart;
@@ -123,7 +123,7 @@ devcall telnetRead(device *devptr, void *buf, uint len)
             case TELNET_CHR_DEL:
             case '\b':
                 TELNET_TRACE("Recv Backspace");
-                /* Move left one character position if possible */
+                /* 可能であれば位置を1文字だけ左に移動する */
                 if (tntptr->icount >= 1)
                 {
                     tntptr->icount--;
@@ -137,7 +137,7 @@ devcall telnetRead(device *devptr, void *buf, uint len)
 
             case '\n':
                 TELNET_TRACE("Recv Newline");
-                /* Put char in input buffer and set idelim to TRUE */
+                /* バッファに文字を追加して、idelimにTRUEをセットする */
                 tntptr->in[index % TELNET_IBLEN] = ch;
                 tntptr->icount++;
                 tntptr->idelim = TRUE;
@@ -149,12 +149,12 @@ devcall telnetRead(device *devptr, void *buf, uint len)
                 break;
             case 0x04:
                 TELNET_TRACE("Recv EOF");
-                /* Handle EOF */
+                /* EOFを処理する */
                 tntptr->ieof = TRUE;
                 tntptr->idelim = TRUE;
                 break;
             case TELNET_IAC:
-                /* Get another char and check which command it is */
+                /* 次の文字を取得してどのコマンドであるかチェックする */
                 ch = (*phw->getc) (phw);
                 if (SYSERR == ch)
                 {
@@ -164,7 +164,7 @@ devcall telnetRead(device *devptr, void *buf, uint len)
                 switch (ch)
                 {
                 case TELNET_WILL:
-                    /* Get another char and check which option it is */
+                    /* 次の文字を取得してどのオプションであるかチェックする */
                     ch = (*phw->getc) (phw);
                     if (SYSERR == ch)
                     {
@@ -173,7 +173,7 @@ devcall telnetRead(device *devptr, void *buf, uint len)
                     }
                     cmdbuf[2] = ch;
 
-                    /* Request to enable SUPPRESS GA on server end */
+                    /* サーバエンド時にSUPRESS_GAを有効にするリクエスト*/
                     if (TELNET_SUPPRESS_GA == ch)
                     {
                         TELNET_TRACE("Recv WILL Suppress Go-Ahead");
@@ -200,7 +200,7 @@ devcall telnetRead(device *devptr, void *buf, uint len)
 
                     break;
                 case TELNET_WONT:
-                    /* If client won't echo then server should */
+                    /* クライアントがwon't echoを要求したらサーバはそうする */
                     ch = (*phw->getc) (phw);
                     if (SYSERR == ch)
                     {
@@ -218,10 +218,10 @@ devcall telnetRead(device *devptr, void *buf, uint len)
                     {
                         TELNET_TRACE("Recv WONT %d (unsupported)", ch);
                     }
-                    /* Otherwise just ignore the won't request */
+                    /* それ以外はwon'tリクエストを無視する */
                     break;
                 case TELNET_DO:
-                    /* Get another char and check which option it is */
+                    /* 次の文字を取得してどのオプションであるかチェックする */
                     ch = (*phw->getc) (phw);
                     if (SYSERR == ch)
                     {
@@ -229,7 +229,7 @@ devcall telnetRead(device *devptr, void *buf, uint len)
                         return SYSERR;
                     }
 
-                    /* Check which option it is and if it applies here */
+                    /* どのオプションで適用できるかチェックする */
                     cmdbuf[0] = TELNET_IAC;
                     if (TELNET_SUPPRESS_GA == ch)
                     {
@@ -251,7 +251,7 @@ devcall telnetRead(device *devptr, void *buf, uint len)
                     }
                     break;
                 case TELNET_DONT:
-                    /* Get another char and check which option it is */
+                    /* 次の文字を取得してどのオプションであるかチェックする */
                     ch = (*phw->getc) (phw);
                     if (SYSERR == ch)
                     {
@@ -267,17 +267,16 @@ devcall telnetRead(device *devptr, void *buf, uint len)
 
                 case TELNET_SE:
                 case TELNET_NOP:
-                    /* Don't do anything, since this is a null operation */
+                    /* null操作なので、何もしない */
                 case TELNET_DM:
-                    /* Useless, since urgent mode is not implemented */
+                    /* 支給モードを実装していないので意味ない */
                 case TELNET_BRK:
                     TELNET_TRACE("Recv Command %d (unsupported)", ch);
                     break;
                 case TELNET_IP:
                     TELNET_TRACE("Recv Interrupt");
-                    /* Terminate the currently running thread... */
-                    /* unless the current thread name begins with "SHELL" */
-
+                    /* 名前が"SHELL"で始まっていない限り、現在実行している
+                     * スレッドを終了させる */
                     uint cpuid;
                     cpuid = getcpuid();
                     thrtab_acquire(thrcurrent[cpuid]);
@@ -289,12 +288,12 @@ devcall telnetRead(device *devptr, void *buf, uint len)
                     break;
                 case TELNET_AO:
                     TELNET_TRACE("Recv Abort Output");
-                    /* Flush the output buffer */
+                    /* 出力バッファをフラッシュする */
                     telnetFlush(devptr);
                     break;
                 case TELNET_AYT:
                     TELNET_TRACE("Recv Are You There");
-                    /* Send "am there" message */
+                    /* "am there"メッセージを送信する */
                     (*phw->write) (phw, (void *)amthere, 36);
                     break;
                 case TELNET_EC:
@@ -316,16 +315,15 @@ devcall telnetRead(device *devptr, void *buf, uint len)
                     break;
                 case TELNET_GA:
                     TELNET_TRACE("Recv Go-Ahead");
-                    /* We want the client to suppress GAs, so this should
-                     * not be sent. But just in case, just ignore it if it
-                     * does. */
+                    /* クライアントにsuppress GAを求めているのでこれは送信されない
+                     * はずである。念の為、無視する。 */
                     break;
                 case TELNET_SB:
                     break;
                 }
                 break;
             default:
-                /* Put byte in TELNET input buffer if it is printable */
+                /* 印刷可能文字であれば入力バッファに追加する */
                 if (isprint(ch))
                 {
                     tntptr->in[index % TELNET_IBLEN] = ch;
@@ -341,10 +339,10 @@ devcall telnetRead(device *devptr, void *buf, uint len)
         }
     }
 
-    /* Signal the input semaphore; done modifying the input buffer */
+    /* 入力セマフォに入力バッファの更新終了を通知 */
     signal(tntptr->isem);
 
-    /* Fill user buffer from input buffer */
+    /* 入力バッファからユーザバッファにコピーする */
     while ((0 < tntptr->icount) && (count < len))
     {
         *buffer++ = tntptr->in[tntptr->istart];

@@ -18,12 +18,12 @@ thread telnetServerKiller(ushort, ushort);
 /**
  * @ingroup telnet
  *
- * Start telnet server
- * @param ethdev  interface on which telnet server will listen
- * @param port  port on which to start the server
- * @param telnetdev  telnet device to use for connection
- * @param shellname     shell device to use for connection
- * @return      OK on success SYSERR on failure
+ * telnetサーバを開始する.
+ * @param ethdev  telnetサーバをlistenするインタフェース
+ * @param port  サーバを開始するポート
+ * @param telnetdev  接続に使用するtelnetデバイス
+ * @param shellname  接続に使用するshellデバイス
+ * @return  成功の場合は ::OK; 失敗の場合は ::SYSERR
  */
 thread telnetServer(int ethdev, int port, ushort telnetdev,
                     char *shellname)
@@ -37,7 +37,7 @@ thread telnetServer(int ethdev, int port, ushort telnetdev,
 
     TELNET_TRACE("ethdev %d, port %d, telnet %d", ethdev, port,
                  telnetdev);
-    /* find netaddr of ethernet device */
+    /* ethernetデバイスのnetaddrを探す */
     interface = netLookup(ethdev);
     if (NULL == interface)
     {
@@ -87,7 +87,7 @@ thread telnetServer(int ethdev, int port, ushort telnetdev,
                      telnetdev - TELNET0, tcpdev - TCP0);
 #endif
 
-        /* Request these options to the client */
+        /* 次のオプションをクライアントに要求する */
         buf[0] = TELNET_IAC;
         buf[1] = TELNET_WILL;
         buf[2] = TELNET_ECHO;
@@ -99,7 +99,7 @@ thread telnetServer(int ethdev, int port, ushort telnetdev,
         TELNET_TRACE
             ("telnetServer() sending WILL ECHO and Suppress GA\n");
 
-        // open shell on TELNET device
+        /* TELNETデバイス上でshellをオープンする */
         tid = create((void *)shell, INITSTK, INITPRIO, shellname, 3,
                      telnetdev, telnetdev, telnetdev);
         if (SYSERR == tid)
@@ -109,12 +109,12 @@ thread telnetServer(int ethdev, int port, ushort telnetdev,
             kill(killtid);
             return SYSERR;
         }
-        /* Clear any pending messages */
+        /* 保留中のメッセージをすべてクリアする */
         recvclr();
         TELNET_TRACE("telnetServer() spawning shell thread %d\n", tid);
         ready(tid, RESCHED_YES, CORE_ZERO);
 
-        // loop until child process dies
+        /* 子プロセスが死ぬまでループする */
         while (recvclr() != tid)
         {
             sleep(200);
@@ -140,10 +140,10 @@ thread telnetServer(int ethdev, int port, ushort telnetdev,
 /**
  * @ingroup telnet
  *
- * Kills telnet server that was spawned
- * @param telnetdev telnet device to close
- * @param tcpdev tcp device to close
- * @return thread return status
+ * 起動されたtelnetサーバをkillする.
+ * @param telnetdev クローズするtelnetデバイス
+ * @param tcpdev クローズするtcpデバイス
+ * @return 状態を返す
  */
 thread telnetServerKiller(ushort telnetdev, ushort tcpdev)
 {
@@ -152,15 +152,15 @@ thread telnetServerKiller(ushort telnetdev, ushort tcpdev)
     minor = devtab[telnetdev].minor;
     sem = telnettab[minor].killswitch;
 
-    /* Wait on device close semaphore */
+    /* デバイスクローズセマフォを待機する */
     wait(sem);
 
     TELNET_TRACE("Killing server");
 
-    /* Close the tcp device */
+    /* tcpデバイスをクローズする */
     close(tcpdev);
 
-    /* Close the telnet device */
+    /* telnetデバイスをクローズする */
     close(telnetdev);
 
     return OK;
