@@ -1,6 +1,6 @@
 /**
  * @file snoopPrintIpv4.c
- * 
+ *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
@@ -13,9 +13,10 @@
 /**
  * @ingroup snoop
  *
- * Print contents of an IPv4 packet
- * @param ip IPv4 packet
- * @return OK if print successful, SYSERR if error occurs
+ * IPv4パケットの内容を出力する
+ * @param ip IPv4パケット
+ * @param verbose 詳細レベル
+ * @return 出力に成功した場合は ::OK; エラーが発生した場合は ::SYSERR
  */
 int snoopPrintIpv4(struct ipv4Pkt *ip, char verbose)
 {

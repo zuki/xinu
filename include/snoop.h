@@ -87,7 +87,7 @@
 
 /** @ingroup snoop
  * @struct snoop
- * snoop構造体
+ * snoop構造体 */
 struct snoop
 {
     uint caplen;                /**< キャプチャするパケットバイト長  */

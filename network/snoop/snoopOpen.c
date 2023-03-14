@@ -1,4 +1,4 @@
-/* @file snoopOpen.c
+/** @file snoopOpen.c
  *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
@@ -12,11 +12,11 @@
 /**
  * @ingroup snoop
  *
- * Opens a capture from a network device.
- * @param cap pointer to capture structure
- * @param name of underlying device, ALL for all network devices
- * @return OK if open was successful, otherwise SYSERR
- * @pre-condition filter settings should already be setup in cap
+ * ネットワークデバイスからのキャプチャをオープンする.
+ * @param cap キャプチャ構造体へのポインタ
+ * @param devname デバイスの名前、すべてのネットワークデバイスの場合は ALL
+ * @return オープンに成功したら ::OK; れ以外は ::SYSERR
+ * @pre capにはフィルタリング設定がなされていること
  */
 int snoopOpen(struct snoop *cap, char *devname)
 {
@@ -25,7 +25,7 @@ int snoopOpen(struct snoop *cap, char *devname)
     int devnum;
     irqmask im;
 
-    /* Error check pointers */
+    /* 引数のエラーチェック */
     if ((NULL == cap) || (NULL == devname))
     {
         return SYSERR;
@@ -33,12 +33,12 @@ int snoopOpen(struct snoop *cap, char *devname)
 
     SNOOP_TRACE("Opening capture on %s", devname);
 
-    /* Reset statistics */
+    /* 統計のリセット */
     cap->ncap = 0;
     cap->nmatch = 0;
     cap->novrn = 0;
 
-    /* Allocated mailbox for queue packets */
+    /* パケットをキューイングするメールボックスを割り当てる */
     cap->queue = mailboxAlloc(SNOOP_QLEN);
     if (SYSERR == (int)cap->queue)
     {
@@ -46,7 +46,8 @@ int snoopOpen(struct snoop *cap, char *devname)
         return SYSERR;
     }
 
-    /* Attach capture to all running network interfaces for devname "ALL" */
+    /* devnameが"ALL"の場合は実行中のすべてのネットワークインタフェースに
+     * キャプチャを接続する */
     if (0 == strcmp(devname, "ALL"))
     {
         im = disable();
@@ -71,7 +72,7 @@ int snoopOpen(struct snoop *cap, char *devname)
         return OK;
     }
 
-    /* Determine network interface to attach capture to */
+    /* キャプチャを接続するネットワークインタフェースを決定する */
     devnum = getdev(devname);
     if (SYSERR == devnum)
     {

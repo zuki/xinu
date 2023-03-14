@@ -1,4 +1,4 @@
-/* @file snoopRead.c
+/** @file snoopRead.c
  *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
@@ -9,14 +9,15 @@
 /**
  * @ingroup snoop
  *
- * Returns a packet captured from a network interface.
- * @return a packet if read was successful, otherwise SYSERR
+ * ネットワークインタフェースからキャプチャしたパケットを返す.
+ * @param cap キャプチャ構造体へのポインタ
+ * @return 読み込みに成功したらパケット、それ以外は ::SYSERR
  */
 struct packet *snoopRead(struct snoop *cap)
 {
     struct packet *pkt;
 
-    /* Error check pointers */
+    /* 引数のエラーチェック */
     if (NULL == cap)
     {
         return (struct packet *)SYSERR;

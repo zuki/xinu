@@ -1,6 +1,5 @@
 /**
- * @defgroup snoop Packet snooping
+ * @defgroup snoop パケットスヌーピング
  * @ingroup network
- * @brief View the data of packets being send and received over a network
- *        interface.
+ * @brief ネットインタフェース上で送受信されているパケットデータを覗き見る.
  */

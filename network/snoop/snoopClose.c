@@ -1,4 +1,4 @@
-/* @file snoopClose.c
+/** @file snoopClose.c
  *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
@@ -11,9 +11,9 @@
 /**
  * @ingroup snoop
  *
- * Closes a capture from a network device or file.
- * @param cap pointer to capture structure
- * @return OK if close was successful, otherwise SYSERR
+ * ネットワークデバイスまたはファイルからのキャプチャをクローズする.
+ * @param cap キャプチャ構造体へのポインタ
+ * @return クローズに成功したら ::OK; それ以外は ::SYSERR
  */
 int snoopClose(struct snoop *cap)
 {
@@ -21,13 +21,13 @@ int snoopClose(struct snoop *cap)
     int i;
     irqmask im;
 
-    /* Error check pointers */
+    /* 引数のエラーチェック */
     if (NULL == cap)
     {
         return SYSERR;
     }
 
-    /* Remove capture from all network interface */
+    /* すべてのネットワークインタフェースからキャプチャを削除する */
     im = disable();
 #if NNETIF
     for (i = 0; i < NNETIF; i++)
@@ -40,7 +40,7 @@ int snoopClose(struct snoop *cap)
 #endif
     restore(im);
 
-    /* Free queued packets */
+    /* キューにあるパケットを解放する */
     while (mailboxCount(cap->queue) > 0)
     {
         pkt = (struct packet *)mailboxReceive(cap->queue);
@@ -50,7 +50,7 @@ int snoopClose(struct snoop *cap)
         }
     }
 
-    /* Free mailbox */
+    /* メールボックスを解放する */
     if (SYSERR == mailboxFree(cap->queue))
     {
         return SYSERR;

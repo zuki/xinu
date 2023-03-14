@@ -1,6 +1,6 @@
 /**
  * @file snoopPrintArp.c
- * 
+ *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
@@ -13,9 +13,10 @@
 /**
  * @ingroup snoop
  *
- * Print contents of ARP packet
- * @param arp ARP packet
- * @return OK if print successful, SYSERR if error occurs
+ * ARPパケットの内容を出力する
+ * @param arp ARPパケット
+ * @param verbose 詳細レベル
+ * @return 出力に成功した場合は ::OK; エラーが発生した場合は ::SYSERR
  */
 int snoopPrintArp(struct arpPkt *arp, char verbose)
 {

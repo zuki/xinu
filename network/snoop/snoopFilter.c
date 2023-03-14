@@ -1,4 +1,4 @@
-/* @file snoopFilter.c
+/** @file snoopFilter.c
  *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
@@ -13,8 +13,10 @@
 /**
  * @ingroup snoop
  *
- * Determine if a packet matches the filter.
- * @return TRUE if packet matches filter, otherwise FALSE
+ * パケットがフィルタにマッチするか判定する.
+ * @param s スヌープ構造体へのポインタ
+ * @param pkt パケットへのポインタ
+ * @return パケットがフィルタにマッチしたら ::TRUE; それ以外は ::FALSE
  */
 bool snoopFilter(struct snoop *s, struct packet *pkt)
 {
@@ -22,7 +24,7 @@ bool snoopFilter(struct snoop *s, struct packet *pkt)
     struct arpPkt *arp = NULL;
     struct ipv4Pkt *ip = NULL;
 
-    /* Packet matches filter if there is no filter */
+    /* フィルタがない場合はパケットはフィルタにマッチしたとする */
     if ((NULL == s->type)
         && (NULL == s->srcaddr.type) && (NULL == s->srcport)
         && (NULL == s->dstaddr.type) && (NULL == s->dstport))
@@ -30,10 +32,11 @@ bool snoopFilter(struct snoop *s, struct packet *pkt)
         return TRUE;
     }
 
-    /* Ensure packet is valid size, otherwise it can't be filtered */
+    /* パケットのサイズが妥当であること。そうでなければフィルタリングは
+       できない */
     if (pkt->len < ETH_HDR_LEN)
     {
-        /* Packet is too small to have Ethernet header */
+        /* パケットはEthernetヘッダを含むだけの長さがない */
         return FALSE;
     }
     else
@@ -44,34 +47,34 @@ bool snoopFilter(struct snoop *s, struct packet *pkt)
         case ETHER_TYPE_ARP:
             if (pkt->len < (ETH_HDR_LEN + ARP_CONST_HDR_LEN))
             {
-                /* Packet is too small to have ARP header */
+                /* パケットはARPヘッダを含むだけの長さがない */
                 return FALSE;
             }
             arp = (struct arpPkt *)ether->data;
             if (pkt->len < (ETH_HDR_LEN + ARP_CONST_HDR_LEN +
                             (2 * arp->hwalen) + (2 * arp->pralen)))
             {
-                /* Packet is too small to have ARP header */
+                /* パケットはARPヘッダを含むだけの長さがない */
                 return FALSE;
             }
             break;
         case ETHER_TYPE_IPv4:
             if (pkt->len < (ETH_HDR_LEN + IPv4_HDR_LEN))
             {
-                /* Packet is too small to have IPv4 header */
+                /* パケットはIPv4ヘッダを含むだけの長さがない */
                 return FALSE;
             }
             ip = (struct ipv4Pkt *)ether->data;
             break;
         default:
-            /* Don't know how to filter other Ethernet types */
+            /* その他のEthernetタイプはフィルタリングする方法を知らない */
             return FALSE;
         }
     }
 
-    /* If code reaches here, the packet is a valid length */
+    /* ここまで到達したということはパケットは妥当な長さである */
 
-    /* Check if packet type matches */
+    /* パケットタイプがマッチするかチェックする */
     if (s->type != NULL)
     {
         /* Check Ethernet type */
@@ -117,10 +120,10 @@ bool snoopFilter(struct snoop *s, struct packet *pkt)
         }
     }
 
-    /* If code reaches here, either there is no type filter 
-     * or the packet matches the type filter */
+    /* ここまで到達したということはフィルタがないか、パケットが
+     * タイプフィルタにマッチした */
 
-    /* Check if packet source address matches */
+    /* パケットの送信元アドレスがマッチするかチェックする */
     if (s->srcaddr.type != NULL)
     {
         /* ARP */
@@ -149,7 +152,7 @@ bool snoopFilter(struct snoop *s, struct packet *pkt)
         }
     }
 
-    /* Check if packet destination address matches */
+    /* パケットのあて先アドレスがマッチするかチェックする */
     if (s->dstaddr.type != NULL)
     {
         /* ARP */
@@ -178,12 +181,13 @@ bool snoopFilter(struct snoop *s, struct packet *pkt)
         }
     }
 
-    /* Check if packet ports match */
+    /* パケットポートがマッチするかチェックする */
+    /* FINME: snoopにポートによるフィルタリング指定があるとsnoopできない */
     if ((s->srcport != NULL) || (s->dstport != NULL))
     {
         if (ip == NULL)
         {
-            /* Only IP packets can be filtered by port */
+            /* IPパケットはポートでしかフィルタリングできない */
             return FALSE;
         }
 

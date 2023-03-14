@@ -1,4 +1,4 @@
-/* @file snoopCapture.c
+/** @file snoopCapture.c
  *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
@@ -9,15 +9,15 @@
 /**
  * @ingroup snoop
  *
- * Captures a network packet from a network interface.
- * @return OK if capture was successful, otherwise SYSERR
+ * ネットワークインタフェースからのネットワークパケットをキャプチャする.
+ * @return キャプチャが成功したら ::OK; それ以外は ::SYSERR
  */
 int snoopCapture(struct snoop *cap, struct packet *pkt)
 {
     struct packet *buf;
     int len;
 
-    /* Error check pointers */
+    /* 引数のエラーチェック */
     if ((NULL == cap) || (NULL == pkt))
     {
         return SYSERR;
@@ -25,20 +25,21 @@ int snoopCapture(struct snoop *cap, struct packet *pkt)
 
     SNOOP_TRACE("Capturing packet");
 
-    /* Increment count of packets captured */
+    /* パケットのキャプチャ回数を増分する */
     cap->ncap++;
 
-    /* Check if packet matches capture filter, if not return OK */
+    /* パケットがキャプチャフィルタにマッチするかチェックし、
+     * 一致しなければOKを返す */
     if (FALSE == snoopFilter(cap, pkt))
     {
         SNOOP_TRACE("Packet does not match filter");
         return OK;
     }
 
-    /* Increment count of packets matching filter */
+    /* フィルタにマッチしたパケット数を増分する */
     cap->nmatch++;
 
-    /* Try to get a buffer to put packet into */
+    /* パケットを収めるバッファを取得する */
     buf = netGetbuf();
     if (SYSERR == (int)buf)
     {
@@ -46,10 +47,10 @@ int snoopCapture(struct snoop *cap, struct packet *pkt)
         return SYSERR;
     }
 
-    /* Copy packet header into buffer */
+    /* パケットヘッダーをバッファにコピーする */
     memcpy(buf, pkt, sizeof(struct packet));
 
-    /* Copy packet contents into buffer */
+    /* パケットの内容をバッファにコピーする */
     len = pkt->len;
     if (len > cap->caplen)
     {
@@ -58,7 +59,7 @@ int snoopCapture(struct snoop *cap, struct packet *pkt)
     memcpy(buf->data, pkt->curr, len);
     buf->curr = buf->data;
 
-    /* Queue packet */
+    /* パケットをキューに入れる */
     if (mailboxCount(cap->queue) >= SNOOP_QLEN)
     {
         netFreebuf(buf);

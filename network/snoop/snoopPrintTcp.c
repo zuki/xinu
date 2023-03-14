@@ -1,6 +1,6 @@
 /**
  * @file snoopPrintTcp.c
- * 
+ *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
@@ -29,9 +29,10 @@ static void snoopPrintTcpPort(ushort port, char *descrp)
 /**
  * @ingroup snoop
  *
- * Print contents of an TCP packet
- * @param tcp TCP packet
- * @return OK if print successful, SYSERR if error occurs
+ * TCPパケットの内容を出力する
+ * @param tcp TCPパケット
+ * @param verbose 詳細レベル
+ * @return 出力に成功した場合は ::OK; エラーが発生した場合は ::SYSERR
  */
 int snoopPrintTcp(struct tcpPkt *tcp, char verbose)
 {

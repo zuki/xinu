@@ -1,6 +1,6 @@
 /**
  * @file snoopPrintEthernet.c
- * 
+ *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
@@ -13,9 +13,10 @@
 /**
  * @ingroup snoop
  *
- * Print contents of Ethernet packet
- * @param ether Ethernet packet
- * @return OK if print successful, SYSERR if error occurs
+ * Ethernetパケットの内容を出力する
+ * @param ether Ethernetパケット
+ * @param verbose 詳細レベル
+ * @return 出力に成功した場合は ::OK; エラーが発生した場合は ::SYSERR
  */
 int snoopPrintEthernet(struct etherPkt *ether, char verbose)
 {
@@ -43,10 +44,13 @@ int snoopPrintEthernet(struct etherPkt *ether, char verbose)
         switch (net2hs(ether->type))
         {
         case ETHER_TYPE_IPv4:
-            sprintf(output, "IP");
+            sprintf(output, "IPv4");
             break;
         case ETHER_TYPE_ARP:
             sprintf(output, "ARP");
+            break;
+        case ETHER_TYPE_IPv6:
+            sprintf(output, "IPv6");
             break;
         default:
             sprintf(output, "0x%04X", net2hs(ether->type));

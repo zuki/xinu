@@ -1,6 +1,6 @@
 /**
  * @file snoopPrint.c
- * 
+ *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
@@ -19,11 +19,11 @@
 /**
  * @ingroup snoop
  *
- * Outputs snoop information for a packet.
- * @param pkt packet
- * @param dump dump level
- * @param verbose verbosity level
- * @return OK, SYSERR if error occurs
+ * パケットのsnoop情報を出力する.
+ * @param pkt パケット
+ * @param dump ダンプレベル
+ * @param verbose 詳細レベル
+ * @return ::OK; エラーが発生した場合は ::SYSERR
  */
 int snoopPrint(struct packet *pkt, char dump, char verbose)
 {
@@ -44,28 +44,28 @@ int snoopPrint(struct packet *pkt, char dump, char verbose)
         return SYSERR;
     }
 
-    /* TODO: Print timestamp */
+    /* TODO: タイムスタンプの出力 */
 
-    /* Print packet summary */
+    /* パケットサマリーの出力 */
     ether = (struct etherPkt *)pkt->curr;
     switch (net2hs(ether->type))
     {
     case ETHER_TYPE_ARP:
         arp = (struct arpPkt *)ether->data;
-        /* strA = destination protocol address */
+        /* strA = あて先プロトコルアドレス */
         addr.type = net2hs(arp->prtype);
         addr.len = arp->pralen;
         memcpy(addr.addr, &arp->addrs[ARP_ADDR_DPA(arp)], addr.len);
         netaddrsprintf(strA, &addr);
-        /* strB = source protocol address */
+        /* strB = 送信元プロトコルアドレス */
         memcpy(addr.addr, &arp->addrs[ARP_ADDR_SPA(arp)], addr.len);
         netaddrsprintf(strB, &addr);
-        /* strC = source hardware address */
+        /* strC = 送信元ハードウェアアドレス */
         addr.type = net2hs(arp->hwtype);
         addr.len = arp->hwalen;
         memcpy(addr.addr, &arp->addrs[ARP_ADDR_SHA(arp)], addr.len);
         netaddrsprintf(strC, &addr);
-        /* Output summary based on operation */
+        /* 操作に基づいてサマリーを出力する */
         switch (net2hs(arp->op))
         {
         case ARP_OP_RQST:
@@ -81,15 +81,15 @@ int snoopPrint(struct packet *pkt, char dump, char verbose)
         break;
     case ETHER_TYPE_IPv4:
         ip = (struct ipv4Pkt *)ether->data;
-        /* strA = destination IP */
+        /* strA = あて先IP */
         addr.type = NETADDR_IPv4;
         addr.len = IPv4_ADDR_LEN;
         memcpy(addr.addr, ip->dst, addr.len);
         netaddrsprintf(strA, &addr);
-        /* strB = source IP */
+        /* strB = 送信元IP */
         memcpy(addr.addr, ip->src, addr.len);
         netaddrsprintf(strB, &addr);
-        /* strC = protocol */
+        /* strC = プロトコル */
         strC[0] = '\0';
         switch (ip->proto)
         {
@@ -103,13 +103,13 @@ int snoopPrint(struct packet *pkt, char dump, char verbose)
             sprintf(strC, "UDP");
             break;
         }
-        /* Output summary */
+        /* サマリーを出力する */
         printf("IP %s > %s : %s", strB, strA, strC);
         break;
     }
     printf("\n");
 
-    /* Print verbose */
+    /* 詳細出力 */
     if (verbose > SNOOP_VERBOSE_NONE)
     {
         snoopPrintEthernet(ether, verbose);
@@ -134,7 +134,7 @@ int snoopPrint(struct packet *pkt, char dump, char verbose)
         }
     }
 
-    /* Print dump */
+    /* ダンプ出力 */
     if ((SNOOP_DUMP_HEX == dump) || (SNOOP_DUMP_CHAR == dump))
     {
         for (i = 0; i < pkt->len; i += 16)

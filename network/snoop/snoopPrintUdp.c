@@ -1,6 +1,6 @@
 /**
  * @file snoopPrintUdp.c
- * 
+ *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
@@ -35,9 +35,10 @@ static void snoopPrintUdpPort(ushort port, char *descrp)
 /**
  * @ingroup snoop
  *
- * Print contents of an UDP packet
- * @param pkt the packet
- * @return OK if print successful, SYSERR if error occurs
+ * UDPパケットの内容を出力する
+ * @param udp UDPパケット
+ * @param verbose 詳細レベル
+ * @return 出力に成功した場合は ::OK; エラーが発生した場合は ::SYSERR
  */
 int snoopPrintUdp(struct udpPkt *udp, char verbose)
 {
