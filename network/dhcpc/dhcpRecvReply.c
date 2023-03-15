@@ -5,7 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2008, 2013.  All rights reserved. */
 
 #include <device.h>
-#include "dhcp.h"
+#include <dhcp.h>
 #include <ether.h>
 #include <ipv4.h>
 #include <network.h>

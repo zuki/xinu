@@ -6,7 +6,7 @@
 
 #include <clock.h>
 #include <device.h>
-#include "dhcp.h"
+#include <dhcp.h>
 #include <ethernet.h>
 #include <ipv4.h>
 #include <network.h>

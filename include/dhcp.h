@@ -20,6 +20,9 @@
 #define DHCP_OP_REQUEST		1
 #define DHCP_OP_REPLY		2
 
+#define DHCP_HW_ETHERNET    1       /**< Ethernet */
+
+#define DHCP_FLAGS_BROADCAST    (1 << 15)
 
 /* DHCPタイムアウト定義 */
 #define DHCP_RETRANSMIT_COUNT    4
