@@ -15,6 +15,7 @@
 #include <string.h>
 #include <tcp.h>
 #include <udp.h>
+#include <dhcp.h>
 
 /**
  * @ingroup snoop
@@ -30,6 +31,7 @@ int snoopPrint(struct packet *pkt, char dump, char verbose)
     struct etherPkt *ether = NULL;
     struct arpPkt *arp = NULL;
     struct ipv4Pkt *ip = NULL;
+    struct udpPkt *udp = NULL;
     uchar *appHdr = NULL;
     struct netaddr addr;
     char strA[20];
@@ -127,7 +129,15 @@ int snoopPrint(struct packet *pkt, char dump, char verbose)
                 snoopPrintTcp((struct tcpPkt *)appHdr, verbose);
                 break;
             case IPv4_PROTO_UDP:
-                snoopPrintUdp((struct udpPkt *)appHdr, verbose);
+                udp = (struct udpPkt *)appHdr;
+                snoopPrintUdp(udp, verbose);
+                switch(net2hs(udp->dstPort))
+                {
+                case UDP_PORT_DHCPS:
+                case UDP_PORT_DHCPC:
+                    snoopPrintDhcp(udp, verbose);
+                    break;
+                }
                 break;
             }
             break;

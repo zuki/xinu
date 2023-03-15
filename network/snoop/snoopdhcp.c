@@ -1,362 +1,375 @@
 /**
  * @file snoophdcp.c
- * 
+ *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
-#include <net.h>
-#include <stdio.h>
-#include <snoop.h>
 #include <network.h>
-//#include <dhcp.h>
+#include <snoop.h>
+#include <stdio.h>
+#include <dhcp.h>
 
+static void snoopPrintDhcpOperation(uchar op, char *descrp)
+{
+    switch(op)
+    {
+    case DHCP_OP_REQUEST:
+        strcpy(descrp, "(REQUEST)");
+        break;
+    case DHCP_OP_REPLY:
+        strcpy(descrp, "(REPLY)");
+        break;
+    default:
+        strcpy(descrp, "");
+        break;
+    }
+}
 
 /**
- * Snoop contents of dhcp packet
- * @param dhcp the dhcp packet
+ * @ingroup snoop
+ * DHCPパケットの内容を出力する.
+ * @param dhcp DHCPパケット
+ * @param verbose 詳細レベル
+ * @return 出力に成功した場合は ::OK; エラーが発生した場合は ::SYSERR
  */
-/*void snoopdhcp(struct dhcpPkt *dhcp)
+int snoopPrintDhcp(struct dhcpPkt *dhcp, char verbose)
 {
-	bool done = FALSE;
-	uchar *opts = NULL;
-	ushort len = 0;
-	ulong i = 0;
-	fprintf(stdout,"DHCP:\t----- DHCP Header -----\n");
-	fprintf(stdout,"DHCP:\tOperation = %d ", dhcp->op);
-	switch(dhcp->op)
-	{
-	case DHCP_OP_REQUEST:
-		fprintf(stdout,"(REQUEST)\n");
-		break;
-	case DHCP_OP_REPLY:
-		fprintf(stdout,"(REPLY)\n");
-		break;
-	default:
-		fprintf(stdout,"(Unrecognized Operation)\n");
-		break;
-	}
+    char descrp[40];
+    char output[40];
+    struct netaddr praddr;
 
-	fprintf(stdout,"DHCP:\tHardware type = 0x%04x ", dhcp->htype);
-	switch(dhcp->htype)
-	{
-	case ARP_HTYPE_ETHERNET:
-		fprintf(stdout, "(Ethernet)\n");
-		break;
-	default:
-		fprintf(stdout, "(Unrecognized Hardware)\n");
-		break;
-	}
-	fprintf(stdout,"DHCP:\tHardware length = %d bytes\n", dhcp->hlen);
-	fprintf(stdout,"DHCP:\tHops = %d\n", dhcp->hops);
-	fprintf(stdout,"DHCP:\tTransfer id = %d\n", net2hl(dhcp->xid));
-	fprintf(stdout,"DHCP:\tSeconds = %d\n", net2hs(dhcp->secs));
-	fprintf(stdout,"DHCP:\tFlags = 0x%04x ", net2hs(dhcp->flags));
-	switch(net2hs(dhcp->flags))
-	{
-	case DHCP_BROADCAST:
-		fprintf(stdout, "(Broadcast)\n");
-		break;
-	default:
-		fprintf(stdout, "\n");
-	}
-	fprintf(stdout,"DHCP:\tClient IP Addr = ");
-	fprint_iplong(net2hl(dhcp->ciaddr));
-	fprintf(stdout, "\n");
-	fprintf(stdout,"DHCP:\tYour IP Addr = ");
-	fprint_iplong(net2hl(dhcp->yiaddr));
-	fprintf(stdout, "\n");
-	fprintf(stdout,"DHCP:\tServer IP Addr = ");
-	fprint_iplong(net2hl(dhcp->siaddr));
-	fprintf(stdout, "\n");
-	fprintf(stdout,"DHCP:\tGateway IP Addr = ");
-	fprint_iplong(net2hl(dhcp->giaddr));
-	fprintf(stdout, "\n");
-	fprintf(stdout,"DHCP:\tClient Hardware Addr = ");
-	fprint_mac(dhcp->chaddr);
-	fprintf(stdout, "\n");
-	i = 0;
-	fprintf(stdout,"DHCP:\tServer name = ");
-	while (NULL != dhcp->sname[i])
-	{
-		fprintf(stdout,"%c", dhcp->sname[i]);
-		i++;
-	}
-	fprintf(stdout, "\n");
-	fprintf(stdout,"DHCP:\tFile = 0x%x\n", dhcp->file);
+    int done = 0;
+    uchar *opts = NULL;
+    ushort len = 0;
+    ulong i = 0;
 
-	opts = dhcp->opts;
+    if (NULL == dhcp) {
+        return SYSERR;
+    }
 
-	while(!done)
-	{
-		switch(*opts)
-		{
-		case DHCP_OPT_END:
-			fprintf(stdout, "DHCP:\tEnd Option (255)\n");
-			done = TRUE;
-			break;
+    printf(stdout," ----- DHCP Header -----\n");
 
-		case DHCP_OPT_PAD:
-			break;
+    snoopPrintDhcpOperation(dhcp->op, descrp);
+    sprintf(output, "%d %s", dhcp->op, descrp);
+    printf("  Operation: %-25s ", output);
 
-		case DHCP_OPT_SUBNET:
-			opts++;
-			len = *opts;
-			if(len != 4)
-			{ break; }
-			fprintf(stdout,"DHCP:\tSubnet Mask Option (1)\n");
-			fprintf(stdout, "\t\tlength = %d\n", len);
-			opts++;
-			fprintf(stdout, "\t\tsubnet addr = %d", *opts);
-			len--;
-			while (0 != len)
-			{
-				opts++;
-				fprintf(stdout,".%d", *opts);
-				len--;
-			}
-			fprintf(stdout, "\n");
-			break;
+    if (dhcp->htype == DHCP_HW_ETHERNET) {
+        strcpy(descrp, "(Ethernet)");
+    } else {
+        strcpy(descrp, "");
+    }
+    sprintf(output, "%d %s", dhcp->htype, descrp);
+    printf("  HW type: %-25s ", output);
 
-		case DHCP_OPT_GATEWAY:
-			opts++;
-			len = *opts;
-			if(0 != (len % 4) || len == 0)
-			{ break; }
-			fprintf(stdout,"DHCP:\tRouter Option (3)\n");
-			fprintf(stdout, "\t\tlength = %d\n", len);
-			opts++;
-			i = 1;
-			fprintf(stdout, "\t\tgateway addr %d = %d", i, *opts);
-			len--;
-			while (0 != len)
-			{
-				opts++;
-				if(0 == (len % 4))
-				{ 
-					i++;
-					fprintf(stdout, "\n\t\tgateway addr %d = %d", i, *opts);
-					opts++;
-					len--;
-				}
-				fprintf(stdout,".%d", *opts);
-				len--;
-			}
-			fprintf(stdout, "\n");
-			break;
+    sprintf(output, "%d bytes", dhcp->hlen);
+    printf("  HW length: %-20s ", output);
+    sprintf(output, "%d", dhcp->hops);
+    printf("  Hops: %-20s\n", output);
+    printf("  Transfer id: %d\n", net2hl(dhcp->xid));
+    printf("  Seconds = %d\n", net2hs(dhcp->secs));
 
-		case DHCP_OPT_DNS:
-			opts++;
-			len = *opts;
-			if (0 != (len % 4) || 0 == len)
-			{ break; }
-			fprintf(stdout,"DHCP:\tDomain Name Server Option (6)\n");
-			fprintf(stdout, "\t\tlength = %d\n", len);
-			opts++;
-			i = 1;
-			fprintf(stdout, "\t\tDNS addr %d = %d", i, *opts);
-			len--;
-			while (0 != len)
-			{
-				opts++;
-				if(0 == (len % 4))
-				{ 
-					i++;
-					fprintf(stdout, "\n\t\tDNS addr %d = %d", i, *opts);
-					len--;
-					opts++;
-				}
-				fprintf(stdout,".%d", *opts);
-				len--;
-			}
-			fprintf(stdout, "\n");
-			break;
+    if (net2hs(dhcp->flags) == DHCP_FLAGS_BROADCAST) {
+        strcpy(descrp, "(Ethernet)");
+    } else {
+        strcpy(descrp, "");
+    }
+    sprintf(output, "0x%04x %s", net2hs(dhcp->flags), descrp);
+    printf("  Falgs: %-25s\n", output);
 
-		case DHCP_OPT_HNAME:
-			opts++;
-			len = *opts;
-			if (0 == len)
-			{ break; }
-			fprintf(stdout, "DHCP:\tHost Name Option (12)\n");
-			fprintf(stdout, "\t\tlength = %d\n", len);
-			opts++;
-			fprintf(stdout, "\t\thost name = %c", *opts);
-			len--;
-			while (0 != len)
-			{
-				opts++;
-				fprintf(stdout,"%c", *opts);
-				len--;
-			}
-			fprintf(stdout, "\n");
+    praddr.type = NETADDR_IPv4;
+    praddr.len = IPv4_ADDR_LEN;
+    memcpy(praddr.addr, net2hl(dhcp->ciaddr), praddr.len);
+    netaddrsprintf(output, &praddr);
+    printf("  Client IP Addr: %-25s ", output);
 
-		case DHCP_OPT_DOMAIN:
-			opts++;
-			len = *opts;
-			if(0 == len)
-			{ break; }
-			fprintf(stdout,"DHCP:\tDomain Name Option (15)\n");
-			fprintf(stdout, "\t\tlength = %d\n", len);
-			opts++;
-			fprintf(stdout, "\t\tdomain name = %c", *opts);
-			len--;
-			while (0 != len)
-			{
-				opts++;
-				fprintf(stdout,"%c", *opts);
-				len--;
-			}
-			fprintf(stdout, "\n");
-			break;
+    memcpy(praddr.addr, net2hl(dhcp->yiaddr), praddr.len);
+    netaddrsprintf(output, &praddr);
+    printf("  Your IP Addr: %-25s\n", output);
 
-		case DHCP_OPT_REQUEST:
-			opts++;
-			len = *opts;
-			if(len != 4)
-			{ break; }
-			fprintf(stdout,"DHCP:\tRequested IP Address Option (50)\n");
-			fprintf(stdout, "\t\tlength = %d\n", len);
-			opts++;
-			fprintf(stdout, "\t\trequested addr = %d", *opts);
-			len--;
-			while (0 != len)
-			{
-				opts++;
-				fprintf(stdout,".%d", *opts);
-				len--;
-			}
-			fprintf(stdout, "\n");
-			break;
+    memcpy(praddr.addr, net2hl(dhcp->siaddr), praddr.len);
+    netaddrsprintf(output, &praddr);
+    printf("  Server IP Addr: %-25s\n", output);
 
-		case DHCP_OPT_LEASE:
-			opts++;
-			len = *opts;
-			if(len != 4)
-			{ break; }
-			fprintf(stdout,"DHCP:\tAddress Lease Time Option (51)\n");
-			fprintf(stdout, "\t\tlength = %d\n", len);
-			opts++;
-			i+= *opts<<24;
-			opts++;
-			i+= *opts<<16;
-			opts++;
-			i+= *opts<<8;
-			opts++;
-			i+= *opts;
-			fprintf(stdout, "\t\tlease time = %u\n", i);
-			break;
+    memcpy(praddr.addr, net2hl(dhcp->giaddr), praddr.len);
+    netaddrsprintf(output, &praddr);
+    printf("  Gateway IP Addr: %-25s\n", output);
 
-		case DHCP_OPT_MSGTYPE:
-			opts++;
-			len = *opts;
-			if(len != 1)
-			{ break; }
-			fprintf(stdout,"DHCP:\tMessage Type Option (53)\n");
-			fprintf(stdout, "\t\tlength = %d\n", len);
-			fprintf(stdout, "\t\ttype = ");
-			opts++;
-			switch(*opts)
-			{
-			case DHCPDISCOVER:
-				fprintf(stdout, "DHCPDISCOVER");
-				break;
-			case DHCPOFFER:
-				fprintf(stdout, "DHCPOFFER");
-				break;
-			case DHCPREQUEST:
-				fprintf(stdout, "DHCPREQUEST");
-				break;
-			case DHCPDECLINE:
-				fprintf(stdout, "DHCPDECLINE");
-				break;
-			case DHCPACK:
-				fprintf(stdout, "DHCPACK");
-				break;
-			case DHCPNAK:
-				fprintf(stdout, "DHCPNAK");
-				break;
-			case DHCPRELEASE:
-				fprintf(stdout, "DHCPRELEASE");
-				break;
-			default:
-				fprintf(stdout, "Unrecognized");
-				break;
-			}
-			fprintf(stdout, "\n");
-			break;
+    printf("  Client Hardware Addr: %02x:%02x:%02x:%02x:%02x:%02x ",
+        dhcp->chaddr[0], dhcp->chaddr[1], dhcp->chaddr[2],
+        dhcp->chaddr[3], dhcp->chaddr[4], dhcp->chaddr[5]);
+    printf("  Server name: %-64s\n", dhcp->sname);
+        printf("  File: %-128s\n", dhcp->file);
 
-		case DHCP_OPT_SERVER:
-			opts++;
-			len = *opts;
-			if(len != 4)
-			{ break; }
-			fprintf(stdout,"DHCP:\tServer Identifier Option (54)\n");
-			fprintf(stdout, "\t\tlength = %d\n", len);
-			opts++;
-			fprintf(stdout, "\t\tserver addr = %d", *opts);
-			len--;
-			while (0 != len)
-			{
-				opts++;
-				fprintf(stdout,".%d", *opts);
-				len--;
-			}
-			fprintf(stdout, "\n");
-			break;
-		case DHCP_OPT_PARAMREQ:
-			opts++;
-			len = *opts;
-			if (0 == len)
-			{ break; }
-			fprintf(stdout, "DHCP:\tParameter Request List Option (55)\n");
-			fprintf(stdout, "\t\tlength = %d\n", len);
-			fprintf(stdout, "\t\tRequest List:\n");
-			while (0 != len)
-			{
-				opts++;
-				switch(*opts)
-				{
-				case DHCP_OPT_SUBNET:
-					fprintf(stdout, "\t\t\tSubnet Option\n");
-					break;
-				case DHCP_OPT_GATEWAY:
-					fprintf(stdout, "\t\t\tGateway Option\n");
-					break;
-				case DHCP_OPT_DNS:
-					fprintf(stdout, "\t\t\tDNS Option\n");
-					break;
-				case DHCP_OPT_HNAME:
-					fprintf(stdout, "\t\t\tHost Name Option\n");
-					break;
-				case DHCP_OPT_DOMAIN:
-					fprintf(stdout, "\t\t\tDomain Name Option\n");
-					break;
-				case DHCP_OPT_REQUEST:
-					fprintf(stdout, "\t\t\tRequest Option\n");
-					break;
-				case DHCP_OPT_LEASE:
-					fprintf(stdout, "\t\t\tLease Option\n");
-					break;
-				case DHCP_OPT_SERVER:
-					fprintf(stdout, "\t\t\tServer Option\n");
-					break;
-				default:
-					fprintf(stdout, "\t\t\tUnrecognized Option %d\n", *opts);
-					break;
-				}
-				len--;
-			}
-			
-		default:
-			opts++;
-			len = *opts;
-			
-			opts+=len;
-			break;
-		}
+    opts = dhcp->opts;
+    while(!done)
+    {
+        switch(*opts)
+        {
+        case DHCP_OPT_END:
+            printf( "  End Option (255)\n");
+            done = TRUE;
+            break;
 
-		opts++;
-	}
-	fprintf(stdout,"DHCP:\n");
+        case DHCP_OPT_PAD:
+            break;
+
+        case DHCP_OPT_SUBNET:
+            opts++;
+            len = *opts;
+            if(len != 4)
+            { break; }
+            printf("  Subnet Mask Option (1)\n");
+            printf("    length = %d\n", len);
+            opts++;
+            printf("    subnet addr = %d", *opts);
+            len--;
+            while (0 != len)
+            {
+                opts++;
+                printf(".%d", *opts);
+                len--;
+            }
+            printf( "\n");
+            break;
+
+        case DHCP_OPT_GATEWAY:
+            opts++;
+            len = *opts;
+            if(0 != (len % 4) || len == 0)
+            { break; }
+            printf("  Router Option (3)\n");
+            printf("    length = %d\n", len);
+            opts++;
+            i = 1;
+            printf("    gateway addr %d = %d", i, *opts);
+            len--;
+            while (0 != len)
+            {
+                opts++;
+                if(0 == (len % 4))
+                {
+                    i++;
+                    printf( "\n\t\tgateway addr %d = %d", i, *opts);
+                    opts++;
+                    len--;
+                }
+                printf(".%d", *opts);
+                len--;
+            }
+            printf( "\n");
+            break;
+
+        case DHCP_OPT_DNS:
+            opts++;
+            len = *opts;
+            if (0 != (len % 4) || 0 == len)
+            { break; }
+            printf("  Domain Name Server Option (6)\n");
+            printf("    length = %d\n", len);
+            opts++;
+            i = 1;
+            printf("    DNS addr %d = %d", i, *opts);
+            len--;
+            while (0 != len)
+            {
+                opts++;
+                if(0 == (len % 4))
+                {
+                    i++;
+                    printf("\n    DNS addr %d = %d", i, *opts);
+                    len--;
+                    opts++;
+                }
+                printf(".%d", *opts);
+                len--;
+            }
+            printf( "\n");
+            break;
+
+        case DHCP_OPT_HNAME:
+            opts++;
+            len = *opts;
+            if (0 == len)
+            { break; }
+            printf("  Host Name Option (12)\n");
+            printf("    length = %d\n", len);
+            opts++;
+            printf("    host name = %c", *opts);
+            len--;
+            while (0 != len)
+            {
+                opts++;
+                printf("%c", *opts);
+                len--;
+            }
+            printf( "\n");
+
+        case DHCP_OPT_DOMAIN:
+            opts++;
+            len = *opts;
+            if(0 == len)
+            { break; }
+            printf("  Domain Name Option (15)\n");
+            printf("    length = %d\n", len);
+            opts++;
+            printf("    domain name = %c", *opts);
+            len--;
+            while (0 != len)
+            {
+                opts++;
+                printf("%c", *opts);
+                len--;
+            }
+            printf( "\n");
+            break;
+
+        case DHCP_OPT_REQUEST:
+            opts++;
+            len = *opts;
+            if(len != 4)
+            { break; }
+            printf("  Requested IP Address Option (50)\n");
+            printf("    length = %d\n", len);
+            opts++;
+            printf("    requested addr = %d", *opts);
+            len--;
+            while (0 != len)
+            {
+                opts++;
+                printf(".%d", *opts);
+                len--;
+            }
+            printf( "\n");
+            break;
+
+        case DHCP_OPT_LEASE:
+            opts++;
+            len = *opts;
+            if(len != 4)
+            { break; }
+            printf("  Address Lease Time Option (51)\n");
+            printf("    length = %d\n", len);
+            opts++;
+            i+= *opts<<24;
+            opts++;
+            i+= *opts<<16;
+            opts++;
+            i+= *opts<<8;
+            opts++;
+            i+= *opts;
+            printf("    lease time = %u\n", i);
+            break;
+
+        case DHCP_OPT_MSGTYPE:
+            opts++;
+            len = *opts;
+            if(len != 1)
+            { break; }
+            printf("Message Type Option (53)\n");
+            printf("    length = %d\n", len);
+            printf("    type = ");
+            opts++;
+            switch(*opts)
+            {
+            case DHCPDISCOVER:
+                printf( "DHCPDISCOVER");
+                break;
+            case DHCPOFFER:
+                printf( "DHCPOFFER");
+                break;
+            case DHCPREQUEST:
+                printf( "DHCPREQUEST");
+                break;
+            case DHCPDECLINE:
+                printf( "DHCPDECLINE");
+                break;
+            case DHCPACK:
+                printf( "DHCPACK");
+                break;
+            case DHCPNAK:
+                printf( "DHCPNAK");
+                break;
+            case DHCPRELEASE:
+                printf( "DHCPRELEASE");
+                break;
+            default:
+                printf( "Unrecognized");
+                break;
+            }
+            printf( "\n");
+            break;
+
+        case DHCP_OPT_SERVER:
+            opts++;
+            len = *opts;
+            if(len != 4)
+            { break; }
+            printf("  Server Identifier Option (54)\n");
+            printf("    length = %d\n", len);
+            opts++;
+            printf("    server addr = %d", *opts);
+            len--;
+            while (0 != len)
+            {
+                opts++;
+                printf(".%d", *opts);
+                len--;
+            }
+            printf( "\n");
+            break;
+        case DHCP_OPT_PARAMREQ:
+            opts++;
+            len = *opts;
+            if (0 == len)
+            { break; }
+            printf("  Parameter Request List Option (55)\n");
+            printf("    length = %d\n", len);
+            printf("    Request List:\n");
+            while (0 != len)
+            {
+                opts++;
+                switch(*opts)
+                {
+                case DHCP_OPT_SUBNET:
+                    printf("      Subnet Option\n");
+                    break;
+                case DHCP_OPT_GATEWAY:
+                    printf("      Gateway Option\n");
+                    break;
+                case DHCP_OPT_DNS:
+                    printf("      DNS Option\n");
+                    break;
+                case DHCP_OPT_HNAME:
+                    printf("      Host Name Option\n");
+                    break;
+                case DHCP_OPT_DOMAIN:
+                    printf("      Domain Name Option\n");
+                    break;
+                case DHCP_OPT_REQUEST:
+                    printf("      Request Option\n");
+                    break;
+                case DHCP_OPT_LEASE:
+                    printf("      Lease Option\n");
+                    break;
+                case DHCP_OPT_SERVER:
+                    printf("      Server Option\n");
+                    break;
+                default:
+                    printf("      Unrecognized Option %d\n", *opts);
+                    break;
+                }
+                len--;
+            }
+
+        default:
+            opts++;
+            len = *opts;
+
+            opts+=len;
+            break;
+        }
+
+        opts++;
+    }
 }
-*/
