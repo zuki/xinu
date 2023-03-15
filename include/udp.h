@@ -188,6 +188,7 @@ struct udpPseudoHdr
  * @ingroup udpinternal
  * @struct udp
  * @brief UDP制御ブロック構造体.
+ */
 struct udp
 {
     device *dev;                        /**< UDPデバイスエントリ      */
