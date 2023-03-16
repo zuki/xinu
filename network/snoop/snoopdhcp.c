@@ -5,9 +5,11 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <network.h>
-#include <snoop.h>
 #include <stdio.h>
+#include <string.h>
+#include <snoop.h>
 #include <dhcp.h>
 
 static void snoopPrintDhcpOperation(uchar op, char *descrp)
@@ -38,17 +40,17 @@ int snoopPrintDhcp(struct dhcpPkt *dhcp, char verbose)
     char descrp[40];
     char output[40];
     struct netaddr praddr;
+    uint32_t val = 0;
 
     int done = 0;
     uchar *opts = NULL;
     ushort len = 0;
-    ulong i = 0;
 
     if (NULL == dhcp) {
         return SYSERR;
     }
 
-    printf(stdout," ----- DHCP Header -----\n");
+    printf(" ----- DHCP Header -----\n");
 
     snoopPrintDhcpOperation(dhcp->op, descrp);
     sprintf(output, "%d %s", dhcp->op, descrp);
@@ -60,14 +62,16 @@ int snoopPrintDhcp(struct dhcpPkt *dhcp, char verbose)
         strcpy(descrp, "");
     }
     sprintf(output, "%d %s", dhcp->htype, descrp);
-    printf("  HW type: %-25s ", output);
+    printf("  HW type: %-25s\n", output);
 
-    sprintf(output, "%d bytes", dhcp->hlen);
-    printf("  HW length: %-20s ", output);
-    sprintf(output, "%d", dhcp->hops);
-    printf("  Hops: %-20s\n", output);
-    printf("  Transfer id: %d\n", net2hl(dhcp->xid));
-    printf("  Seconds = %d\n", net2hs(dhcp->secs));
+    sprintf(output, "0x%02x (%u) bytes", dhcp->hlen, dhcp->hlen);
+    printf("  HW length: %-25s ", output);
+    sprintf(output, "0x%02x (%u)", dhcp->hops, dhcp->hops);
+    printf("  Hops: %-25s ", output);
+    sprintf(output, "0x%04x (%u)", dhcp->xid, net2hl(dhcp->xid));
+    printf("  Transfer id: %-25s\n", output);
+    sprintf(output, "0x%02x (%u)", dhcp->secs, net2hl(dhcp->secs));
+    printf("  Seconds: %-25s ", output);
 
     if (net2hs(dhcp->flags) == DHCP_FLAGS_BROADCAST) {
         strcpy(descrp, "(Ethernet)");
@@ -77,29 +81,27 @@ int snoopPrintDhcp(struct dhcpPkt *dhcp, char verbose)
     sprintf(output, "0x%04x %s", net2hs(dhcp->flags), descrp);
     printf("  Falgs: %-25s\n", output);
 
-    praddr.type = NETADDR_IPv4;
-    praddr.len = IPv4_ADDR_LEN;
-    memcpy(praddr.addr, net2hl(dhcp->ciaddr), praddr.len);
+    int2ipv4(net2hl(dhcp->ciaddr), &praddr);
     netaddrsprintf(output, &praddr);
     printf("  Client IP Addr: %-25s ", output);
 
-    memcpy(praddr.addr, net2hl(dhcp->yiaddr), praddr.len);
+    int2ipv4(net2hl(dhcp->yiaddr), &praddr);
     netaddrsprintf(output, &praddr);
     printf("  Your IP Addr: %-25s\n", output);
 
-    memcpy(praddr.addr, net2hl(dhcp->siaddr), praddr.len);
+    int2ipv4(net2hl(dhcp->siaddr), &praddr);
     netaddrsprintf(output, &praddr);
-    printf("  Server IP Addr: %-25s\n", output);
+    printf("  Server IP Addr: %-25s ", output);
 
-    memcpy(praddr.addr, net2hl(dhcp->giaddr), praddr.len);
+    int2ipv4(net2hl(dhcp->giaddr), &praddr);
     netaddrsprintf(output, &praddr);
     printf("  Gateway IP Addr: %-25s\n", output);
 
     printf("  Client Hardware Addr: %02x:%02x:%02x:%02x:%02x:%02x ",
         dhcp->chaddr[0], dhcp->chaddr[1], dhcp->chaddr[2],
         dhcp->chaddr[3], dhcp->chaddr[4], dhcp->chaddr[5]);
-    printf("  Server name: %-64s\n", dhcp->sname);
-        printf("  File: %-128s\n", dhcp->file);
+    printf("  Server name: %s\n", dhcp->sname);
+    printf("  File: %s\n", dhcp->file);
 
     opts = dhcp->opts;
     while(!done)
@@ -116,220 +118,150 @@ int snoopPrintDhcp(struct dhcpPkt *dhcp, char verbose)
 
         case DHCP_OPT_SUBNET:
             opts++;
-            len = *opts;
-            if(len != 4)
-            { break; }
-            printf("  Subnet Mask Option (1)\n");
-            printf("    length = %d\n", len);
-            opts++;
-            printf("    subnet addr = %d", *opts);
-            len--;
-            while (0 != len)
-            {
-                opts++;
-                printf(".%d", *opts);
-                len--;
+            len = *opts++;
+            if (len != 4)  break;
+            printf("  Subnet Mask Option (1): ");
+            for (int i = 0; i < len; i++) {
+                if (i > 0) printf(".");
+                printf("%d", *opts++);
             }
+            opts--;
             printf( "\n");
             break;
 
         case DHCP_OPT_GATEWAY:
             opts++;
-            len = *opts;
-            if(0 != (len % 4) || len == 0)
-            { break; }
-            printf("  Router Option (3)\n");
-            printf("    length = %d\n", len);
-            opts++;
-            i = 1;
-            printf("    gateway addr %d = %d", i, *opts);
-            len--;
-            while (0 != len)
-            {
-                opts++;
-                if(0 == (len % 4))
-                {
-                    i++;
-                    printf( "\n\t\tgateway addr %d = %d", i, *opts);
-                    opts++;
-                    len--;
+            len = *opts++;
+            if (0 != (len % 4) || len == 0) break;
+            printf("  Router Option (3):\n");
+            for (int i = 0; i < len / 4; i++) {
+                printf("    gateway addr[%d]: ", i);
+                for (int j = 0; j < 4; j++) {
+                    if (j > 0) printf(".");
+                    printf("%d", *opts++);
                 }
-                printf(".%d", *opts);
-                len--;
+                printf( "\n");
             }
-            printf( "\n");
+            opts--;
             break;
 
         case DHCP_OPT_DNS:
             opts++;
             len = *opts;
-            if (0 != (len % 4) || 0 == len)
-            { break; }
-            printf("  Domain Name Server Option (6)\n");
-            printf("    length = %d\n", len);
-            opts++;
-            i = 1;
-            printf("    DNS addr %d = %d", i, *opts);
-            len--;
-            while (0 != len)
-            {
-                opts++;
-                if(0 == (len % 4))
-                {
-                    i++;
-                    printf("\n    DNS addr %d = %d", i, *opts);
-                    len--;
-                    opts++;
+            if (0 != (len % 4) || 0 == len)  break;
+            printf("  Domain Name Server Option (6):\n");
+            for (int i = 0; i < len / 4; i++) {
+                printf("    DNS addr[%d]: ", i);
+                for (int j = 0; j < 4; j++) {
+                    if (j > 0) printf(".");
+                    printf("%d", *opts++);
                 }
-                printf(".%d", *opts);
-                len--;
+                printf( "\n");
             }
-            printf( "\n");
+            opts--;
             break;
 
         case DHCP_OPT_HNAME:
             opts++;
-            len = *opts;
-            if (0 == len)
-            { break; }
-            printf("  Host Name Option (12)\n");
-            printf("    length = %d\n", len);
-            opts++;
-            printf("    host name = %c", *opts);
-            len--;
-            while (0 != len)
-            {
-                opts++;
-                printf("%c", *opts);
-                len--;
+            len = *opts++;
+            if (0 == len) break;
+            printf("  Host Name Option (12): ");
+            for (int i = 0; i < len; i++) {
+                if (i > 0) printf(".");
+                printf("%d", *opts++);
             }
-            printf( "\n");
-
+            opts--;
+            printf("\n");
+            break;
         case DHCP_OPT_DOMAIN:
             opts++;
-            len = *opts;
-            if(0 == len)
-            { break; }
-            printf("  Domain Name Option (15)\n");
-            printf("    length = %d\n", len);
-            opts++;
-            printf("    domain name = %c", *opts);
-            len--;
-            while (0 != len)
-            {
-                opts++;
-                printf("%c", *opts);
-                len--;
+            len = *opts++;
+            if (0 == len) break;
+            printf("  Domain Name Option (15): ");
+            for (int i = 0; i < len; i++) {
+                printf("%c", *opts++);
             }
             printf( "\n");
             break;
 
         case DHCP_OPT_REQUEST:
             opts++;
-            len = *opts;
-            if(len != 4)
-            { break; }
-            printf("  Requested IP Address Option (50)\n");
-            printf("    length = %d\n", len);
-            opts++;
-            printf("    requested addr = %d", *opts);
-            len--;
-            while (0 != len)
-            {
-                opts++;
-                printf(".%d", *opts);
-                len--;
+            len = *opts++;
+            if (len != 4) break;
+            printf("  Requested IP Address Option (50): ");
+            for (int i = 0; i < len; i++) {
+                if (i > 0) printf(".");
+                printf("%d", *opts++);
             }
-            printf( "\n");
+            opts--;
+            printf("\n");
             break;
 
         case DHCP_OPT_LEASE:
             opts++;
-            len = *opts;
-            if(len != 4)
-            { break; }
-            printf("  Address Lease Time Option (51)\n");
-            printf("    length = %d\n", len);
-            opts++;
-            i+= *opts<<24;
-            opts++;
-            i+= *opts<<16;
-            opts++;
-            i+= *opts<<8;
-            opts++;
-            i+= *opts;
-            printf("    lease time = %u\n", i);
+            len = *opts++;
+            if (len != 4) break;
+            val = ((uint32_t)(*opts++) << 24) | ((uint32_t)(*opts++) << 16) |
+                  ((uint32_t)(*opts++) << 8)  | ((uint32_t)(*opts++) << 0);
+            printf("  Address Lease Time Option (51): ");
+            printf("%u\n", val);
             break;
 
         case DHCP_OPT_MSGTYPE:
             opts++;
-            len = *opts;
-            if(len != 1)
-            { break; }
-            printf("Message Type Option (53)\n");
-            printf("    length = %d\n", len);
-            printf("    type = ");
-            opts++;
+            len = *opts++;
+            if (len != 1) break;
+            printf("Message Type Option (53): ");
             switch(*opts)
             {
             case DHCPDISCOVER:
-                printf( "DHCPDISCOVER");
+                printf( "DHCPDISCOVER\n");
                 break;
             case DHCPOFFER:
-                printf( "DHCPOFFER");
+                printf( "DHCPOFFER\n");
                 break;
             case DHCPREQUEST:
-                printf( "DHCPREQUEST");
+                printf( "DHCPREQUEST\n");
                 break;
             case DHCPDECLINE:
-                printf( "DHCPDECLINE");
+                printf( "DHCPDECLINE\n");
                 break;
             case DHCPACK:
-                printf( "DHCPACK");
+                printf( "DHCPACK\n");
                 break;
             case DHCPNAK:
-                printf( "DHCPNAK");
+                printf( "DHCPNAK\n");
                 break;
             case DHCPRELEASE:
-                printf( "DHCPRELEASE");
+                printf( "DHCPRELEASE\n");
                 break;
             default:
-                printf( "Unrecognized");
+                printf( "Unrecognized\n");
                 break;
             }
-            printf( "\n");
             break;
 
         case DHCP_OPT_SERVER:
             opts++;
-            len = *opts;
-            if(len != 4)
-            { break; }
-            printf("  Server Identifier Option (54)\n");
-            printf("    length = %d\n", len);
-            opts++;
-            printf("    server addr = %d", *opts);
-            len--;
-            while (0 != len)
-            {
-                opts++;
-                printf(".%d", *opts);
-                len--;
+            len = *opts++;
+            if (len != 4) break;
+            printf("  Server Identifier Option (54): ");
+            for (int i = 0; i < len; i++) {
+                if (i > 0) printf(".");
+                printf("%d", *opts++);
             }
-            printf( "\n");
+            opts--;
+            printf("\n");
             break;
+
         case DHCP_OPT_PARAMREQ:
             opts++;
-            len = *opts;
-            if (0 == len)
-            { break; }
-            printf("  Parameter Request List Option (55)\n");
-            printf("    length = %d\n", len);
-            printf("    Request List:\n");
-            while (0 != len)
+            len = *opts++;
+            if (0 == len) break;
+            printf("  Parameter Request List Option (55):\n");
+            for (int i = 0; i < len; i++)
             {
-                opts++;
-                switch(*opts)
+                switch(*opts++)
                 {
                 case DHCP_OPT_SUBNET:
                     printf("      Subnet Option\n");
@@ -359,17 +291,17 @@ int snoopPrintDhcp(struct dhcpPkt *dhcp, char verbose)
                     printf("      Unrecognized Option %d\n", *opts);
                     break;
                 }
-                len--;
             }
+            break;
 
         default:
             opts++;
             len = *opts;
 
-            opts+=len;
+            opts += len;
             break;
         }
-
-        opts++;
     }
+
+    return OK;
 }
