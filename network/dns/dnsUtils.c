@@ -14,8 +14,6 @@
 
 #define NULLCH '\0'
 
-static uint32_t dnsGetRName(char *sop, char *son, char *dst);
-
 /**
  * @fn dnsQuery
  *
@@ -78,7 +76,7 @@ int32_t dnsQuery(char *dname, char *data, uint16_t type)
     qlen += 2;
 
     /* 8. 合計のパケット長を返す */
-    return sizeof(struct dnspkt) - DNS_DATASIZE + qlen;
+    return sizeof(struct dnsPkt) - DNS_DATASIZE + qlen;
 }
 
 /**
@@ -90,7 +88,7 @@ int32_t dnsQuery(char *dname, char *data, uint16_t type)
  * @param addr IPアドレス
  * @return 成功したら OK; そうでなければ SYSERR
  */
-syscall dnsGetA(char *dname, struct dnspkt *rpkt, uint32_t *addr)
+syscall dnsGetA(char *dname, struct dnsPkt *rpkt, uint32_t *addr)
 {
     uint16_t    qcount;     /* Number of Questions        */
     uint16_t    tmp16;      /* Used for endian conversion    */
@@ -99,6 +97,7 @@ syscall dnsGetA(char *dname, struct dnspkt *rpkt, uint32_t *addr)
     char       *dptr;       /* Data pointer            */
     char        llen;       /* Label length            */
     int32_t     i;          /* Loop index            */
+    char cname[1024] = {0}; /* CNAME */
 
     /* 1. 問い合わせ回数を抽出 */
     memcpy((char *)&tmp16, (char *) &rpkt->qucount, 2);
@@ -151,13 +150,16 @@ syscall dnsGetA(char *dname, struct dnspkt *rpkt, uint32_t *addr)
         dptr += namlen;
         /* 5.2 回答がマッチしType Aであるか確認する */
         memcpy((char *)&tmptype, dptr, 2);
-        if ((strncmp(dname, rname, strlen(dname)) == 0) &&
+        if (((strncmp(dname, rname, strlen(dname)) == 0)
+           || (cname != NULL && strncmp(cname, rname, strlen(cname)) == 0)) &&
             (net2hs(tmptype) == DNS_QT_A) ) {
             /* 5.2.1 IPアドレスをピックアップ */
             memcpy((char *)&tmpip, dptr+10, 4);
             if (ipaddr == 0) {
                 ipaddr = tmpip;
             }
+        } else if (net2hs(tmptype) == DNS_QT_CNAME) {
+            namlen = dnsGetRName((char *)rpkt, dptr+10, cname);
         }
         /* 5.3 type, class, ttlを読み飛ばす */
         dptr += 8;
@@ -183,7 +185,7 @@ syscall dnsGetA(char *dname, struct dnspkt *rpkt, uint32_t *addr)
  * @param cname CNAME
  * @return 成功したら OK; そうでなければ SYSERR
  */
-syscall dnsGetCNAME(char *dname, struct dnspkt *rpkt, char *cname)
+syscall dnsGetCNAME(char *dname, struct dnsPkt *rpkt, char *cname)
 {
     uint16_t    qcount;     /* Number of Questions        */
     uint16_t    tmp16;      /* Used for endian conversion    */
@@ -272,7 +274,7 @@ syscall dnsGetCNAME(char *dname, struct dnspkt *rpkt, char *cname)
  * @param dst 文字列を格納するバッファへのポインタ
  * @return 処理したドメイン名の長さ（オフセットの場合は2）
  */
-static uint32_t dnsGetRName(char *sop, char *son, char *dst)
+uint32_t dnsGetRName(char *sop, char *son, char *dst)
 {
     char        llen;           /* Label length            */
     uint16_t    tmpoff;         /* Temporary to hold offset    */

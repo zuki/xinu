@@ -16,6 +16,7 @@
 #include <tcp.h>
 #include <udp.h>
 #include <dhcp.h>
+#include <dns.h>
 
 /* Tracing macros */
 //#define TRACE_SNOOP     TTY1
@@ -120,6 +121,7 @@ int snoopPrintIpv4(struct ipv4Pkt *ip, char verbose);
 int snoopPrintTcp(struct tcpPkt *tcp, char verbose);
 int snoopPrintUdp(struct udpPkt *udp, char verbose);
 int snoopPrintDhcp(struct dhcpPkt *dhcp, char verbose);
+int snoopPrintDns(struct dnsPkt *dns, char verbose);
 struct packet *snoopRead(struct snoop *cap);
 
 #endif                          /* _SNOOP_H_ */

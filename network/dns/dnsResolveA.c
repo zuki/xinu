@@ -23,8 +23,8 @@
 */
 syscall dnsResolveA(const struct netif *netptr, char *dname, struct netaddr *addr)
 {
-    struct dnspkt   qpkt;       /* DNS問い合わせパケットバッファ            */
-    struct dnspkt   rpkt;       /* DNS応答パケットバッファ                  */
+    struct dnsPkt   qpkt;       /* DNS問い合わせパケットバッファ            */
+    struct dnsPkt   rpkt;       /* DNS応答パケットバッファ                  */
     int32_t         qlen;       /* DNS問い合わせメッセージ長                */
     uint32_t        ipaddr;     /* 応答から抽出したIPアドレス(net2hl済み)   */
     int32_t         i;          /* Loop index                               */
@@ -54,7 +54,7 @@ syscall dnsResolveA(const struct netif *netptr, char *dname, struct netaddr *add
     }
 
     /* 6. DNS質問メッセージを作成 */
-    memset((char *)&qpkt, 0, sizeof(struct dnspkt));
+    memset((char *)&qpkt, 0, sizeof(struct dnsPkt));
     qpkt.id = (uint16_t)gettid();
     qpkt.rd = 1;
     qpkt.qucount = hs2net(1);
@@ -74,7 +74,7 @@ syscall dnsResolveA(const struct netif *netptr, char *dname, struct netaddr *add
             continue;
         }
         /* 7.2 応答を読み込む */
-        if (read(udpdev, (char *)&rpkt, sizeof(struct dnspkt)) == SYSERR) {
+        if (read(udpdev, (char *)&rpkt, sizeof(struct dnsPkt)) == SYSERR) {
             DNS_TRACE("Error receiving DNS Query Message");
             continue;
         }

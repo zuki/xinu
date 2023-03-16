@@ -71,13 +71,13 @@ int snoopPrint(struct packet *pkt, char dump, char verbose)
         switch (net2hs(arp->op))
         {
         case ARP_OP_RQST:
-            printf("arp who-has %s tell %s", strA, strB);
+            printf("\narp who-has %s tell %s", strA, strB);
             break;
         case ARP_OP_REPLY:
-            printf("arp reply %s is-at %s", strA, strC);
+            printf("\narp reply %s is-at %s", strA, strC);
             break;
         default:
-            printf("arp unknown from %s to %s", strB, strA);
+            printf("\narp unknown from %s to %s", strB, strA);
             break;
         }
         break;
@@ -106,7 +106,7 @@ int snoopPrint(struct packet *pkt, char dump, char verbose)
             break;
         }
         /* サマリーを出力する */
-        printf("IP %s > %s : %s", strB, strA, strC);
+        printf("\nIP %s > %s : %s", strB, strA, strC);
         break;
     }
     printf("\n");
@@ -131,11 +131,22 @@ int snoopPrint(struct packet *pkt, char dump, char verbose)
             case IPv4_PROTO_UDP:
                 udp = (struct udpPkt *)appHdr;
                 snoopPrintUdp(udp, verbose);
+
+                appHdr = (uchar *)udp + 8;
                 switch(net2hs(udp->dstPort))
                 {
                 case UDP_PORT_DHCPS:
                 case UDP_PORT_DHCPC:
-                    snoopPrintDhcp(udp, verbose);
+                    snoopPrintDhcp((struct dhcpPkt *)appHdr, verbose);
+                    break;
+                case UDP_PORT_DNS:
+                    snoopPrintDns((struct dnsPkt *)appHdr, verbose);
+                    break;
+                }
+                switch(net2hs(udp->srcPort))
+                {
+                case UDP_PORT_DNS:
+                    snoopPrintDns((struct dnsPkt *)appHdr, verbose);
                     break;
                 }
                 break;
@@ -147,6 +158,7 @@ int snoopPrint(struct packet *pkt, char dump, char verbose)
     /* ダンプ出力 */
     if ((SNOOP_DUMP_HEX == dump) || (SNOOP_DUMP_CHAR == dump))
     {
+        printf("\n");
         for (i = 0; i < pkt->len; i += 16)
         {
             printf("\t0x%04X  ", i);

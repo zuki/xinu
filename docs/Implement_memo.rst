@@ -282,3 +282,488 @@ telnetとsnoopを実行してみた。
 
 .. image:: ./images/telnet.png
     :scale: 50%
+
+*****************
+snoopPrintDns
+*****************
+
+色々と問題あり
+==============
+
+.. code-block:: none
+
+    xsh$ snoop -dd -vv -t UDP
+    Snooping... Press <Enter> to stop.
+    IP 192.168.10.106 > 192.168.10.1 : UDP
+    ----- Ethernet Header -----
+    Dst: F8:B7:97:87:2C:DC         Src: B8:27:EB:AB:E8:48         Type: IPv4
+    ----- IPv4 Header -----
+    Version: 4              Header len: 20 bytes    Service: Routine
+    Total len: 59 bytes     Identification: 0       Flags: 0x000
+    Frag offset: 0 bytes    Time to Live: 64 hops   Protocol: UDP
+    Src addr: 192.168.10.106            Dst addr: 192.168.10.1
+    ----- UDP Header -----
+    Src Port: 51525                     Dst Port: 53
+    Message length: 39 bytes            Checksum: 0x5DF3
+    ----- DNS Header -----
+    ID: 618
+    QR: 0 (Query)                   Opcode: 14                          Authoritative Answer: NO
+    Truncation: NO                          Recursion Desired: NO
+    Recursion Available: NO                          Response Code: 0 (No Error)
+
+    Question Count: 1   Answer Count = 1   Name Server RR Count: 0   Resource RR Count: 0
+    ----- Question Section 0 -----
+    Question Name: d?
+    Type: 0                           Class: 0
+    ----- Answer Section 0 -----
+    Server Name: d?
+    Record Type: 0                           Class: 0
+    TTL: 0   RD length: 0  RDATA: Unrecognized
+        0x0000   F8B7 9787 2CDC B827 EBAB E848 0800 4500  |....,..'...H..E.|
+        0x0010   003B 0000 0000 4011 E4F6 C0A8 0A6A C0A8  |.;....@......j..|
+        0x0020   0A01 C945 0035 0027 5DF3 2200 0100 0001  |...E.5.'].".....|
+        0x0030   0000 0000 0000 0768 6F6B 7564 6169 0261  |.......hokudai.a|
+        0x0040   6302 6A70 0000 0100 01                   |c.jp.....|
+    IP 192.168.10.1 > 192.168.10.106 : UDP
+    ----- Ethernet Header -----
+    Dst: B8:27:EB:AB:E8:48         Src: F8:B7:97:87:2C:DC         Type: IPv4
+    ----- IPv4 Header -----
+    Version: 4              Header len: 20 bytes    Service: Routine
+    Total len: 75 bytes     Identification: 15087   Flags: 0x002
+    Frag offset: 0 bytes    Time to Live: 64 hops   Protocol: UDP
+    Src addr: 192.168.10.1              Dst addr: 192.168.10.106
+    ----- UDP Header -----
+    Src Port: 53                        Dst Port: 51525
+    Message length: 55 bytes            Checksum: 0x6DB9
+    ----- DNS Header -----
+    ID: 20864
+    QR: 0 (Query)                   Opcode: 0 (Query)                   Authoritative Answer: NO
+    Truncation: NO                          Recursion Desired: NO
+    Recursion Available: NO                          Response Code: 4 (Not Implemented Error)
+
+    Question Count: 34135   Answer Count = 388   Name Server RR Count: 0   Resource RR Count: 0
+    ----- Question Section 0 -----
+    Question Name: d?
+    Type: 0                           Class: 0
+    ----- Question Section 1 -----
+    Question Name: d?
+    Type: 0                           Class: 0
+    ...
+    ----- Question Section 300 -----
+    Question Name: d?
+    Type: 0                           Class: 0
+    ----- Question Section 301 -----
+    Question Name: d?
+    Type: 85                          Class: 21808
+    ----- Question Section 302 -----
+
+修正1
+=====
+
+.. code-block:: none
+
+    xsh$ nslookup www.yahoo.co.jp
+    RESOLVED: domain www.yahoo.co.jp -> ip address 183.79.219.252.
+
+.. code-block:: none
+
+    xsh$ snoop -dd -vv -t UDP
+    Snooping... Press <Enter> to stop.
+
+    IP 192.168.10.106 > 192.168.10.1 : UDP
+    ----- Ethernet Header -----
+    Dst: F8:B7:97:87:2C:DC         Src: B8:27:EB:AB:E8:48         Type: IPv4
+    ----- IPv4 Header -----
+    Version: 4              Header len: 20 bytes    Service: Routine
+    Total len: 61 bytes     Identification: 0       Flags: 0x000
+    Frag offset: 0 bytes    Time to Live: 64 hops   Protocol: UDP
+    Src addr: 192.168.10.106            Dst addr: 192.168.10.1
+    ----- UDP Header -----
+    Src Port: 51525                     Dst Port: 53
+    Message length: 41 bytes            Checksum: 0x4C4F
+    ----- DNS Header -----
+    ID: 0x0024 (9216)     QR: 0 (Query)         Opcode: 0 (Query)
+    AA: 0 NO              TC: 0 NO              RD: 1 (YES)
+    RA: 0 NO              RCODE: 0 (No Error)
+    QUC: 1   ANC: 0   NSC: 0   ARC: 0
+    ----- Question Section 0 -----
+    Question Name: www.yahoo.co.jp
+    Type: 1 (Host Address)            Class: 1 (Internet)
+
+        0x0000   F8B7 9787 2CDC B827 EBAB E848 0800 4500  |....,..'...H..E.|
+        0x0010   003D 0000 0000 4011 E4F4 C0A8 0A6A C0A8  |.=....@......j..|
+        0x0020   0A01 C945 0035 0029 4C4F 2400 0100 0001  |...E.5.)LO$.....|
+        0x0030   0000 0000 0000 0377 7777 0579 6168 6F6F  |.......www.yahoo|
+        0x0040   0263 6F02 6A70 0000 0100 01              |.co.jp.....|
+
+    IP 192.168.10.1 > 192.168.10.106 : UDP
+    ----- Ethernet Header -----
+    Dst: B8:27:EB:AB:E8:48         Src: F8:B7:97:87:2C:DC         Type: IPv4
+    ----- IPv4 Header -----
+    Version: 4              Header len: 20 bytes    Service: Routine
+    Total len: 105 bytes    Identification: 32181   Flags: 0x002
+    Frag offset: 0 bytes    Time to Live: 64 hops   Protocol: UDP
+    Src addr: 192.168.10.1              Dst addr: 192.168.10.106
+    ----- UDP Header -----
+    Src Port: 53                        Dst Port: 51525
+    Message length: 85 bytes            Checksum: 0x2730
+    ----- DNS Header -----
+    ID: 0x0024 (9216)     QR: 1 (Response)      Opcode: 0 (Query)
+    AA: 0 NO              TC: 0 NO              RD: 1 (YES)
+    RA: 1 (YES)           RCODE: 0 (No Error)
+    QUC: 1   ANC: 2   NSC: 0   ARC: 0
+    ----- Question Section 0 -----
+    Question Name: www.yahoo.co.jp
+    Type: 1 (Host Address)            Class: 1 (Internet)
+    ----- Answer Section 0 -----
+    Domain Name: www.yahoo.co.jp
+    Record Type: 5 (Canonical Name)                    Class: 1 (Internet)
+    TTL: 0x07020000 (0)              RD length: 0x1000 (16)
+    RDATA: edge12.g.yimg.jp
+    ----- Answer Section 1 -----
+    Domain Name: edge12.g.yimg.jp
+    Record Type: 1 (Host Address)                      Class: 1 (Internet)
+    TTL: 0x0d000000 (0)              RD length: 0x0400 (4)
+    RData: 183.79.250.251
+
+        0x0000   B827 EBAB E848 F8B7 9787 2CDC 0800 4500  |.'...H....,...E.|
+        0x0010   0069 7DB5 4000 4011 2713 C0A8 0A01 C0A8  |.i}.@.@.'.......|
+        0x0020   0A6A 0035 C945 0055 2730 2400 8180 0001  |.j.5.E.U'0$.....|
+        0x0030   0002 0000 0000 0377 7777 0579 6168 6F6F  |.......www.yahoo|
+        0x0040   0263 6F02 6A70 0000 0100 01C0 0C00 0500  |.co.jp..........|
+        0x0050   0100 0002 0700 1006 6564 6765 3132 0167  |........edge12.g|
+        0x0060   0479 696D 67C0 19C0 2D00 0100 0100 0000  |.yimg...-.......|
+        0x0070   0D00 04B7 4FFA FB                        |....O..|
+
+    IP 192.168.10.106 > 192.168.10.1 : UDP
+    ----- Ethernet Header -----
+    Dst: F8:B7:97:87:2C:DC         Src: B8:27:EB:AB:E8:48         Type: IPv4
+    ----- IPv4 Header -----
+    Version: 4              Header len: 20 bytes    Service: Routine
+    Total len: 61 bytes     Identification: 0       Flags: 0x000
+    Frag offset: 0 bytes    Time to Live: 64 hops   Protocol: UDP
+    Src addr: 192.168.10.106            Dst addr: 192.168.10.1
+    ----- UDP Header -----
+    Src Port: 51525                     Dst Port: 53
+    Message length: 41 bytes            Checksum: 0x4C4F
+    ----- DNS Header -----
+    ID: 0x0024 (9216)     QR: 0 (Query)         Opcode: 0 (Query)
+    AA: 0 NO              TC: 0 NO              RD: 1 (YES)
+    RA: 0 NO              RCODE: 0 (No Error)
+    QUC: 1   ANC: 0   NSC: 0   ARC: 0
+    ----- Question Section 0 -----
+    Question Name: www.yahoo.co.jp
+    Type: 1 (Host Address)            Class: 1 (Internet)
+
+        0x0000   F8B7 9787 2CDC B827 EBAB E848 0800 4500  |....,..'...H..E.|
+        0x0010   003D 0000 0000 4011 E4F4 C0A8 0A6A C0A8  |.=....@......j..|
+        0x0020   0A01 C945 0035 0029 4C4F 2400 0100 0001  |...E.5.)LO$.....|
+        0x0030   0000 0000 0000 0377 7777 0579 6168 6F6F  |.......www.yahoo|
+        0x0040   0263 6F02 6A70 0000 0100 01              |.co.jp.....|
+
+    IP 192.168.10.1 > 192.168.10.106 : UDP
+    ----- Ethernet Header -----
+    Dst: B8:27:EB:AB:E8:48         Src: F8:B7:97:87:2C:DC         Type: IPv4
+    ----- IPv4 Header -----
+    Version: 4              Header len: 20 bytes    Service: Routine
+    Total len: 105 bytes    Identification: 32182   Flags: 0x002
+    Frag offset: 0 bytes    Time to Live: 64 hops   Protocol: UDP
+    Src addr: 192.168.10.1              Dst addr: 192.168.10.106
+    ----- UDP Header -----
+    Src Port: 53                        Dst Port: 51525
+    Message length: 85 bytes            Checksum: 0x064E
+    ----- DNS Header -----
+    ID: 0x0024 (9216)     QR: 1 (Response)      Opcode: 0 (Query)
+    AA: 0 NO              TC: 0 NO              RD: 1 (YES)
+    RA: 1 (YES)           RCODE: 0 (No Error)
+    QUC: 1   ANC: 2   NSC: 0   ARC: 0
+    ----- Question Section 0 -----
+    Question Name: www.yahoo.co.jp
+    Type: 1 (Host Address)            Class: 1 (Internet)
+    ----- Answer Section 0 -----
+    Domain Name: www.yahoo.co.jp
+    Record Type: 5 (Canonical Name)                    Class: 1 (Internet)
+    TTL: 0x27030000 (0)              RD length: 0x1000 (16)
+    RDATA: edge12.g.yimg.jp
+    ----- Answer Section 1 -----
+    Domain Name: edge12.g.yimg.jp
+    Record Type: 1 (Host Address)                      Class: 1 (Internet)
+    TTL: 0x0d000000 (0)              RD length: 0x0400 (4)
+    RData: 183.79.219.252
+
+        0x0000   B827 EBAB E848 F8B7 9787 2CDC 0800 4500  |.'...H....,...E.|
+        0x0010   0069 7DB6 4000 4011 2712 C0A8 0A01 C0A8  |.i}.@.@.'.......|
+        0x0020   0A6A 0035 C945 0055 064E 2400 8180 0001  |.j.5.E.U.N$.....|
+        0x0030   0002 0000 0000 0377 7777 0579 6168 6F6F  |.......www.yahoo|
+        0x0040   0263 6F02 6A70 0000 0100 01C0 0C00 0500  |.co.jp..........|
+        0x0050   0100 0003 2700 1006 6564 6765 3132 0167  |....'...edge12.g|
+        0x0060   0479 696D 67C0 19C0 2D00 0100 0100 0000  |.yimg...-.......|
+        0x0070   0D00 04B7 4FDB FC                        |....O..|
+
+    IP 192.168.10.106 > 192.168.10.1 : UDP
+    ----- Ethernet Header -----
+    Dst: F8:B7:97:87:2C:DC         Src: B8:27:EB:AB:E8:48         Type: IPv4
+    ----- IPv4 Header -----
+    Version: 4              Header len: 20 bytes    Service: Routine
+    Total len: 61 bytes     Identification: 0       Flags: 0x000
+    Frag offset: 0 bytes    Time to Live: 64 hops   Protocol: UDP
+    Src addr: 192.168.10.106            Dst addr: 192.168.10.1
+    ----- UDP Header -----
+    Src Port: 51525                     Dst Port: 53
+    Message length: 41 bytes            Checksum: 0x4C4F
+    ----- DNS Header -----
+    ID: 0x0024 (9216)     QR: 0 (Query)         Opcode: 0 (Query)
+    AA: 0 NO              TC: 0 NO              RD: 1 (YES)
+    RA: 0 NO              RCODE: 0 (No Error)
+    QUC: 1   ANC: 0   NSC: 0   ARC: 0
+    ----- Question Section 0 -----
+    Question Name: www.yahoo.co.jp
+    Type: 1 (Host Address)            Class: 1 (Internet)
+
+        0x0000   F8B7 9787 2CDC B827 EBAB E848 0800 4500  |....,..'...H..E.|
+        0x0010   003D 0000 0000 4011 E4F4 C0A8 0A6A C0A8  |.=....@......j..|
+        0x0020   0A01 C945 0035 0029 4C4F 2400 0100 0001  |...E.5.)LO$.....|
+        0x0030   0000 0000 0000 0377 7777 0579 6168 6F6F  |.......www.yahoo|
+        0x0040   0263 6F02 6A70 0000 0100 01              |.co.jp.....|
+
+    IP 192.168.10.1 > 192.168.10.106 : UDP
+    ----- Ethernet Header -----
+    Dst: B8:27:EB:AB:E8:48         Src: F8:B7:97:87:2C:DC         Type: IPv4
+    ----- IPv4 Header -----
+    Version: 4              Header len: 20 bytes    Service: Routine
+    Total len: 105 bytes    Identification: 32184   Flags: 0x002
+    Frag offset: 0 bytes    Time to Live: 64 hops   Protocol: UDP
+    Src addr: 192.168.10.1              Dst addr: 192.168.10.106
+    ----- UDP Header -----
+    Src Port: 53                        Dst Port: 51525
+    Message length: 85 bytes            Checksum: 0xBD4D
+    ----- DNS Header -----
+    ID: 0x0024 (9216)     QR: 1 (Response)      Opcode: 0 (Query)
+    AA: 0 NO              TC: 0 NO              RD: 1 (YES)
+    RA: 1 (YES)           RCODE: 0 (No Error)
+    QUC: 1   ANC: 2   NSC: 0   ARC: 0
+    ----- Question Section 0 -----
+    Question Name: www.yahoo.co.jp
+    Type: 1 (Host Address)            Class: 1 (Internet)
+    ----- Answer Section 0 -----
+    Domain Name: www.yahoo.co.jp
+    Record Type: 5 (Canonical Name)                    Class: 1 (Internet)
+    TTL: 0x70030000 (0)              RD length: 0x1000 (16)
+    RDATA: edge12.g.yimg.jp
+    ----- Answer Section 1 -----
+    Domain Name: edge12.g.yimg.jp
+    Record Type: 1 (Host Address)                      Class: 1 (Internet)
+    TTL: 0x0d000000 (0)              RD length: 0x0400 (4)
+    RData: 183.79.219.252
+
+        0x0000   B827 EBAB E848 F8B7 9787 2CDC 0800 4500  |.'...H....,...E.|
+        0x0010   0069 7DB8 4000 4011 2710 C0A8 0A01 C0A8  |.i}.@.@.'.......|
+        0x0020   0A6A 0035 C945 0055 BD4D 2400 8180 0001  |.j.5.E.U.M$.....|
+        0x0030   0002 0000 0000 0377 7777 0579 6168 6F6F  |.......www.yahoo|
+        0x0040   0263 6F02 6A70 0000 0100 01C0 0C00 0500  |.co.jp..........|
+        0x0050   0100 0003 7000 1006 6564 6765 3132 0167  |....p...edge12.g|
+        0x0060   0479 696D 67C0 19C0 2D00 0100 0100 0000  |.yimg...-.......|
+        0x0070   0D00 04B7 4FDB FC                        |....O..|
+
+    IP 192.168.10.106 > 192.168.10.1 : UDP
+    ----- Ethernet Header -----
+    Dst: F8:B7:97:87:2C:DC         Src: B8:27:EB:AB:E8:48         Type: IPv4
+    ----- IPv4 Header -----
+    Version: 4              Header len: 20 bytes    Service: Routine
+    Total len: 61 bytes     Identification: 0       Flags: 0x000
+    Frag offset: 0 bytes    Time to Live: 64 hops   Protocol: UDP
+    Src addr: 192.168.10.106            Dst addr: 192.168.10.1
+    ----- UDP Header -----
+    Src Port: 51525                     Dst Port: 53
+    Message length: 41 bytes            Checksum: 0x484F
+    ----- DNS Header -----
+    ID: 0x0024 (9216)     QR: 0 (Query)         Opcode: 0 (Query)
+    AA: 0 NO              TC: 0 NO              RD: 1 (YES)
+    RA: 0 NO              RCODE: 0 (No Error)
+    QUC: 1   ANC: 0   NSC: 0   ARC: 0
+    ----- Question Section 0 -----
+    Question Name: www.yahoo.co.jp
+    Type: 5 (Canonical Name)          Class: 1 (Internet)
+
+        0x0000   F8B7 9787 2CDC B827 EBAB E848 0800 4500  |....,..'...H..E.|
+        0x0010   003D 0000 0000 4011 E4F4 C0A8 0A6A C0A8  |.=....@......j..|
+        0x0020   0A01 C945 0035 0029 484F 2400 0100 0001  |...E.5.)HO$.....|
+        0x0030   0000 0000 0000 0377 7777 0579 6168 6F6F  |.......www.yahoo|
+        0x0040   0263 6F02 6A70 0000 0500 01              |.co.jp.....|
+
+    IP 192.168.10.1 > 192.168.10.106 : UDP
+    ----- Ethernet Header -----
+    Dst: B8:27:EB:AB:E8:48         Src: F8:B7:97:87:2C:DC         Type: IPv4
+    ----- IPv4 Header -----
+    Version: 4              Header len: 20 bytes    Service: Routine
+    Total len: 89 bytes     Identification: 32185   Flags: 0x002
+    Frag offset: 0 bytes    Time to Live: 64 hops   Protocol: UDP
+    Src addr: 192.168.10.1              Dst addr: 192.168.10.106
+    ----- UDP Header -----
+    Src Port: 53                        Dst Port: 51525
+    Message length: 69 bytes            Checksum: 0x43C2
+    ----- DNS Header -----
+    ID: 0x0024 (9216)     QR: 1 (Response)      Opcode: 0 (Query)
+    AA: 0 NO              TC: 0 NO              RD: 1 (YES)
+    RA: 1 (YES)           RCODE: 0 (No Error)
+    QUC: 1   ANC: 1   NSC: 0   ARC: 0
+    ----- Question Section 0 -----
+    Question Name: www.yahoo.co.jp
+    Type: 5 (Canonical Name)          Class: 1 (Internet)
+    ----- Answer Section 0 -----
+    Domain Name: www.yahoo.co.jp
+    Record Type: 5 (Canonical Name)                    Class: 1 (Internet)
+    TTL: 0x73030000 (0)              RD length: 0x1000 (16)
+    RDATA: edge12.g.yimg.jp
+
+        0x0000   B827 EBAB E848 F8B7 9787 2CDC 0800 4500  |.'...H....,...E.|
+        0x0010   0059 7DB9 4000 4011 271F C0A8 0A01 C0A8  |.Y}.@.@.'.......|
+        0x0020   0A6A 0035 C945 0045 43C2 2400 8180 0001  |.j.5.E.EC.$.....|
+        0x0030   0001 0000 0000 0377 7777 0579 6168 6F6F  |.......www.yahoo|
+        0x0040   0263 6F02 6A70 0000 0500 01C0 0C00 0500  |.co.jp..........|
+        0x0050   0100 0003 7300 1006 6564 6765 3132 0167  |....s...edge12.g|
+        0x0060   0479 696D 67C0 19                        |.yimg..|
+
+    IP 192.168.10.106 > 192.168.10.1 : UDP
+    ----- Ethernet Header -----
+    Dst: F8:B7:97:87:2C:DC         Src: B8:27:EB:AB:E8:48         Type: IPv4
+    ----- IPv4 Header -----
+    Version: 4              Header len: 20 bytes    Service: Routine
+    Total len: 62 bytes     Identification: 0       Flags: 0x000
+    Frag offset: 0 bytes    Time to Live: 64 hops   Protocol: UDP
+    Src addr: 192.168.10.106            Dst addr: 192.168.10.1
+    ----- UDP Header -----
+    Src Port: 51525                     Dst Port: 53
+    Message length: 42 bytes            Checksum: 0xB921
+    ----- DNS Header -----
+    ID: 0x0024 (9216)     QR: 0 (Query)         Opcode: 0 (Query)
+    AA: 0 NO              TC: 0 NO              RD: 1 (YES)
+    RA: 0 NO              RCODE: 0 (No Error)
+    QUC: 1   ANC: 0   NSC: 0   ARC: 0
+    ----- Question Section 0 -----
+    Question Name: edge12.g.yimg.jp
+    Type: 1 (Host Address)            Class: 1 (Internet)
+
+        0x0000   F8B7 9787 2CDC B827 EBAB E848 0800 4500  |....,..'...H..E.|
+        0x0010   003E 0000 0000 4011 E4F3 C0A8 0A6A C0A8  |.>....@......j..|
+        0x0020   0A01 C945 0035 002A B921 2400 0100 0001  |...E.5.*.!$.....|
+        0x0030   0000 0000 0000 0665 6467 6531 3201 6704  |.......edge12.g.|
+        0x0040   7969 6D67 026A 7000 0001 0001            |yimg.jp.....|
+
+    IP 192.168.10.1 > 192.168.10.106 : UDP
+    ----- Ethernet Header -----
+    Dst: B8:27:EB:AB:E8:48         Src: F8:B7:97:87:2C:DC         Type: IPv4
+    ----- IPv4 Header -----
+    Version: 4              Header len: 20 bytes    Service: Routine
+    Total len: 78 bytes     Identification: 32187   Flags: 0x002
+    Frag offset: 0 bytes    Time to Live: 64 hops   Protocol: UDP
+    Src addr: 192.168.10.1              Dst addr: 192.168.10.106
+    ----- UDP Header -----
+    Src Port: 53                        Dst Port: 51525
+    Message length: 58 bytes            Checksum: 0xE513
+    ----- DNS Header -----
+    ID: 0x0024 (9216)     QR: 1 (Response)      Opcode: 0 (Query)
+    AA: 0 NO              TC: 0 NO              RD: 1 (YES)
+    RA: 1 (YES)           RCODE: 0 (No Error)
+    QUC: 1   ANC: 1   NSC: 0   ARC: 0
+    ----- Question Section 0 -----
+    Question Name: edge12.g.yimg.jp
+    Type: 1 (Host Address)            Class: 1 (Internet)
+    ----- Answer Section 0 -----
+    Domain Name: edge12.g.yimg.jp
+    Record Type: 1 (Host Address)                      Class: 1 (Internet)
+    TTL: 0x0d000000 (0)              RD length: 0x0400 (4)
+    RData: 183.79.219.252
+
+        0x0000   B827 EBAB E848 F8B7 9787 2CDC 0800 4500  |.'...H....,...E.|
+        0x0010   004E 7DBB 4000 4011 2728 C0A8 0A01 C0A8  |.N}.@.@.'(......|
+        0x0020   0A6A 0035 C945 003A E513 2400 8180 0001  |.j.5.E.:..$.....|
+        0x0030   0001 0000 0000 0665 6467 6531 3201 6704  |.......edge12.g.|
+        0x0040   7969 6D67 026A 7000 0001 0001 C00C 0001  |yimg.jp.........|
+        0x0050   0001 0000 000D 0004 B74F DBFC            |.........O..|
+
+    565 packets captured
+    10 packets matched filter
+    10 packets printed
+    0 packets overrun
+
+修正2
+=====
+
+DNSパケットのsnoopは問題なくなったが、dnsの解決で最初の応答でCNAMEとそのIPが
+返されているのに何度も質問を続けている。dnsGetA()を修正した。
+
+.. code-block:: none
+
+    xsh$ nslookup www.yahoo.co.jp
+    RESOLVED: domain www.yahoo.co.jp -> ip address 183.79.219.252.
+
+.. code-block:: none
+
+    xsh$ snoop -dd -vv -t UDP
+    Snooping... Press <Enter> to stop.
+
+    IP 192.168.10.106 > 192.168.10.1 : UDP
+    ----- Ethernet Header -----
+    Dst: F8:B7:97:87:2C:DC         Src: B8:27:EB:AB:E8:48         Type: IPv4
+    ----- IPv4 Header -----
+    Version: 4              Header len: 20 bytes    Service: Routine
+    Total len: 61 bytes     Identification: 0       Flags: 0x000
+    Frag offset: 0 bytes    Time to Live: 64 hops   Protocol: UDP
+    Src addr: 192.168.10.106            Dst addr: 192.168.10.1
+    ----- UDP Header -----
+    Src Port: 51525                     Dst Port: 53
+    Message length: 41 bytes            Checksum: 0x4D4F
+    ----- DNS Header -----
+    ID: 0x0023 (8960)     QR: 0 (Query)         Opcode: 0 (Query)
+    AA: 0 NO              TC: 0 NO              RD: 1 (YES)
+    RA: 0 NO              RCODE: 0 (No Error)
+    QUC: 1   ANC: 0   NSC: 0   ARC: 0
+    ----- Question Section 0 -----
+    Question Name: www.yahoo.co.jp
+    Type: 1 (Host Address)            Class: 1 (Internet)
+
+        0x0000   F8B7 9787 2CDC B827 EBAB E848 0800 4500  |....,..'...H..E.|
+        0x0010   003D 0000 0000 4011 E4F4 C0A8 0A6A C0A8  |.=....@......j..|
+        0x0020   0A01 C945 0035 0029 4D4F 2300 0100 0001  |...E.5.)MO#.....|
+        0x0030   0000 0000 0000 0377 7777 0579 6168 6F6F  |.......www.yahoo|
+        0x0040   0263 6F02 6A70 0000 0100 01              |.co.jp.....|
+
+    IP 192.168.10.1 > 192.168.10.106 : UDP
+    ----- Ethernet Header -----
+    Dst: B8:27:EB:AB:E8:48         Src: F8:B7:97:87:2C:DC         Type: IPv4
+    ----- IPv4 Header -----
+    Version: 4              Header len: 20 bytes    Service: Routine
+    Total len: 105 bytes    Identification: 39577   Flags: 0x002
+    Frag offset: 0 bytes    Time to Live: 64 hops   Protocol: UDP
+    Src addr: 192.168.10.1              Dst addr: 192.168.10.106
+    ----- UDP Header -----
+    Src Port: 53                        Dst Port: 51525
+    Message length: 85 bytes            Checksum: 0x824F
+    ----- DNS Header -----
+    ID: 0x0023 (8960)     QR: 1 (Response)      Opcode: 0 (Query)
+    AA: 0 NO              TC: 0 NO              RD: 1 (YES)
+    RA: 1 (YES)           RCODE: 0 (No Error)
+    QUC: 1   ANC: 2   NSC: 0   ARC: 0
+    ----- Question Section 0 -----
+    Question Name: www.yahoo.co.jp
+    Type: 1 (Host Address)            Class: 1 (Internet)
+    ----- Answer Section 0 -----
+    Domain Name: www.yahoo.co.jp
+    Record Type: 5 (Canonical Name)                    Class: 1 (Internet)
+    TTL: 0xb2010000 (0)              RD length: 0x1000 (16)
+    RDATA: edge12.g.yimg.jp
+    ----- Answer Section 1 -----
+    Domain Name: edge12.g.yimg.jp
+    Record Type: 1 (Host Address)                      Class: 1 (Internet)
+    TTL: 0x07000000 (0)              RD length: 0x0400 (4)
+    RData: 183.79.219.252                                                       # 1回の応答で返答している
+
+        0x0000   B827 EBAB E848 F8B7 9787 2CDC 0800 4500  |.'...H....,...E.|
+        0x0010   0069 9A99 4000 4011 0A2F C0A8 0A01 C0A8  |.i..@.@../......|
+        0x0020   0A6A 0035 C945 0055 824F 2300 8180 0001  |.j.5.E.U.O#.....|
+        0x0030   0002 0000 0000 0377 7777 0579 6168 6F6F  |.......www.yahoo|
+        0x0040   0263 6F02 6A70 0000 0100 01C0 0C00 0500  |.co.jp..........|
+        0x0050   0100 0001 B200 1006 6564 6765 3132 0167  |........edge12.g|
+        0x0060   0479 696D 67C0 19C0 2D00 0100 0100 0000  |.yimg...-.......|
+        0x0070   0700 04B7 4FDB FC                        |....O..|

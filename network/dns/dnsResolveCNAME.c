@@ -23,8 +23,8 @@
 */
 syscall dnsResolveCNAME(const struct netif *netptr, char *dname, char *cname)
 {
-    struct dnspkt   qpkt;       /* DNS問い合わせパケットバッファ            */
-    struct dnspkt   rpkt;       /* DNS応答パケットバッファ                  */
+    struct dnsPkt   qpkt;       /* DNS問い合わせパケットバッファ            */
+    struct dnsPkt   rpkt;       /* DNS応答パケットバッファ                  */
     int32_t         qlen;       /* DNS問い合わせメッセージ長                */
     int32_t         i;          /* Loop index                               */
     uint16_t        udpdev;     /* UDPデバイス番号                          */
@@ -53,7 +53,7 @@ syscall dnsResolveCNAME(const struct netif *netptr, char *dname, char *cname)
     }
 
     /* 6. DNS質問メッセージを作成 */
-    memset((char *)&qpkt, 0, sizeof(struct dnspkt));
+    memset((char *)&qpkt, 0, sizeof(struct dnsPkt));
     qpkt.id = (uint16_t)gettid();
     qpkt.rd = 1;
     qpkt.qucount = hs2net(1);
@@ -73,7 +73,7 @@ syscall dnsResolveCNAME(const struct netif *netptr, char *dname, char *cname)
             continue;
         }
         /* 7.2 応答を読み込む */
-        if (read(udpdev, (char *)&rpkt, sizeof(struct dnspkt)) == SYSERR) {
+        if (read(udpdev, (char *)&rpkt, sizeof(struct dnsPkt)) == SYSERR) {
             DNS_TRACE("Error receiving DNS Query Message");
             continue;
         }
