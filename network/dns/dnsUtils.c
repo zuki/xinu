@@ -12,8 +12,6 @@
 #include <dns.h>
 #include <udp.h>
 
-#define NULLCH '\0'
-
 /**
  * @fn dnsQuery
  *

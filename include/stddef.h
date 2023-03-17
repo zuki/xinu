@@ -43,5 +43,5 @@ typedef int tid_typ;            /**< thread ID type                     */
 #define EOF      (-2)           /**< End-of-file (usually from read)    */
 #define TIMEOUT  (-3)           /**< system call timed out              */
 #define NOMSG    (-4)           /**< no message to receive              */
-
+#define NULLCH   '\0'           /**< NULL文字 */
 #endif                          /* _STDDEF_H_ */

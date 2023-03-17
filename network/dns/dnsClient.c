@@ -12,8 +12,6 @@
 #include <dns.h>
 #include <udp.h>
 
-#define NULLCH '\0'
-
 /**
  * @ingroup dns
  * ドメイン名を検索して、IPアドレスを取得する.
