@@ -201,10 +201,11 @@ int snoopPrintDhcp(struct dhcpPkt *dhcp, char verbose)
             opts++;
             len = *opts++;
             if (len != 4) break;
-            val = ((uint32_t)(*opts++) << 24) | ((uint32_t)(*opts++) << 16) |
-                  ((uint32_t)(*opts++) << 8)  | ((uint32_t)(*opts++) << 0);
+            val = ((uint32_t)*opts << 24) | ((uint32_t)*(opts+1) << 16) |
+                  ((uint32_t)*(opts+2) << 8)  | ((uint32_t)*(opts+3) << 0);
             printf("  Address Lease Time Option (51): ");
             printf("%u\n", val);
+            opts += 4;
             break;
 
         case DHCP_OPT_MSGTYPE:
