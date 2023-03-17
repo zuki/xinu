@@ -20,7 +20,7 @@ do                                                                    \
 {                                                                     \
     fprintf(TRACE_DNS, "%s:%d (%d) ", __FILE__, __LINE__, gettid());     \
     fprintf(TRACE_DNS, format, ## __VA_ARGS__);                          \
-    fprintf(TRACE_DNS, "\n");
+    fprintf(TRACE_DNS, "\n");                                       \
 } while (0)
 #else
 #  define DNS_TRACE(format, ...)
