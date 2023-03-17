@@ -151,7 +151,7 @@ static void snoopPrintRR(struct dnsPkt *dns, char **ptr, uint16_t count, char *t
         snoopPrintDnsQclass(net2hs(rr->rclass), descrp);
         sprintf(output, "%u %s", net2hs(rr->rclass), descrp);
         printf("  Class: %-25s\n", output);
-        sprintf(output, "0x%08x (%u)", rr->ttl, net2hs(rr->ttl));
+        sprintf(output, "0x%08x (%u)", rr->ttl, net2hl(rr->ttl));
         printf("  TTL: %-25s ", output);
         sprintf(output, "0x%04x (%u)", rr->rdlen, net2hs(rr->rdlen));
         printf("  RD length: %-25s\n", output);
@@ -209,13 +209,13 @@ int snoopPrintDns(struct dnsPkt *dns, char verbose)
     snoopPrintDnsOpcode(dns->opcode, descrp);
     sprintf(output, "%u %s", dns->opcode, descrp);
     printf("  Opcode: %-25s\n", output);
-    sprintf(output, "%u %s", dns->aa, dns->aa == 1 ? "(YES)" : "NO");
+    sprintf(output, "%u %s", dns->aa, dns->aa == 1 ? "(YES)" : "(NO)");
     printf("  AA: %-15s ", output);
-    sprintf(output, "%u %s", dns->tc, dns->tc == 1 ? "(YES)" : "NO");
+    sprintf(output, "%u %s", dns->tc, dns->tc == 1 ? "(YES)" : "(NO)");
     printf("  TC: %-15s ", output);
-    sprintf(output, "%u %s", dns->rd, dns->rd == 1 ? "(YES)" : "NO");
+    sprintf(output, "%u %s", dns->rd, dns->rd == 1 ? "(YES)" : "(NO)");
     printf("  RD: %-15s\n", output);
-    sprintf(output, "%u %s", dns->ra, dns->ra == 1 ? "(YES)" : "NO");
+    sprintf(output, "%u %s", dns->ra, dns->ra == 1 ? "(YES)" : "(NO)");
     printf("  RA: %-15s ", output);
     snoopPrintDnsRcode(dns->rcode, descrp);
     sprintf(output, "%u %s", dns->rcode, descrp);

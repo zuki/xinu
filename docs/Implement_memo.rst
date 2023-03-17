@@ -696,7 +696,7 @@ DNSパケットのsnoopは問題なくなったが、dnsの解決で最初の応
 .. code-block:: none
 
     xsh$ nslookup www.yahoo.co.jp
-    RESOLVED: domain www.yahoo.co.jp -> ip address 183.79.219.252.
+    RESOLVED: domain www.yahoo.co.jp -> ip address 182.22.28.252.
 
 .. code-block:: none
 
@@ -716,8 +716,8 @@ DNSパケットのsnoopは問題なくなったが、dnsの解決で最初の応
     Message length: 41 bytes            Checksum: 0x4D4F
     ----- DNS Header -----
     ID: 0x0023 (8960)     QR: 0 (Query)         Opcode: 0 (Query)
-    AA: 0 NO              TC: 0 NO              RD: 1 (YES)
-    RA: 0 NO              RCODE: 0 (No Error)
+    AA: 0 (NO)            TC: 0 (NO)            RD: 1 (YES)
+    RA: 0 (NO)            RCODE: 0 (No Error)
     QUC: 1   ANC: 0   NSC: 0   ARC: 0
     ----- Question Section 0 -----
     Question Name: www.yahoo.co.jp
@@ -734,15 +734,15 @@ DNSパケットのsnoopは問題なくなったが、dnsの解決で最初の応
     Dst: B8:27:EB:AB:E8:48         Src: F8:B7:97:87:2C:DC         Type: IPv4
     ----- IPv4 Header -----
     Version: 4              Header len: 20 bytes    Service: Routine
-    Total len: 105 bytes    Identification: 39577   Flags: 0x002
+    Total len: 105 bytes    Identification: 43866   Flags: 0x002
     Frag offset: 0 bytes    Time to Live: 64 hops   Protocol: UDP
     Src addr: 192.168.10.1              Dst addr: 192.168.10.106
     ----- UDP Header -----
     Src Port: 53                        Dst Port: 51525
-    Message length: 85 bytes            Checksum: 0x824F
+    Message length: 85 bytes            Checksum: 0xFD0F
     ----- DNS Header -----
     ID: 0x0023 (8960)     QR: 1 (Response)      Opcode: 0 (Query)
-    AA: 0 NO              TC: 0 NO              RD: 1 (YES)
+    AA: 0 (NO)            TC: 0 (NO)            RD: 1 (YES)
     RA: 1 (YES)           RCODE: 0 (No Error)
     QUC: 1   ANC: 2   NSC: 0   ARC: 0
     ----- Question Section 0 -----
@@ -751,19 +751,24 @@ DNSパケットのsnoopは問題なくなったが、dnsの解決で最初の応
     ----- Answer Section 0 -----
     Domain Name: www.yahoo.co.jp
     Record Type: 5 (Canonical Name)                    Class: 1 (Internet)
-    TTL: 0xb2010000 (0)              RD length: 0x1000 (16)
+    TTL: 0x51010000 (337)            RD length: 0x1000 (16)
     RDATA: edge12.g.yimg.jp
     ----- Answer Section 1 -----
     Domain Name: edge12.g.yimg.jp
     Record Type: 1 (Host Address)                      Class: 1 (Internet)
-    TTL: 0x07000000 (0)              RD length: 0x0400 (4)
-    RData: 183.79.219.252                                                       # 1回の応答で返答している
+    TTL: 0x27000000 (39)             RD length: 0x0400 (4)
+    RData: 182.22.28.252
 
         0x0000   B827 EBAB E848 F8B7 9787 2CDC 0800 4500  |.'...H....,...E.|
-        0x0010   0069 9A99 4000 4011 0A2F C0A8 0A01 C0A8  |.i..@.@../......|
-        0x0020   0A6A 0035 C945 0055 824F 2300 8180 0001  |.j.5.E.U.O#.....|
+        0x0010   0069 AB5A 4000 4011 F96D C0A8 0A01 C0A8  |.i.Z@.@..m......|
+        0x0020   0A6A 0035 C945 0055 FD0F 2300 8180 0001  |.j.5.E.U..#.....|
         0x0030   0002 0000 0000 0377 7777 0579 6168 6F6F  |.......www.yahoo|
         0x0040   0263 6F02 6A70 0000 0100 01C0 0C00 0500  |.co.jp..........|
-        0x0050   0100 0001 B200 1006 6564 6765 3132 0167  |........edge12.g|
+        0x0050   0100 0001 5100 1006 6564 6765 3132 0167  |....Q...edge12.g|
         0x0060   0479 696D 67C0 19C0 2D00 0100 0100 0000  |.yimg...-.......|
-        0x0070   0700 04B7 4FDB FC                        |....O..|
+        0x0070   2700 04B6 161C FC                        |'......|
+
+    191 packets captured
+    2 packets matched filter
+    2 packets printed
+    0 packets overrun

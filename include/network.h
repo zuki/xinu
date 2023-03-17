@@ -32,7 +32,7 @@
 #if BYTE_ORDER == LITTLE_ENDIAN
 /** @def hs2net(x)
  * 16bitをネットワークバイトオーダに変換する */
-#define hs2net(x) (ushort) ((((ushort)(x) >> 8) & 0xff) | (((ushort)(x) & 0xff) << 8))
+#define hs2net(x) (ushort) ((((x) >> 8) & 0xff) | (((x) & 0xff) << 8))
 /** @def net2hs(x)
  * 16bitをホストバイトオーダに変換する */
 #define net2hs(x) hs2net(x)
