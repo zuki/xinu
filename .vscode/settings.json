@@ -18,6 +18,7 @@
         "new": "c",
         "typeinfo": "c",
         "__threading_support": "c",
-        "__locale": "c"
+        "__locale": "c",
+        "chrono": "c"
     }
 }
