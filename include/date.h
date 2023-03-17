@@ -34,6 +34,7 @@ extern char *tz_names[24];
 #define TZ_MST (-7)
 #define TZ_CST (-6)
 #define TZ_EST (-5)
+#define TZ_JST (+9)
 
 #define DAYS_IN_YEAR 365
 #define SECS_IN_MIN  60

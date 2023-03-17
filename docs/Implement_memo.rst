@@ -772,3 +772,56 @@ DNSパケットのsnoopは問題なくなったが、dnsの解決で最初の応
     2 packets matched filter
     2 packets printed
     0 packets overrun
+
+*********************
+NTPクライアントを実装
+*********************
+
+.. code-block:: none
+
+    xsh$ date
+    Datetime not set, run with '-s' option
+    xsh$ date -s
+    16:24:47 JST Friday, March 17, 2023
+    xsh$ date
+    16:24:58 JST Friday, March 17, 2023
+
+.. code-block:: none
+
+    IP 192.168.10.106 > 133.243.238.243 : UDP
+    ----- Ethernet Header -----
+    Dst: F8:B7:97:87:2C:DC         Src: B8:27:EB:AB:E8:48         Type: IPv4
+    ----- IPv4 Header -----
+    Version: 4              Header len: 20 bytes    Service: Routine
+    Total len: 76 bytes     Identification: 0       Flags: 0x000
+    Frag offset: 0 bytes    Time to Live: 64 hops   Protocol: UDP
+    Src addr: 192.168.10.106            Dst addr: 133.243.238.243
+    ----- UDP Header -----
+    Src Port: 123                       Dst Port: 123
+    Message length: 56 bytes            Checksum: 0x2FF8
+
+        0x0000   F8B7 9787 2CDC B827 EBAB E848 0800 4500  |....,..'...H..E.|
+        0x0010   004C 0000 0000 4011 3AA8 C0A8 0A6A 85F3  |.L....@.:....j..|
+        0x0020   EEF3 007B 007B 0038 2FF8 E300 0A00 0000  |...{.{.8/.......|
+        0x0030   0000 0000 0000 5843 4952 0000 0000 0000  |......XCIR......|
+        0x0040   0000 0000 0000 0000 0000 0000 0000 0000  |................|
+        0x0050   0000 0000 0000 0000 0000                 |..........|
+
+    IP 133.243.238.243 > 192.168.10.106 : UDP
+    ----- Ethernet Header -----
+    Dst: B8:27:EB:AB:E8:48         Src: F8:B7:97:87:2C:DC         Type: IPv4
+    ----- IPv4 Header -----
+    Version: 4              Header len: 20 bytes    Service: Routine
+    Total len: 76 bytes     Identification: 1306    Flags: 0x000
+    Frag offset: 0 bytes    Time to Live: 44 hops   Protocol: UDP
+    Src addr: 133.243.238.243           Dst addr: 192.168.10.106
+    ----- UDP Header -----
+    Src Port: 123                       Dst Port: 123
+    Message length: 56 bytes            Checksum: 0x5295
+
+        0x0000   B827 EBAB E848 F8B7 9787 2CDC 0800 4500  |.'...H....,...E.|
+        0x0010   004C 051A 0000 2C11 498E 85F3 EEF3 C0A8  |.L....,.I.......|
+        0x0020   0A6A 007B 007B 0038 5295 2401 0AEC 0000  |.j.{.{.8R.$.....|
+        0x0030   0000 0000 0000 4E49 4354 E7BE 943F 0000  |......NICT...?..|
+        0x0040   0000 0000 0000 0000 0000 E7BE 943F 6BDE  |.............?k.|
+        0x0050   28FA E7BE 943F 6BDE 36BC                 |(....?k.6.|

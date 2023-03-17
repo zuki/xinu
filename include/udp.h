@@ -65,6 +65,10 @@
  * @brief UDP標準ポート番号: TFTP */
 #define UDP_PORT_TFTP       69
 /** @ingroup udpexternal
+ * @def UDP_PORT_NTP
+ * @brief UDP標準ポート番号: NTP */
+#define UDP_PORT_NTP        123
+/** @ingroup udpexternal
  * @def UDP_PORT_TRACEROUTE
  * @brief UDP標準ポート番号: TRACEROUTE */
 #define UDP_PORT_TRACEROUTE	33434

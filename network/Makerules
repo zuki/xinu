@@ -4,7 +4,7 @@
 COMP = network
 
 # Name of networking modules to include in the built system
-NETWORKING = arp dhcpc dns emulate icmp ipv4 net netaddr route snoop tftp
+NETWORKING = arp dhcpc dns emulate icmp ipv4 net netaddr ntp route snoop tftp
 
 DIR = ${TOPDIR}/${COMP}
 include ${NETWORKING:%=${DIR}/%/Makerules}

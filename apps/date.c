@@ -6,6 +6,7 @@
 
 #include <clock.h>
 #include <date.h>
+#include <ntp.h>
 
 static uint date_time = 0;
 
@@ -22,7 +23,7 @@ char *weekday_names[] = { "Sunday", "Monday", "Tuesday", "Wednesday",
 
 char *tz_names[] = {            /* UTC */
     "", "", "", "", "", "",     /* UTC+5 */
-    "", "", "", "", "", "",     /* UTC+11 */
+    "", "", "", "J", "", "",     /* UTC+11 */
     /* UTC-12 */
     "", "", "H", "AK", "P", "M",        /* UTC-7 */
     "C", "E", "A", "", "", ""   /* UTC-1 */
@@ -34,12 +35,10 @@ char *tz_names[] = {            /* UTC */
  */
 uint get_datetime(void)
 {
-#if RTCLOCK
+    if (date_time == 0) {
+        return 0;
+    }
     return (date_time + clktime);
-#else
-    date_time = 0;
-    return SYSERR;
-#endif                          /* RTCLOCK */
 }
 
 /**
@@ -49,12 +48,8 @@ uint get_datetime(void)
  */
 uint set_datetime(uint dt)
 {
-#if RTCLOCK
     date_time = dt - clktime;
     return (date_time + clktime);
-#else
-    return SYSERR;
-#endif                          /* RTCLOCK */
 }
 
 /**
@@ -63,7 +58,7 @@ uint set_datetime(uint dt)
  */
 void printDate(uint dt)
 {
-    printDateTZ(dt, TZ_CST);
+    printDateTZ(dt, TZ_JST);
 }
 
 /**
