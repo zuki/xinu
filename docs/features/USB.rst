@@ -1,30 +1,26 @@
 USB
 ===
 
-**USB (Universal Serial Bus)** is a standard for connecting devices to a
-computer system. It supports an immense range of devices, including (but
-not limited to) keyboards, mice, flash drives, microphones, and network
-adapters.
+**USB (Universal Serial Bus)** はコンピュータシステムにデバイスを接続
+するための規格です。キーボード、マウス、フラッシュドライブ、マイク、
+ネットワークアダプタなど、さまざまなデバイスをサポートしています。
 
-Although USB is ubiquitous in modern computer systems, even in some
-"embedded" devices, it is very challenging to implement software support
-for USB. This is primarily a result of the high complexity of USB, which
-arises from several factors, including support for virtually any
-arbitrary device, support for dynamic device attachment and detachment,
-backwards compatibility with multiple versions of the USB specification,
-and multiple supported speeds and transfer types. The USB 2.0
-specification is 650 pages long, yet only covers a fraction of the
-information needed to implement, from scratch, a USB software stack and
-a driver controlling a specific USB device.
+USBは現代のコンピュータシステム、さらには一部の「組み込み」デバイスに
+至るまで、どこにでもあるものですが、USBのソフトウェアサポートの実装は
+非常に難しいものです。これは、USBが非常に複雑であることが主な原因ですが、
+これはいくつかの要因、たとえば、事実上あらゆる任意のデバイスのサポート、
+デバイスの動的な着脱のサポート、複数のバージョンのUSB仕様との後方互換性、
+サポートされる複数の速度と転送タイプなどにより発生します。USB 2.0仕様は
+650ページにも及びますが、特定のUSBデバイスを制御するUSBソフトウェア
+スタックとドライバをゼロから実装するために必要な情報のほんの一部しか
+カバーしていません。
 
-Due to the high complexity of USB, this article cannot fully explain
-USB, nor can it even fully explain Embedded Xinu's implementation of
-USB. Instead, it gives an overview of USB in the context of Embedded
-Xinu's implementation. For full details about USB, the reader will
-inevitably need to read the USB specification itself, as well as other
-relevant specifications and webpages. For full details specifically
-about Embedded Xinu's implementation, the reader will inevitably need to
-read the source code.
+USBは非常に複雑なため、ここではUSBを完全に説明することはできませんし、
+Embedded XinuのUSBの実装も完全に説明することはできません。ここでは
+Embedded Xinuの実装の文脈におけるUSBの概要を説明します。USBの完全な
+詳細については必然的にUSB仕様そのものやその他の関連する仕様やウェブ
+ページを読む必要があります。Embedded Xinuの実装に関する詳細については、
+ソースコードを読む必要があります。
 
 .. contents::
    :local:
@@ -35,108 +31,96 @@ read the source code.
 バストポロジ
 ~~~~~~~~~~~~
 
-Fundamentally, USB is just a way to connect devices to a computer
-system. A USB bus accomplishes this by arranging devices in a tree. Each
-node of the tree is a **USB device**. There are two fundamental types of
-USB devices: **hubs** and **functions**. USB hubs can have "child"
-devices in the tree, while functions cannot. Hubs can be "children" of
-other hubs, up to a depth of 7 levels.
+基本的に、USBはコンピュータシステムにデバイスを接続するための手段でしか
+ありません。USBバスはデバイスをツリー状に配置することでこれを実現します。
+ツリーの各ノードが **USBデバイス** です。USBデバイスには **ハブ** と
+**ファンクション** という2つの基本タイプがあります。USBハブはツリーの中に
+「子」デバイスを持つことができますが、ファンクションは持つことができません。
+ハブは他のハブの「子」になることができ、最大で7階層まで可能です。
 
-The root node of the tree is the **root hub**, and every USB bus has one
-(although it may be faked by the Host Controller Driver, described
-later).
+ツリーのルートノードは **ルートハブ** です。すべてのUSBバスに1つずつあります
+（ただし、後で述べるように、ホストコントローラドライバによって偽装されることが
+あります）。
 
-A USB hub provides a fixed number of attachment points for additional
-devices called **ports**. A USB port may be either completely internal
-or exposed to the "outside" as a place to plug in a USB cable. From the
-user's point of view there is certainly a difference between these two
-manifestations of a USB port, but from the software's point of view
-there is no difference. On a similar note, it is also possible that a
-single physical package, which a naive user might refer to as a "USB
-device", actually contains an integrated USB hub onto which one or more
-USB devices (as defined above) are attached. Such physical packages are
-referred to as **compound devices**. An example of a compound device is
-one of Apple's USB keyboards that provides a USB port to attach a mouse.
+USBハブは **ポート** と呼ばれるデバイスを追加する取り付けポイントを一定数
+提供します。USBポートは、完全に内蔵されている場合と、USBケーブルを差し込む
+場所として「外部」に露出している場合があります。ユーザから見るとこの2つの
+USBポートの姿には明確な違いがありますが、ソフトウェアから見ると違いはありません。
+同様に、素朴なユーザーが「USBデバイス」と呼ぶような1つの物理的パッケージが
+実際には（上で定義した）1つ以上のUSBデバイスが取り付けられる統合USBハブを
+含んでいることもありえます。このような物理的パッケージは **複合デバイス** と
+呼ばれます。マウスを取り付けるためのUSBポートが用意されているApple社のUSB
+キーボードは複合デバイスの一例です。
 
-Since USB is a dynamic bus, USB devices can be attached or detached from
-the USB at any arbitrary time. Detaching a hub implies detaching all
-child devices.
+USBは動的なバスであるため、USBデバイスは任意のタイミングでUSBから着脱する
+ことができます。ハブを切り離すと、すべての子デバイスが切り離されることに
+なります。
 
-For its part, Embedded Xinu's USB implementation fully supports the
-dynamic tree topology of a USB bus.
+Embedded XinuのUSB実装は、USBバスの動的ツリートポロジーを完全にサポート
+しています。
+
 
 デバイス
 ~~~~~~~~~
 
-Due to the generality of USB a USB device that is not a hub can be
-virtually anything at all. This is made possible in part by a highly
-nested design:
+USBの汎用性により、ハブでないUSBデバイスは、事実上何でもありです。これは
+高度にネスト化されたデザインによって実現されています。
 
--  A USB device has one or more **configurations**.
--  A configuration has one or more **interfaces**.
--  An interface has one or more **alternate settings**.
--  An alternate setting has one or more **endpoints**.
+- USBデバイスは1つ以上の **コンフィギュレーション** を持ちます。
+- コンフィギュレーションは1つ以上の **インタフフェース** を持ちます。
+- インターフェースは1つ以上の **代替設定** を持ちます。
+- 代替設定は1つ以上の **エンドポイント** を持ちます。
 
-Every device, configuration, interface, and endpoint has a corresponding
-**descriptor** that can be read by the USB software to retrieve
-information about the described entity in a standard format.
+すべてのデバイス、コンフィギュレーション、インタフェース、エンドポイントは
+対応する **ディスクリプタ** を持ち、USBソフトウェアはこれを読み取ることで
+記述されたエンティティに関する情報を標準フォーマットで取得することができます。
 
-Although this format allows for highly complex devices, most devices are
-relatively simple and have just one configuration. Furthermore, common
-devices only have one interface. In fact, as of this writing, Embedded
-Xinu's USB subsystem aims to support the common case only; it therefore
-always sets the device to its first listed configuration, then attempts
-to bind a device driver to the entire device rather than examining
-individual interfaces to see if they need separate "interface drivers".
+このフォーマットは非常に複雑なデバイスを可能にしますが、ほとんどのデバイスは
+比較的単純であり、1つのコンフィギュレーションしか持ちません。さらに、一般的な
+デバイスは1つのインタフェースしか持っていません。実際、これを書いている時点に
+おいて、Embedded XinunoのUSBサブシステムは一般的なケースしかサポートしていません。
+そのため、デバイスは常に最初にリストアップされたコンフィグレーションで設定し、
+個々のインタフェースに個別の「インタフェースドライバ」が必要かどうかを調べる
+ことはせず、デバイス全体にデバイスドライバをバインドすることを試みます。
 
 ホストコントローラ
 ~~~~~~~~~~~~~~~~~~~~
 
-USB is a polled bus, so all transfers over the USB are initiated by the
-**host**. The term "host" in this context means the USB software as well
-as the USB Host Controller, which is the hardware responsible for
-actually sending and receiving data over the USB and maintaining the
-root hub. This is actually one of the trickier parts of USB. Since the
-USB specification itself does not standardize the exact division of
-tasks between software and hardware, it's often not clear who is
-responsible when the specification says "host".
+USBはポーリングバスであるため、USB上のすべての転送は **ホスト** によって
+開始されます。ここでいう「ホスト」とは、USBソフトウェアと、実際にUSB上で
+データを送受信し、ルートハブを維持するハードウェアであるUSBホストコントローラの
+ことです。実はこれがUSBの厄介な部分の1つです。USBの仕様自体はソフトウェアと
+ハードウェアの正確な役割分担を標準化していないため、仕様に「ホスト」と書かれて
+いても誰が責任を負うのかよくわからないことが多いのです。
 
-The essential thing to know is that the place where the USB software
-directly meets the USB hardware is in the USB Host Controller Driver,
-which operates the USB Host Controller. Some USB Host Controllers
-present standard interfaces (such as UHCI, OHCI, or EHCI--- all
-defined in specifications separate from the USB specification itself)
-to software. Others do not present a standard interface, but instead
-have vendor-provided documentation and/or a vendor-provided driver; an
-example of this is the :doc:`/arm/rpi/Synopsys-USB-Controller` used on
-the :doc:`/arm/rpi/Raspberry-Pi`.  Obviously, a standard interface is
-highly preferred when independently implementing a Host Controller
-Driver.
+知っておくべき重要なことは、USBソフトウェアがハードウェアと直接出会う場所は
+USBホストコントローラを操作する「USBホストコントローラドライバ」であるという
+ことです。USBホストコントローラの中にはソフトウェアに対して標準的なインタフェース
+（UHCI、OHCI、EHCIなど、いずれもUSB仕様とは別の仕様で定義されている）を提示する
+ものがあります。また、標準的なインタフェースは提供されていませんがベンダーが提供する
+ドキュメントやベンダーが提供するドライバを持つものもあります。 :doc:`/arm/rpi/Raspberry-Pi` で
+使用されている :doc:`/arm/rpi/Synopsys-USB-Controller` はその一例です。もちろん、
+ホストコントローラドライバを独自に実装する場合は、標準的なインタフェースのほうが
+遥かに望ましいものです。
 
 転送
 ~~~~~~~~~
 
-To communicate with USB devices, the host sends and receives data over
-the USB using USB transfers. A USB transfer occurs to or from a
-particular endpoint on a particular device. Every endpoint is associated
-with a specific type of USB transfer, which can be one of the following:
+USBデバイスと通信するために、ホストはUSB転送を使用してUSB上でデータを送受信します。
+USB転送は特定のデバイスの特定のエンドポイントとの間で行われます。すべてのエンド
+ポイントは特定のタイプのUSB転送に関連付けられ、以下のいずれかになります：
 
--  **Control** transfers. These are typically used for device
-   configuration. There are two main unique features of these transfers.
-   First, a special packet called SETUP is always sent over the USB
-   before the actual data of the control transfer, and software needs to
-   specify the contents of this packet. Second, every device has an
-   endpoint over which control transfers in either direction can be
-   made, and this endpoint is never explicitly listed in the endpoint
-   descriptors.
--  **Interrupt** transfers. These are used for time-bounded transmission
-   of small quantities of data (e.g. data from a keyboard or mouse).
--  **Bulk** transfers. These are used for reliable (with error
-   detection) transmission of large quantities of data with no
-   particular time guarantees (e.g. reading and writing data on mass
-   storage devices).
--  **Isochronous** transfers. These are used for regular transmission of
-   data with no error detecting (e.g. video capture).
+- **コントロール** 転送。これは通常、デバイスのコンフィグレーションに使用されます。
+  この転送には主に2つのユニークな特徴があります。第一に、コントロール転送の実際の
+  データの前に SETUP と呼ばれる特別なパケットが常にUSB上で送信され、ソフトウェアは
+  このパケットの内容を指定する必要があります。第二に、すべてのデバイスには双方向の
+  コントロール転送が可能なエンドポイントが1つあり、このエンドポイントはエンドポイント
+  ディスクリプタに明示的に記載されることはありません。
+- **インターラプト** 転送。（キーボードやマウスからのデータなど）少量のデータを時間
+  制限付きで転送する場合に使用されます。
+- **バルク** 転送。特定の時間を保証しない大量のデータの信頼性の高い（エラー検出を伴う）
+  転送に使用されます（大容量記憶装置のデータの読み書きなど）。
+- **アイソクロナス** 転送。エラー検出のない定期的なデータ転送に使用します（ビデオキャプチャなど）。
 
 現在、Embedded Xinuはコントール転送、インターラプト転送、バルク転送を
 サポートしています。アイソクロナス転送はまだテストされていません。また、
@@ -146,22 +130,19 @@ with a specific type of USB transfer, which can be one of the following:
 速度
 ~~~~~~
 
-USB supports multiple transfer speeds:
+USBは複数の転送速度に対応しています。
 
--  1.5 Mbit/s (Low Speed) (USB 1+)
--  12 Mbit/s (Full Speed) (USB 1+)
--  480 Mbit/s (High Speed) (USB 2.0+)
--  5000 Mbit/s (Super Speed) (USB 3.0+)
+- 1.5Mbit/s (低速: LS) (USB 1+)
+- 12Mbit/s (フルスピード: FS) (USB 1+)
+- 480Mbit/s (高速: HS) (USB 2.0+)
+- 5000Mbit/s (超高速: SS) (USB 3.0+)
 
-Yes, Full Speed is in fact the second lowest speed. Well I think we all
-know that 12 Mbit/s ought to be enough for anyone. But anyway, due to
-the need to maintain backwards compatibility with legacy devices, the
-USB software (mainly the host controller driver) unfortunately needs to
-take into account transfer speeds. At minimum, it must be aware that
-transfers to or from devices attached at Low Speed or Full Speed are
-performed as a series of **split transactions**, which allow Low Speed
-or Full Speed transfers to occur without significantly slowing down the
-portion of the USB bus operating at a higher speed.
+そうです、FSは2番目に遅い速度です。でも、何にでも12Mbit/sで十分だと思います。
+しかし、レガシーデバイスとの後方互換性を維持する必要があるため、残念ながら、USBソフトウェア
+（主にホストコントローラドライバ）は転送速度を考慮する必要がある。少なくとも、
+LSまたはFSで接続されたデバイスとの転送は、HSで動作するUSBバスの部分を大幅に減速させる
+ことなくLSまたはFSの転送を実行できるようにする一連の **分割トランザクション** と
+して実行されることを認識する必要があります。
 
 これを書いている時点では、Embedded XinuのUSBサブシステムはUSB 2.0を
 サポートしており、LS、FS、HSで動作するデバイスをサポートしています。
