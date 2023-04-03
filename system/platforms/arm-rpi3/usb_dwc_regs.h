@@ -13,7 +13,7 @@
 #include <usb_util.h>
 
 /**
- * @ingroup usbhcd
+ * @def DWC_NUM_CHANNELS
  * DWCホストのチャンネル数である. それぞれが独立のUSB転送に使用できる。
  * BCM2835 (Raspberry Pi)では8チャンネル使用できる。これはドキュメント
  * "BCM2835 ARM Peripherals" の201ページに記載されている。
@@ -40,20 +40,21 @@
  */
 struct dwc_regs {
 
-    /* 0x000 : GOTGCTL: OTGコントロール/ステータスレジスタ. */
+    /** [0x000] : GOTGCTL: OTGコントロール/ステータスレジスタ. */
     uint32_t otg_control;
 
-    /* 0x004 : GOTGINT: OTG割り込みレジスタ. */
+    /** [0x004] : GOTGINT: OTG割り込みレジスタ. */
     uint32_t otg_interrupt;
 
     /**
-     * 0x008 : GAHBCFG: AHBコンフィグレーションレジスタ.
+     * [0x008] : GAHBCFG: AHBコンフィグレーションレジスタ.
      *
      * このレジスタはDWCとシステムの他のペリフェラルとのインタフェースを
      * 構成する  */
     uint32_t ahb_configuration;
 
 /**
+ * @def DWC_AHB_INTERRUPT_ENABLE
  * USBコントローラからの割り込みを有効にする（実際はアプリケーション全体の
  * 割り込みを有効にする: アンマスク）. デフォルトは無効（マスク）になっている。 */
 #define DWC_AHB_INTERRUPT_ENABLE  (1 << 0)
@@ -79,12 +80,12 @@ struct dwc_regs {
  */
 #define DWC_AHB_DMA_ENABLE        (1 << 5)
 
-    /* 0x00c : GUSBCFG: USBコンフィグレーションレジスタ. */
+    /** [0x00c] : GUSBCFG: USBコンフィグレーションレジスタ. */
     uint32_t core_usb_configuration;
 
 
     /**
-     * 0x010 : GRSTCTL: コアリセットレジスタ.
+     * [0x010] : GRSTCTL: コアリセットレジスタ.
      *
      * ソフトウェアはこのレジスタを使ってコア内部の様々なハードウェアを
      * リセットすることができる。
@@ -103,7 +104,7 @@ struct dwc_regs {
 #define DWC_SOFT_RESET      (1 << 0)
 
     /**
-     * 0x014 : GINTSTS: コア割り込みレジスタ.
+     * [0x014] : GINTSTS: コア割り込みレジスタ.
      *
      * このレジスタは保留されているトップレベルのDWC割り込みの状態を含んでいる。
      * 1は割り込みが保留されていることを、0は保留されていないことを意味する。
@@ -117,21 +118,21 @@ struct dwc_regs {
             uint32_t stuff             : 3;
 
             /**
-             * Start of Frame.  TODO
+             * [3] : Start of Frame.  TODO
              */
             uint32_t sof_intr          : 1;
 
             uint32_t morestuff         : 20;
 
             /**
-             * ホストポートの状態が変更された。ソフトウェアはHPRTでホスト
+             * [24] : ホストポートの状態が変更された。ソフトウェアはHPRTでホスト
              * ポートの現在の状態を調べて、変更のあったステータスのフラグを
              * クリアする必要がある。
              */
             uint32_t port_intr         : 1;     /* Bit 24 */
 
             /**
-             * チャネル割り込みが発生した。ソフトウェアはHAINTでどのチャネルで
+             * [25] : チャネル割り込みが発生した。ソフトウェアはHAINTでどのチャネルで
              * 割り込みが保留されているか調べて、その割り込みを処理して、その
              * チャネルの割り込みをクリアする必要がある。
              */
@@ -142,735 +143,731 @@ struct dwc_regs {
     } core_interrupts;
 
     /**
-     * 0x018 : GINTMSK: コア割り込みマスクレジスタ.
+     * [0x018] : GINTMSK: コア割り込みマスクレジスタ.
      *
      * このレジスタはGINTSTSと同じ形式であり、対応する割り込みを有効 (1) または
      * 無効 (0) にする。リセット後の初期状態はすべて 0
      */
     union dwc_core_interrupts core_interrupt_mask;
 
-    /* 0x01c : GRXSTSR: 受信ステータスキュー読み込み */
+    /** [0x01c] : GRXSTSR: 受信ステータスキュー読み込み */
     uint32_t receive_status;
 
-    /* 0x020 : GRXSTSP: 受信ステータスキュー読み込みとポップアウト */
+    /** [0x020] : GRXSTSP: 受信ステータスキュー読み込みとポップアウト */
     uint32_t receive_status_pop;
 
     /**
-     * 0x024 : GRXFSIZ: 受信FIFOサイズレジスタ.
+     * [0x024] : GRXFSIZ: 受信FIFOサイズレジスタ.
      *
-     * This register contains the size of the Receive FIFO, in 4-byte words.
+     * 受信FIFOのサイズ（4バイトワード単位）を保持する.
      *
-     * This register must be set by software before using the controller; see
-     * the note in the documentation for the hwcfg3 register about configuring
-     * the dynamic FIFOs.
+     * コントローラを使用する前にソフトウェアはこのレジスタをセット
+     * する必要がある。動的FIFOの構成についてはhwcfg3レジスタの中を参照。
      */
     uint32_t rx_fifo_size;
 
     /**
-     * 0x028 : Non Periodic Transmit FIFO Size Register.
+     * [0x028] : GNPTXFSIZ: 非周期転送FIFOサイズレジスタ.
      *
-     * The low 16 bits of this register contain the offset of the Nonperiodic
-     * Transmit FIFO, in 4-byte words, from the start of the memory reserved by
-     * the controller for dynamic FIFOs.  The high 16 bits of this register
-     * contain its size, in 4-byte words.
+     * 下位16ビットには非周期転送FIFOの動的FIFOのためにコントローラにより
+     * 確保されたメモリの開始地点からの（4バイトワード単位の）オフセットを
+     * 保持する。上位16ビットには（4バイトワード単位の）サイズを保持する。
      *
-     * This register must be set by software before using the controller; see
-     * the note in the documentation for the hwcfg3 register about configuring
-     * the dynamic FIFOs.
+     * コントローラを使用する前にソフトウェアはこのレジスタをセット
+     * する必要がある。動的FIFOの構成についてはhwcfg3レジスタの中を参照。
      */
     uint32_t nonperiodic_tx_fifo_size;
 
-    /* 0x02c : Non Periodic Transmit FIFO/Queue Status Register */
+    /** [0x02c] : GNPTXSTS: 非周期転送FIFO/Queueステータスレジスタ */
     uint32_t nonperiodic_tx_fifo_status;
 
-    /* 0x030 */
+    /** [0x030] : GI2CCTL: I2Cアクセスレジスタ */
     uint32_t i2c_control;
 
-    /* 0x034 */
+    /** [0x034] : GPVNDCTL: PHYベンダー制御レジスタ */
     uint32_t phy_vendor_control;
 
-    /* 0x038 */
+    /** [0x038] : GGPIO: GPIOレジスタ */
     uint32_t gpio;
 
-    /* 0x03c */
+    /** [0x03c] : GUID: ユーザIDレジスタ */
     uint32_t user_id;
 
-    /* 0x040 */
+    /** [0x040] : GSNPSID: Synopsys IDレジスタ */
     uint32_t vendor_id;
 
-    /* 0x044 */
+    /** [0x044] : GHWCFG1: ユーザハードウェア構成1レジスタ */
     uint32_t hwcfg1;
 
-    /* 0x048 */
+    /** [0x048] : GHWCFG2: ユーザハードウェア構成2レジスタ */
     uint32_t hwcfg2;
 
     /**
-     * 0x04c : Hardware Configuration 3 Register.
+     * [0x04c] : GHWCFG3: ユーザハードウェア構成3レジスタ.
      *
-     * The high 16 bits of this read-only register contain the maximum total
-     * size, in words, of the dynamic FIFOs (Rx, Nonperiodic Tx, and Periodic
-     * Tx).  Software must set up these three dynamic FIFOs in the rx_fifo_size,
-     * nonperiodic_tx_fifo_size, and host_periodic_tx_fifo_size registers such
-     * that their total size does not exceed this maximum total size and no
-     * FIFOs overlap.
+     * 上位16ビット（RO）には動的FIFO（受信、周期送信、非周期送信）の（ワード単位の）
+     * 最大合計サイズを保持する。ソフトウェはrx_fifo_size, nonperiodic_tx_fifo_size,
+     * host_perodic_tx_fifo_sizeで3つの動的FIFOを設定する必要がある。このとき、
+     * これらの合計サイズはこのレジスタの合計サイズを超えてはならない。また、FIFOは
+     * 重なってはならない。
      *
-     * Note: Software must explicitly configure the dynamic FIFOs even if the
-     * controller is operating in DMA mode, since the default values for the
-     * FIFO sizes and offsets may be invalid.  For example, in Broadcom's
-     * instantiation of this controller for the BCM2835, only 4080 words are
-     * available for dynamic FIFOs, but the dynamic FIFO sizes are set to 4096,
-     * 32, and 0, which are invalid as they add up to more than 4080.  <b>IF YOU
-     * DO NOT DO THIS YOU WILL GET SILENT MEMORY CORRUPTION</b>.
+     * 注: コントローラがDMAモードで動作していても、サフとウェアは動的FIFOを
+     * 明示的に構成しなければならない。なぜなら、FIFOサイズとオフセットのデフォルト値は
+     * 不正な値だからである。たとえば、BCM2835のおけるこのコントローラのBroadcomに
+     * よるインスタンスでは動的FIFOとして4080バイトしか利用できない。しかし、動的
+     * FIFOのサイズはそれぞれ4096, 32, 0と設定されておりこれは合計すると4080を超える
+     * ので不正である。<b>これをしないと知らないうちにメモリ破壊することになる。</b>
      *
-     * The low 16 bits of this register contain various flags that are not
-     * documented here as we don't use any in our driver.
+     * 下位16ビットにはここでは説明していない様々なフラグを保持している。
+     * 我々のドライバはこのフラグは使用しない。
      */
     uint32_t hwcfg3;
 
-    /* 0x050 */
+    /** [0x050] : GHWCFG4: ユーザハードウェア構成4レジスタ */
     uint32_t hwcfg4;
 
-    /* 0x054 */
+    /** [0x054] : GLPMCFG: コアLPM構成レジスタ */
     uint32_t core_lpm_configuration;
 
-    /* 0x058 */
+    /** [0x058] : GPWRDN: 電源切断レジスタ */
     uint32_t global_powerDn;
 
-    /* 0x05c */
+    /** [0x05c] : GDFIFOCFG: DFIFOソフトウェア構成レジスタ */
     uint32_t global_fifo_config;
 
-    /* 0x060 */
+    /** [0x060] : GADPCTL: ADPタイマー、制御・ステータスレジスタ */
     uint32_t adp_control;
 
-    /* 0x064 */
+    /** [0x064-0x0Fc] : 予約済み*/
     uint32_t reserved_0x64[39];
 
     /**
-     * 0x100 : Host Periodic Transmit FIFO Size Register.
+     * [0x100] : HPTXFSIZ: ホスト周期転送FIFOサイズレジスタ.
      *
-     * The low 16 bits of this register configure the offset of the Periodic
-     * Transmit FIFO, in 4-byte words, from the start of the memory reserved by
-     * the controller for dynamic FIFOs.  The high 16 bits of this register
-     * configure its size, in 4-byte words.
+     * 下位16ビットには周期転送FIFOの動的FIFOのためにコントローラにより
+     * 確保されたメモリの開始地点からの（4バイトワード単位の）オフセットを
+     * 保持する。上位16ビットには（4バイトワード単位の）サイズを保持する。
      *
-     * This register should be set by software before using the controller; see
-     * the note in the documentation for the hwcfg3 register about configuring
-     * the dynamic FIFOs.
+     * コントローラを使用する前にソフトウェアはこのレジスタをセット
+     * する必要がある。動的FIFOの構成についてはhwcfg3レジスタの中を参照。
      */
     uint32_t host_periodic_tx_fifo_size;
 
-    /* TODO */
+    /** [0x104-0x13c] : デバイス用レジスタ, [0x140-3FF] : 予約済み */
     uint32_t stuff[191];
 
-    /**
+    /** @ingroup usbhcd
      * @name ホストレジスタ
      *
-     * このポイントから始まるレジスタは「ホスト」レジスタとみなされる。
+     * このポイント(0x400)から始まるレジスタは「ホスト」レジスタである.
      * これらはOTG（On-The-Go）プロトコルの「ホスト」パートで使用される。
      * OTGはこのハードウェアがUSBホストまたはUSBデバイスとして動作することを
-     * 可能にする。このドライバではホストだけを扱うのでデバイスに対ソウル
+     * 可能にする。このドライバではホストだけを扱うのでデバイスに対する
      * レジスタは宣言しない
      */
-    /**@{*/
 
-    /* 0x400 */
+    /** [0x400] : HCFG: ホスト構成レジスタ */
     uint32_t host_configuration;
 
-    /* 0x404 */
+    /** [0x404] : HFIR: ホストフレーム間隔レジスタ */
     uint32_t host_frame_interval;
 
-    /* 0x408 */
+    /** [0x408] : HFNUM: ホストフレーム番号/フレーム残り時間レジスタ */
     uint32_t host_frame_number;
 
-    /* 0x40c */
+    /** [0x40c] : 予約済み */
     uint32_t host_reserved_0x40c;
 
-    /* 0x410 */
+    /** [0x410] : HPTXSTS: ホスト周期転送FIFO/Queueステータスレジスタ */
     uint32_t host_fifo_status;
 
     /**
-     * 0x414 : Host All Channels Interrupt Register.
+     * [0x414] : HAINT: ホスト全チェネル割り込みレジスタ.
      *
-     * This register contains a bit for each host channel that indicates whether
-     * an interrupt has occurred on that host channel.  You cannot clear the
-     * interrupts by writing to this register; use the channel-specific
-     * interrupt registers instead.
+     * 各ホストチェネルで割り込みがあったか否かを示すビット（1チャネル1ビット）を
+     * 保持する。このレジスタに書き込んでも割り込みをクリアすることはできない。
+     * クリアには各チャネルのHCINTレジスタを使用すること。
      */
     uint32_t host_channels_interrupt;
 
     /**
-     * 0x418 : Host All Channels Interrupt Mask Register.
+     * [0x418] : HAINTMASK: ホスト全チャネル割り込みマスクレジスタ.
      *
-     * Same format as the Host All Channels Interrupt Register, but a 1 in this
-     * register indicates that the corresponding host channel interrupt is
-     * enabled.  Software can change this register.  Defaults to all 0's after a
-     * reset.
+     * HAINTと同じフォーマットだが、このレジスタの1は対応するホストチャネルの
+     * 割り込みを有効にすることを意味する。ソフトウェアはこのレジスタを変更する
+     * ことができる。リセット後のデフォルト値はすべて0である。
      */
     uint32_t host_channels_interrupt_mask;
 
-    /* 0x41c */
+    /** [0x41c] : HFLBAddr: ホストフレームリスト基底アドレスレジスタ */
     uint32_t host_frame_list;
 
-    /* 0x420 */
+    /** [0x420-0x43F] : 予約済み */
     uint32_t host_reserved_0x420[8];
 
     /**
-     * 0x440 : Host Port Control and Status Register.
+     * [0x440] : HPRT: ホストポート制御・ステータスレジスタ.
      *
-     * This register provides the information needed to respond to status
-     * queries about the "host port", which is the port that is logically
-     * attached to the root hub.
+     * ルートハブに論理的に接続されたポートである「ホストポート」に
+     * 関するステータスクエリに応答するために必要な情報を提供する。
      *
-     * When changing this register, software must read its value, then clear the
-     * enabled, connected_changed, enabled_changed, and overcurrent_changed
-     * members to avoid changing them, as those particular bits are cleared by
-     * writing 1.
+     * このレジスタを変更する場合、ソフトウェアはその値を読んだ後、
+     * enabled, connected_changed, enabled_changed, overcurrent_changedの
+     * クリアして、変更を避ける必要がある。これらのビットは1を書き込むと
+     * クリアされるからである。
      */
     union dwc_host_port_ctrlstatus {
+        /** レジスタ値 */
         uint32_t val;
         struct {
-            /**
-             *  1: a device is connected to this port.
-             *  0: no device is connected to this port.
+            /** [0] : デバイス接続の有無.
              *
-             *  Changed by hardware only.
+             *  - 1: デバイスがこのポートに接続されている.
+             *  - 0: このポートにはデバイスが接続されていない.
+             *
+             *  変更ができるのはハードウェアのみ。
              */
             uint32_t connected : 1; /* Bit 0 */
 
             /**
-             * Set by hardware when connected bit changes.  Software can write
-             * 1 to acknowledge and clear.  The setting of this bit by hardware
-             * generates an interrupt that can be enabled by setting port_intr
-             * in the core_interrupt_mask register.
+             * [1] : connectedビットに変更があった場合にハードウェアがセットする.
+             * ソフトウェアは1を書き込むことで了解してクリアできる。ハードウェアに
+             * よるこのビットのセットによりcore_interrupt_maskレジスタのport_intrを
+             * 設定することにより有効になる割り込みが生成される。
              */
             uint32_t connected_changed : 1; /* Bit 1 */
 
             /**
-             * 1: port is enabled.
-             * 0: port is disabled.
+             * [2] : ポートが有効か.
              *
-             * Note: the host port is enabled by default after it is reset.
+             * - 1: ポートは有効.
+             * - 0: ポートは無効.
              *
-             * Note: Writing 1 here appears to disable the port.
+             * 注1: リセット後、ホストポートはデフォルトで有効になる.
+             * 注2: 1を書き込むとそのポートは無効になるようだ.
              */
             uint32_t enabled : 1; /* Bit 2 */
 
             /**
-             * Set by hardware when enabled bit changes.  Software can write 1
-             * to acknowledge and clear.  The setting of this bit by hardware
-             * generates an interrupt that can be enabled by setting port_intr
-             * in the core_interrupt_mask register.
+             * [3] : enabledビットに変更があった場合にハードウェアがセットする.
+             * ソフトウェアは1を書き込むことで了解してクリアできる。ハードウェアに
+             * よるこのビットのセットによりcore_interrupt_maskレジスタのport_intrを
+             * 設定することにより有効になる割り込みが生成される。
              */
             uint32_t enabled_changed : 1; /* Bit 3 */
 
             /**
-             * 1: overcurrent condition active on this port
-             * 0: no overcurrent condition active on this port
+             * [4] : 過電流があるか.
              *
-             * Changed by hardware only.
+             * - 1: このポートで過電流条件が発生
+             * - 0: このポートで過電流条件はない
+             *
+             * 変更ができるのはハードウェアのみ。
              */
             uint32_t overcurrent : 1; /* Bit 4 */
 
             /**
-             * Set by hardware when the overcurrent bit changes.  The software
-             * can write 1 to acknowledge and clear.  The setting of this bit by
-             * hardware generates the interrupt that can be enabled by setting
-             * port_intr in the core_interrupt_mask register.
+             * [5] : overcurrentビットに変更があった場合にハードウェアがセットする.
+             * ソフトウェアは1を書き込むことで了解してクリアできる。ハードウェアに
+             * よるこのビットのセットによりcore_interrupt_maskレジスタのport_intrを
+             * 設定することにより有効になる割り込みが生成される。
              */
             uint32_t overcurrent_changed : 1; /* Bit 5 */
 
             /**
-             * Set by software to set resume signalling.
+             * [6] : レジュームシグナルを設定するためにソフトウェアがセットする.
              */
             uint32_t resume : 1; /* Bit 6 */
 
             /**
-             * Set by software to suspend the port.
+             * [7] : ポートをサスペンドするためにソフトウェアがセットする.
              */
             uint32_t suspended : 1; /* Bit 7 */
 
             /**
-             * Software can set this to start a reset on this port.  Software
-             * must clear this after waiting 60 milliseconds for the reset is
-             * complete.
+             * [8] : ポートのリセットを開始するためにソフトウェアがセットできる.
+             * リセットが完了させるためにソフトウェアは60ミリ秒後にこのビットを
+             * クリアする必要がある。
              */
             uint32_t reset : 1; /* Bit 8 */
-
+            /** [9] : 予約済み */
             uint32_t reserved : 1; /* Bit 9 */
 
             /**
-             * Current logic of data lines (10: logic of D+; 11: logic of D-).
+             * [11-10] : データラインの現在のロジック (10: logic of D+; 11: logic of D-).
              *
-             * Changed by hardware only.
+             * 変更ができるのはハードウェアのみ。
              */
             uint32_t line_status : 2; /* Bits 10-11*/
 
             /**
-             * 1: port is powered.
-             * 0: port is not powered.
+             * [12] : 電源が入っているか.
              *
-             * Software can change this bit to power on (1) or power off (0)
-             * the port.
+             * - 1: ポートの電源オン.
+             * - 0: ポートの電源オフ.
+             *
+             * ソフトウェアはこのビットを変更することでポートの電源をオン (1) /
+             * オフ (0)することができる。
              */
             uint32_t powered : 1; /* Bit 12 */
-
+            /** [16-13] : テスト制御用 */
             uint32_t test_control : 4; /* Bits 13-16 */
 
             /**
-             * Speed of attached device (if any).  This should only be
-             * considered meaningful if the connected bit is set.
+             * [18-17] : 接続されたデバイスの速度（もしあれば）.
+             * connectedビットが設定されている場合にのみ意味があると考えるべき。S
              *
-             * 00: high speed; 01: full speed; 10: low speed
+             * 00: HS (high speed); 01: FS (full speed); 10: LS (low speed)
              *
-             * Changed by hardware only.
+             * 変更ができるのはハードウェアのみ。
              */
             uint32_t speed : 2; /* Bits 17-18 */
-
+            /** [31-19] : 予約済み */
             uint32_t reserved2 : 13; /* Bits 19-32 */
 
         };
-    } host_port_ctrlstatus;
+    } host_port_ctrlstatus; /**< [0x440] : HPRT: ホストポート制御・ステータスレジスタ */
 
+    /** [0x444-0x4fc] : 予約済み */
     uint32_t host_reserved_0x444[47];
 
     /**
-     * 0x500 : Array of host channels.  Each host channel can be used to
-     * execute an independent USB transfer or transaction simultaneously.  A USB
-     * transfer may consist of multiple transactions, or packets.  To avoid
-     * having to re-program the channel, it may be useful to use one channel for
-     * all transactions of a transfer before allowing other transfers to be
-     * scheduled on it.
+     * [0x500][16] : ホストチャネルレジスタ配列.
+     * - 0x00 : HCCHARn: Host Channel-n Characteristics Register
+     * - 0x04 : HCSPLTn: Host Channel-n Split Control Register
+     * - 0x08 : HCINTn: Host Channel-n Interrupt Register
+     * - 0x0c : HINTMSKn: Host Channel-n Interrupt Mask Register
+     * - 0x10 : HCTSIZn: Host Channel-n Transfer Size Register
+     * - 0x14 : HCDMAn: Host Channel-n DMA Address Register
+     * - 0x18 : 予約済み
+     * - 0x1c : HCDMABn: Host Channel-n DMA Buffer Address Register
+     *
+     * 各ホストチャネルは、独立したUSB転送またはUSBトランザクションを
+     * 同時に実行するために使用することができる。 USB転送は複数の
+     * トランザクション、またはパケットで構成されることがある。チャネルの
+     * 再プログラムを避けるために、他の転送をそのチャネルにスケジュールする
+     * 前に転送のすべてのトランザクションに1つのチャネルを使用することが
+     * 有用であろう。
      */
     struct dwc_host_channel {
-
         /**
-         * Channel Characteristics Register -
+         * [0x500] HCCHAR: ホストチャネル属性レジスタ.
          *
-         * Contains various fields that must be set to prepare this channel for
-         * a transfer to or from a particular endpoint on a particular USB
-         * device.
+         * このチャネルを特定のUSBデバイスの特定のエンドポイントとの間の
+         * 転送に使用するために準備する必要がある様々なフィールドが含まれている。
          *
-         * This register only needs to be programmed one time when doing a
-         * transfer, regardless of how many packets it consists of, unless the
-         * channel is re-programmed for a different transfer or the transfer is
-         * moved to a different channel.
+         * このレジスタは、チャンネルが別の転送のために再プログラムされるか、
+         * 転送が別のチャンネルに移動されない限り、それが何個のパケットで構成
+         * されていても、転送を行うときに1回だけプログラムされる必要がある。
          */
         union dwc_host_channel_characteristics {
+            /** レジスタ値 */
             uint32_t val;
             struct {
                 /**
-                 * Maximum packet size the endpoint is capable of sending or
-                 * receiving.  Must be programmed by software before starting
-                 * the transfer.
+                 * [10-0] : エンドポイントが送受信できる最大パケットサイズ.
+                 * 転送を開始する前にプログラムする必要がある。
                  */
                 uint32_t max_packet_size     : 11; /* Bits 0-10  */
 
                 /**
-                 * Endpoint number (low 4 bits of bEndpointAddress).  Must be
-                 * programmed by software before starting the transfer.
+                 * [14-10] : エンドポイント番号（bEndpointAddressの下位4ビット）.
+                 * 転送を開始する前にプログラムする必要がある。
                  */
                 uint32_t endpoint_number     : 4;  /* Bits 11-14 */
 
                 /**
-                 * Endpoint direction (high bit of bEndpointAddress).  Must be
-                 * programmed by software before starting the transfer.
+                 * [15] : エンドポイントの方向（bEndpointAddressの上位ビット）.
+                 * 転送を開始する前にプログラムする必要がある。
                  */
                 uint32_t endpoint_direction  : 1;  /* Bit  15    */
-
+                /** [16] : 予約済み */
                 uint32_t reserved            : 1;  /* Bit  16    */
 
                 /**
-                 * 1 when the device being communicated with is attached at low
-                 * speed; 0 otherwise.  Must be programmed by software before
-                 * starting the transfer.
+                 * [17] : デバイスの速度.
+                 *
+                 * - 1: 通信するデバイスがLSで接続された時
+                 * - 0: それ以外
+                 *
+                 * 転送を開始する前にプログラムする必要がある。
                  */
                 uint32_t low_speed           : 1;  /* Bit  17    */
 
                 /**
-                 * Endpoint type (low 2 bits of bmAttributes).  Must be
-                 * programmed by software before starting the transfer.
+                 * [19-18] : エンドポイントのタイプ（bmAttributesの下位2ビット）.
+                 * 転送を開始する前にプログラムする必要がある。
                  */
                 uint32_t endpoint_type       : 2;  /* Bits 18-19 */
 
                 /**
-                 * Maximum number of transactions that can be executed per
-                 * microframe as part of this transfer.  Normally 1, but should
-                 * be set to 1 + (bits 11 and 12 of wMaxPacketSize) for
-                 * high-speed interrupt and isochronous endpoints.  Must be
-                 * programmed by software before starting the transfer.
+                 * [21-20] : マイクロフレーム当たりに実行できる最大トランザックション数.
+                 * 通常は1だが、HSのインターラプト転送とアイソクロナス転送では
+                 * 1 + (wMaxPacketSizeのビット11, 12）をセットするべきである。
+                 * 転送を開始する前にプログラムする必要がある。
                  */
                 uint32_t packets_per_frame   : 2;  /* Bits 20-21 */
 
                 /**
-                 * USB device address of the device on which the endpoint is
-                 * located.  Must be programmed by software before starting the
-                 * transfer.
+                 * [28-22] : エンドポイントが位置するデバイスのUSBデバイスアドレス.
+                 * 転送を開始する前にプログラムする必要がある。
                  */
                 uint32_t device_address      : 7;  /* Bits 22-28 */
 
                 /**
-                 * Just before enabling the channel (for all transactions),
-                 * software needs to set this to the opposite of the low bit of
-                 * the host_frame_number register.  Otherwise the hardware will
-                 * issue frame overrun errors on some transactions.  TODO: what
-                 * exactly does this do?
+                 * [29] : （すべてのトランザクション用に）チャネルを有効にする直前に
+                 * host_frame_numberレジスタの下位ビットの値と逆の値をセットする必要が
+                 * ある。そういないと一部のトランザクションでフレームオーバランエラーが
+                 * 発生する。
+                 * TODO: 具体的にどの様になっているのか。
                  */
                 uint32_t odd_frame           : 1;  /* Bit  29    */
 
                 /**
-                 * Software can set this to 1 to halt the channel.  Not needed
-                 * during normal operation as the channel halts automatically
-                 * when a transaction completes or an error occurs.
+                 * [30] : 1をセットするとチャネルを停止することができる.
+                 * トランザクションが完了したり、エラーが発生するとトランザクションは
+                 * 自動的に停止するので通常操作の間は必要がない。
                  */
                 uint32_t channel_disable     : 1;  /* Bit  30    */
 
                 /**
-                 * Software can set this to 1 to enable the channel, thereby
-                 * actually starting the transaction on the USB.  This must only
-                 * be done after the characteristics, split_control, and
-                 * transfer registers, and possibly other registers (depending
-                 * on the transfer) have been programmed.
+                 * [31] : 1をセットするとチャネルが有効になり、実際にUSB上で
+                 * トランザクションが開始する. このビットはcharacteristics、
+                 * split_control、transferレジスタとおそらくはその他のレジスタ
+                 * （転送による）をプログラムした後にセットする必要がある。
                  */
                 uint32_t channel_enable      : 1;  /* Bit  31    */
-            };
-        } characteristics;
+            }; /**< ビット説明 */
+        } characteristics; /**< [0x500] HCCHAR: ホストチャネル属性レジスタ */
 
         /**
-         * Channel Split Control Register -
+         * [0x504] : HCSPLT: ホストチャネル分割制御レジスタ -
          *
-         * This register is used to set up Split Transactions for communicating
-         * with low or full-speed devices attached to a high-speed hub.  When
-         * doing so, set split_enable to 1 and the other fields as documented.
-         * Otherwise, software must clear this register before starting the
-         * transfer.
+         * HSハブに接続されたLS, FSのデバイスと通信するための分割トランザクションを
+         * 設定するために使用する. これを行うにはsplit_enable に1を、その他の
+         * フィールドに以下の説明の値を設定する。これを行わない場合は、転送を
+         * 開始する前にこのレジスタをクリアする必要がある。
          *
-         * Like the Channel Characteristics register, this register only
-         * needs to be programmed one time if the channel is enabled multiple
-         * times to send all the packets of a single transfer.
+         * チャネル属性レジスタ同様、このレジスタもチャネルを複数回有効にして1つの
+         * 転送のすべてのパケットを送信する場合に1回だけプログラムする必要がある。
          */
         union dwc_host_channel_split_control {
+            /** レジスタ値 */
             uint32_t val;
             struct {
                 /**
-                 * 0-based index of the port on the high-speed hub on which the
-                 * low or full-speed device is attached.
+                 * [6-0] : LS, FSデバイスが接続されるHSハブ上のポートの0始まりのインデック.
                  */
                 uint32_t port_address          : 7;  /* Bits 0-6   */
 
                 /**
-                 * USB device address of the high-speed hub that acts as the
-                 * Transaction Translator for this low or full-speed device.
-                 * This is not necessarily the hub the device is physically
-                 * connected to, since that could be a full-speed or low-speed
-                 * hub.  Instead, software must walk up the USB device tree
-                 * (towards the root hub) until a high-speed hub is found and
-                 * use its device address here.
+                 * [13-7] : このLS, FSデバイスのとランザックション変換器として動作する
+                 * HSハブのUSBデバイスアドレス. これは必ずしもデバイスが物理的に接続
+                 * されたハブとは限らない。接続されたハブがFSハブまたはLSハブかも
+                 * しれないからである。ソフトウェアはUSBデバイスツリーを（ルートハブの
+                 * 方向に向かって）たどってHSハブを見つけて、そのアドレスを設定する必要が
+                 * ある。
                  */
                 uint32_t hub_address           : 7;  /* Bits 7-13  */
 
                 /**
-                 * TODO: what exactly does this do?
+                 * [15-14] : 各OUTトランザクションでどのペイロードを送信するかを決める.
+                 *
+                 * - 0b11: すべてのペイロード
+                 * - 0b10: 最初のペイロード
+                 * - 0b01: 中間のペイロード
+                 * - 0b00: 最後のペイロード
                  */
                 uint32_t transaction_position  : 2;  /* Bits 14-15 */
 
                 /**
-                 *  0: Do a Start Split transaction
-                 *  1: Do a Complete Split transaction.
+                 * [16] : 分割トランザクションの完了か.
                  *
-                 * When split transactions are enabled, this must be programmed
-                 * by software before enabling the channel.  Note that you must
-                 * begin with a Start Split transaction and alternate this bit
-                 * for each transaction until the transfer is complete.
+                 * - 0: Start Splitトランザクションを行う
+                 * - 1: Complete Splitトランザクションを行う
+                 *
+                 * 分割トランザクションが有効な場合、チャネルを有効にする前に
+                 * プログラムする必要がある。分割開始トランザクションで開始し、
+                 * 転送が完了するまで各トランザクションでこのビットを交互に
+                 * 使用する必要があることに注意されたい。
                  */
                 uint32_t complete_split        : 1;  /* Bit  16    */
-
+                /** [30-17] : 予約済み */
                 uint32_t reserved              : 14; /* Bits 17-30 */
 
                 /**
-                 * Set to 1 to enable Split Transactions.
+                 * [31] : 1をセットすると分割トランザクションが有効になる.
                  */
                 uint32_t split_enable          : 1;  /* Bit  31    */
             };
-        } split_control;
+        } split_control; /**< [0x504] : HCSPLT: ホストチャネル分割制御レジスタ */
 
         /**
-         * Channel Interrupts Register -
+         * [0x508] : HCINT: ホストチャネル割り込みレジスタ -
          *
-         * Bitmask of status conditions that have occurred on this channel.
+         * このチャネルで起きたステータス条件のビットマスク。
          *
-         * These bits can be used with or without "real" interrupts.  To have
-         * the CPU get a real interrupt when one of these bits gets set, set the
-         * appropriate bit in the interrupt_mask, and also ensure that
-         * interrupts from the channel are enabled in the
-         * host_channels_interrupt_mask register, channel interrupts overall are
-         * enabled in the core_interrupt_mask register, and interrupts from the
-         * DWC hardware overall are enabled in the ahb_configuration register
-         * and by any system-specific interrupt controller.
+         * これらのビットは「実際の」割り込みの有無にかかわらず使用することが
+         * できる。これらのビットが設定されたときにCPUが実際に割り込みを受ける
+         * ようにするには、interrupt_maskの該当するビットを設定し、さらに
+         * チャネルからの割り込みをhost_channels_interrupt_maskレジスタで、
+         * チャネル全体の割り込みをcore_interrupt_maskレジスタで、DWCハードウェア
+         * 全体の割り込みをahb_configurationレジスタとシステム固有の割り込み
+         * コントローラで有効にすることが必要である。
          */
         union dwc_host_channel_interrupts {
+            /** レジスタ値 */
             uint32_t val;
             struct {
                 /**
-                 * The requested USB transfer has successfully completed.
+                 * [0] : リクエストされたUSB転送が成功裏に完了した.
                  *
-                 * Exceptions and caveats:
+                 * 例外と注意事項:
                  *
-                 * - When doing split transactions, this bit will be set after a
-                 *   Complete Split transaction has finished, even though the
-                 *   overall transfer may not actually be complete.
+                 * - 分割トランザクションを行っている場合、全体の転送が実際には
+                 *   完了していなくても、このビットはComplete Splitトランザクションが
+                 *   終了した後に設定される。
                  *
-                 * - The transfer will only be complete up to the extent that
-                 *   data was programmed into the channel.  For example, control
-                 *   transfers have 3 phases, each of which must be programmed
-                 *   into the channel separately.  This flag will be set after
-                 *   each of these phases has successfully completed.
+                 * - 転送は、データがチャネルにプログラムされた範囲までしか完了
+                 *   しない。たとえば、コントロール転送には3つのフェーズがあり、
+                 *   それらを個別にチャネルにプログラムする必要がある。このフラグは
+                 *   各フェーズが正常に完了するごとに設定される。
                  *
-                 * - An OUT transfer is otherwise considered complete when
-                 *   exactly the requested number of bytes of data have been
-                 *   successfully transferred, while an IN transfer is otherwise
-                 *   considered complete when exactly the requested number of
-                 *   bytes of data have been successfully transferred or a
-                 *   shorter-than-expected packet was received.
+                 * - OUT転送は、要求されたバイト数のデータが正確に転送されたときに
+                 *   完了したとみなされるが、IN転送は、要求されたバイト数のデータが
+                 *   正確に転送されたとき、または予想より短いパケットを受信したときに
+                 *   完了したとみなされる。
                  */
                 uint32_t transfer_completed       : 1;  /* Bit 0     */
 
                 /**
-                 * The channel has halted.  After this bit has been set, the
-                 * channel sits idle and nothing else will happen until software
-                 * takes action.
+                 * [1] : チャネルが停止された. このビットがセットされるとチャネルは
+                 * アイドル状態になり、ソフトウェアがアクションをするまで何もおこらない。
                  *
-                 * Channels may halt for several reasons.  From our experience
-                 * these cover all possible situations in which software needs
-                 * to take action, so this is the only channel interrupt that
-                 * actually needs to be enabled.  At least in DMA mode, the
-                 * controller to some extent will act autonomously to complete
-                 * transfers and only issue this interrupt when software needs
-                 * to take action.
+                 * チャネルはいくつかの理由で停止する場合がある。我々の経験では
+                 * ソフトウェアがアクションを起こす必要があるすべての可能な状況を
+                 * カバーしているので、実際に有効にする必要があるのはこのチャネル
+                 * 割り込みだけある。少なくともDMAモードでは、コントローラはある程度
+                 * 自律的に動作して転送を完了し、ソフトウェアがアクションを起こす
+                 * 必要がある場合にのみ、この割り込みを発行する。
                  *
-                 * Situations in which a channel will halt include but probably
-                 * are not limited to:
+                 * チャネルが停止する状況には、以下のようなものがある。
                  *
-                 * - The transfer has completed, thereby setting the
-                 *   transfer_completed flag as documented above.
+                 * - 転送が完了し、上で説明したtransfer_completedフラグが設定された
                  *
-                 * - A Start Split or Complete Split transaction has finished.
+                 * - Start Split、または、Complete Splitトランザクションが終了した
                  *
-                 * - The hub sent a NYET packet when trying to execute a
-                 *   Complete Split transaction, thereby signalling that the
-                 *   Split transaction is not yet complete.
+                 * - Complete Splitトランザクションを実行しようとしたときにハブが
+                 *   NYETパケットを送信して、Splitトランザクションがまだ完了していない
+                 *   ことを伝えた
                  *
-                 * - The device sent a NAK packet, thereby signalling it had no
-                 *   data to send at the time, when trying to execute an IN
-                 *   interrupt transfer.
+                 * - INインターラプト転送を実行しようとしたときに、デバイスがNAKパケットを
+                 *   送信し、その時点で送信するデータがないことを通知した
                  *
-                 * - One of several errors has occurred, such as an AHB error,
-                 *   data toggle error, tranasction error, stall condition, or
-                 *   frame overrun error.
+                 * - AHBエラー、データトグルエラー、トランザクションエラー、ストール状態、
+                 *   フレームオーバーランエラーなど、複数のエラーのいずれかが発生した。
                  */
                 uint32_t channel_halted           : 1;  /* Bit 1     */
 
                 /**
-                 * An error occurred on the ARM Advanced High-Performance Bus
-                 * (AHB).
+                 * [2] : AHB (ARM Advanced High-Performance Bus) でエラーが発生した
                  */
                 uint32_t ahb_error                : 1;  /* Bit 2     */
 
                 /**
-                 * The device issued a STALL handshake packet (endpoint is
-                 * halted or control pipe request is not supported).
+                 * [3] : デバイスがSTALLハンドシェークパケットを発行した.
+                 * （エンドポイントは停止される、または、コントロールパイプが
+                 * サポートされなくなる）
                  */
                 uint32_t stall_response_received  : 1;  /* Bit 3     */
 
                 /**
-                 * The device issued a NAK handshake packet (receiving device
-                 * cannot accept data or transmitting device cannot send data).
+                 * [4] : デバイスがNACKハンドシェークパケットを発行した.
+                 * （受信デバイスはデータを受け付けることができない、
+                 * 送信デバイスはデータを送信できない）
                  *
-                 * The channel will halt with this bit set when performing an IN
-                 * transfer from an interrupt endpoint that has no data to send.
-                 * As this requires software intervention to restart the
-                 * channel, this means that polling of interrupt endpoints (e.g.
-                 * on hubs and HID devices) must be done in software, even if
-                 * the actual transactions themselves are interrupt-driven.
+                 * インターラプトエンドポイントからIN転送を実行中に送信するべき
+                 * データがないとチャネルはこのビットをセットして停止する。
+                 * チャネルを再起動するためにはソフトウェアの介入が必要であるため、
+                 * これは実際のトランザクションが割り込み駆動であったとしても、
+                 * ソフトウェアはインターラプトエンドポイント（ハブやHIDデバイスなど）の
+                 * ポーリングを行う必要があることをこれは意味する。
                  */
                 uint32_t nak_response_received    : 1;  /* Bit 4     */
 
                 /**
-                 * The device issued an ACK handshake packet (receiving device
-                 * acknowledged error-free packet).
+                 * [5] : デバイスがACKハンドシェークパケットを発行した.
+                 * （受信デバイスはエラーのないパケットを確認した）
                  */
                 uint32_t ack_response_received    : 1;  /* Bit 5     */
 
                 /**
-                 * The device issued a NYET handshake packet.
+                 * [6] : デバイスがNYETハンドシェークパケットを発行した.
                  */
                 uint32_t nyet_response_received   : 1;  /* Bit 6     */
 
                 /**
-                 * From our experience this seems to usually indicate that
-                 * software programmed the channel incorrectly.
+                 * [7] : 経験によると、通常、これはソフトウェアによるチャネルの
+                 * プログラムに誤りがあることを示している。
                  */
                 uint32_t transaction_error        : 1;  /* Bit 7     */
 
                 /**
-                 * Unexpected bus activity occurred.
+                 * [8] : 予期せぬバスアクティビティが発生した。.
                  */
                 uint32_t babble_error             : 1;  /* Bit 8     */
 
                 /**
-                 * TODO
+                 * [9] : TODO フレームオーバランが発生した?.
                  */
                 uint32_t frame_overrun            : 1;  /* Bit 9     */
 
                 /**
-                 * When issuing a series of DATA transactions to an endpoint,
-                 * the correct DATA0 or DATA1 packet ID was not specified in the
-                 * packet_id member of the transfer register.
+                 * [10] : エンドポイントに一連のDATAトランザクションを
+                 * 発行している際に、転送レジスタのpacket_idメンバに
+                 * DATA0, DATA1のいずれかの正しいパケットIDを指定しなかった.
                  */
                 uint32_t data_toggle_error        : 1;  /* Bit 10    */
-
+                /** [11] : バッファが利用できない. */
                 uint32_t buffer_not_available     : 1;  /* Bit 11    */
+                /** [12] : 過剰トランザクションエラーが発生した. */
                 uint32_t excess_transaction_error : 1;  /* Bit 12    */
+                /** [13] : チャネルのディスクリプタリストがロールオーバーした. */
                 uint32_t frame_list_rollover      : 1;  /* Bit 13    */
+                /** [31-14] : 予約済み */
                 uint32_t reserved                 : 18; /* Bits 14-31 */
             };
-        } interrupts;
+        } interrupts; /**< [0x508] : HCINT: ホストチャネル割り込みレジスタ */
 
         /**
-         * Channel Interrupts Mask Register -
+         * [0x50c] : HCINTMSK: ホストチャネル割り込みマスクレジスタ -
          *
-         * This has the same format as the Channel Interrupts Register, but
-         * software uses this to enable (1) or disable (0) the corresponding
-         * interrupt.  Defaults to all 0's after a reset.
+         * ホストチャネル割り込みレジスタと同じフォーマットであるが、
+         * 対応する割り込みを有効にする (1)、または無効にする (0) のに
+         * ソフトウェアが使用する。
          */
         union dwc_host_channel_interrupts interrupt_mask;
 
         /**
-         * Channel Transfer Register:
+         * [0x510] : HCTSIZ: ホストチャネル転送サイズレジスタ -
          *
-         * Used to store additional information about the transfer.  This must
-         * be programmed before beginning the transfer.
+         * 転送に関するその他の情報を格納するのに使用する。転送を開始する前に
+         * プログラムする必要がある。
          */
         union dwc_host_channel_transfer {
+            /** レジスタ値 */
             uint32_t val;
             struct {
                 /**
-                 * Size of the data to send or receive, in bytes.  Software must
-                 * program this before beginning the transfer.  This can be
-                 * greater than the maximum packet length.
+                 * [18-0] : 送信または受信するデータのサイズ（バイト単位）.
+                 * 転送を開始する前にプログラムする必要がある。最大パケット長より
+                 * 大きくてもかまわない。
                  *
-                 * For IN transfers, the hardware decrements this field for each
-                 * packet received by the number of bytes received.  For split
-                 * transactions, the decrement happens after the Complete Split
-                 * rather than the Start Split.  Software can subtract this
-                 * field from the original transfer size in order to determine
-                 * the number of bytes received at any given point, including
-                 * when the transfer has encountered an error or has completed
-                 * with either the full size or a short size.
+                 * IN転送の場合、ハードウェアはパケットを受信するごとに受信したバイト
+                 * 数だけこのフィールドをデクリメントする。 スプリットトランザクションの
+                 * 場合、デクリメントはスタートスプリットではなく、コンプリートスプリットの
+                 * 後に行われる。ソフトウェアは、転送中にエラーが発生した場合やフルサイズ
+                 * またはショートサイズのいずれかで完了した場合を含む任意の時点で受信した
+                 * バイト数を決定するために、もともとの転送サイズからこのフィールドの値を
+                 * 減算することができる。
                  *
-                 * For OUT transfers, the hardware does not update this field as
-                 * expected.  It will not be decremented when data is
-                 * transmitted, at least not in every case; hence, software
-                 * cannot rely on its value to indicate how many bytes of data
-                 * have been transmitted so far.  Instead, software must inspect
-                 * the packet_count field and assume that all data was
-                 * transmitted if packet_count is 0, or that the amount of data
-                 * transmitted is equal to the endpoint's maximum packet size
-                 * times [the original packet count minus packet_count] if
-                 * packet_count is nonzero.
+                 * OUT転送の場合、ハードウェアはこのフィールドを期待通りには更新しない。
+                 * データが転送された際に少なくともすべての場合で、ハードウェアが
+                 * デクリメントすることはない。したがって、ソフトウェアはこのフィールドの
+                 * 値を頼りにこれまでに何バイトのデータが送信されたかを示すことはできない。
+                 * ソフトウェアはpacket_countフィールドを検査し、packet_countが0の場合は
+                 * すべてのデータが送信されたと、packet_countが0以外の場合は
+                 * 送信されたデータ量がエンドポイントの最大パケットサイズに[元のパケット
+                 * カウントからpacket_countを引いた値]をかけたものに等しいと仮定しなければ
+                 * ならない。
                  */
                 uint32_t size         : 19; /* Bits 0-18  */
 
                 /**
-                 * Number of packets left to transmit or maximum number of
-                 * packets left to receive.  Software must program this before
-                 * beginning the transfer.  The packet count is calculated as
-                 * the size divided by the maximum packet size, rounded up to
-                 * the nearest whole packet.  As a special case, if the transfer
-                 * size is 0 bytes, the packet count must be set to 1.
+                 * [28-19] : 送信残りのパケット数、または受信残りのパケット最大数.
+                 * 転送を開始する前にプログラムする必要がある。パケット数はサイズを
+                 * 最大パケットサイズで割り、パケット単位に切り上げたものとして
+                 * 計算する。特別なケースとして、転送サイズが0バイトの場合、パケット
+                 * 数は1と設定しなければならない。
                  *
-                 * The hardware will decrement this register when a packet is
-                 * successfully sent or received.  In the case of split
-                 * transactions, this happens after the Complete Split rather
-                 * than after the Start Split.  If the final received packet of
-                 * an IN transfer is short, it is still counted.
+                 * ハードウェアはパケットの送受信が成功した場合にこのレジスタを
+                 * デクリメントする。分割トランザクションの場合は、Start Splitでは
+                 * なく、Complete Splitの後にデクリメントされる。IN転送の最終受信
+                 * パケットがshortの場合もカウントされる。
                  */
                 uint32_t packet_count : 10; /* Bits 19-28 */
 
                 /**
-                 * High 2 bits of the Packet ID used in the USB protocol.
+                 * [30-29] : USBプロトコルで使用されるPacket IDの上位2ビット.
                  *
-                 * When performing the SETUP phase of a control transfer,
-                 * specify 0x3 here to generate the needed SETUP token.
+                 * コントロール転送のSETUPフェーズを実行する場合、必要なSETUP
+                 * トークンが生成するために0x3を設定する。
                  *
-                 * When performing the DATA phase of a control transfer,
-                 * initially specify 0x2 here to begin the DATA packets with the
-                 * needed DATA1 Packet ID.
+                 * コントール転送のDATAフェーズを実行する場合、必要なDATA1
+                 * パケットIDでDATAパケットを開始するために初めは0x2を設定する。
                  *
-                 * When performing the STATUS phase of a control transfer,
-                 * specify 0x2 here to generate the neeed DATA1 Packet ID.
+                 * コントロール転送のSTATUSフェーズを実行する場合、必要なDATA1
+                 * パケットIDを生成するために0x2を設定する。
                  *
-                 * When starting a bulk, isochronous, or interrupt transfer,
-                 * specify 0x0 here to generate the needed DATA0 Packet ID.
+                 * バルク転送、アイソクロナス転送、インターラプト転送を開始する
+                 * 場合は、必要なDATA0パケットIDを生成するために0x0を設定する。
                  *
-                 * In the case of a transfer consisting of multiple DATA
-                 * packets, the hardware will update this field with the Packet
-                 * ID to use for the next packet.  This field therefore only
-                 * needs to be re-programmed if the transfer is moved to a
-                 * different channel or the channel is re-used before the
-                 * transfer is complete.  When doing so, software must save this
-                 * field so that it can be re-programmed correctly.
+                 * 複数のDATAパケットで構成される転送の場合、ハードウェアが次の
+                 * パケットに使用するパケットIDでこのフィールドを更新する。
+                 * したがって、このフィールドを再プログラムする必要があるのは、
+                 * 転送を別のチャネルに移動したり、転送が完了する前にそのチャネルを
+                 * 再使用する場合だけである。その際、ソフトウェアはこのフィールドを
+                 * 保存し、正しく再プログラムできるようにする必要がある。
                  */
                 uint32_t packet_id    : 2;  /* Bits 29-30 */
 
                 /**
-                 * TODO
+                 * [31] : TODO
                  */
                 uint32_t do_ping      : 1;  /* Bit  31    */
             };
-        } transfer;
+        } transfer; /**< [0x510] : HCTSIZ: ホストチャネル転送サイズレジスタ */
 
         /**
-         * Channel DMA Address Register -
+         * [0x514] : HCDMA: ホストチャネルDMAアドレスレジスタ.
          *
-         * Word-aligned address at which the hardware will read or write data
-         * using Direct Memory Access.  This must be programmed before beginning
-         * the transfer, unless the size of the data to send or receive is 0.
-         * The hardware will increment this address by the number of bytes
-         * successfully received or sent, which will correspond to the size
-         * decrease in transfer.size.
+         * DMAを使用してハードウェアがデータを読み書きするためのワードアラインド
+         * アドレス。 送信または受信するデータのサイズが0でない限り、転送を開始
+         * する前にプログラムする必要がある。ハードウェアは正常に受信または送信
+         * されたバイト数だけこのアドレスをインクリメントする。これはtransfer.sizeの
+         * デクリメントに対応する。
          *
-         * Note: DMA must be enabled in the AHB Configuration Register before
-         * this register can be used.  Otherwise, the hardware is considered to
-         * be in Slave mode and must be controlled a different way, which we do
-         * not use in our driver and do not attempt to document.
+         * 注: このレジスタを使用する前に、AHB Configuration RegisterでDMAを有効に
+         * する必要がある。そうしないとハードウェアはスレーブモードであるとみなされ、
+         * 別の方法で制御する必要があるが、これは私たちのドライバでは使用していないので
+         * 説明しない。
          *
-         * BCM2835-specific note:  Theoretically, addresses written to this
-         * register must be bus addresses, not ARM physical addresses.  However,
-         * in our experience the behavior is the same when simply using ARM
-         * physical addresses.
+         * BCM2835固有の注意: 理論的には、このレジスタに書き込むアドレスはARM物理
+         * アドレスではなく、バスアドレスでなければならない。 しかし、経験によれば
+         * 単にARM物理アドレスを使用しても動作は同じである。
          */
         uint32_t dma_address;
-
+        /** [0x518] : 予約済み */
         uint32_t reserved_1;
+        /** [0x51c] : HCDMAB: ホストチャネルDMAバッファアドレスレジスタ */
         uint32_t reserved_2;
-    } host_channels[DWC_NUM_CHANNELS];
-
+    } host_channels[DWC_NUM_CHANNELS]; /**< ホストチャネルレジスタ配列 */
+    /** [0x6f0-0x7fc] : 予約済み */
     uint32_t host_reserved_after_channels[(0x800 - 0x500 -
                         (DWC_NUM_CHANNELS * sizeof(struct dwc_host_channel))) /
                          sizeof(uint32_t)];
 
-    /**@}*/
 
-    /* 0x800 */
 
+    /** [0x800-0xdfc] : デバイス用レジスタ */
     uint32_t reserved_0x800[(0xe00 - 0x800) / sizeof(uint32_t)];
 
-    /* 0xe00 : Power and Clock Gating Control Register */
+    /** [0xe00] : PCGCCTL: 電源・クロックゲーティング制御レジスタ */
     uint32_t power;
 };
 
-/* Make sure the registers are declared correctly.  This is dummy code that will
- * be compiled into nothing.  */
+/** レジスタが正しく宣言されていることを確認する. これはダミーコードであり
+ * コンパイルされるとなくなる。  */
 static inline void _dwc_check_regs(void)
 {
     STATIC_ASSERT(offsetof(struct dwc_regs, vendor_id) == 0x40);

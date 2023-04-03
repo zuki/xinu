@@ -17,7 +17,7 @@
  * こと、また、EHCIのような標準的なインタフェースではなく独自のカスタム
  * ホストコントローラインタフェースを使用していることに注意されたい。
  * そのため、このドライバは、必要なハードウェアの詳細を得るために、ベンダーが
- * 提供した非常に複雑で理解しにくいLinuxドライバなどのいくつかの情報源を
+ * 提供している非常に複雑で理解しにくいLinuxドライバなど、いくつかの情報源を
  * 使用して、ベストエフォートベースで書かれている。
  *
  * このファイルでは usb_hcdi.h で定義されているホストコントローラドライバ
@@ -33,21 +33,21 @@
  * である。ソフトウェアから見ると、異なるホストチャネルを使用した
  * トランザクションを同時に実行することが可能である。
  *
- * ホストチャネルレジスタの中には割り込みをあつかつものがあります。
+ * ホストチャネルレジスタの中には割り込みを扱うものがある。
  * このドライバはこれらを多用し、すべてのUSB転送を割り込み駆動で行っている。
  * しかし、このハードウェアとUSB2.0自体の設計上の欠陥により「インターラプト」
  * 転送と「アイソクロナス」転送では個々の転送が割り込み駆動であったとしても
  * 依然として、新しいデータの確認にはソフトウェアポーリングを使用する必要が
  * ある。これはたとえば、USBマウスのポーリングレートを100回/秒と指定した場合、
- * 残念ながらソフトウェアでは100回/秒のポーリングが行われることを意味する。
+ * 残念ながらソフトウェアで100回/秒のポーリングが行われることを意味する。
  * この特殊なハードウェアで割り込みがどのように制御されるかについての詳細は、
  * dwc_setup_interrupts() のコメントを参照されたい。
  *
  * もう1つ重要な概念は「パケット」、「トランザクション」、「転送」という
- * アイデアである。コントロールメッセージ、またはバルクリクエストのような
- * 1つのUSB転送はそれがエンドポイントの最大パケットサイズを超える場合、
- * 複数のパケットに分割する必要がある場合がある。残念ながらこのハードウェアは
- * それをやってくれないのでこのコードで明示的に対処する必要がある。ただし、
+ * アイデアである。コントロールメッセージ、またはバルクリクエスト転送で
+ * 1つのUSB転送がエンドポイントの最大パケットサイズを超える場合は
+ * 複数のパケットに分割する必要がある。残念ながらこのハードウェアは
+ * それをやってくれないのでコードで明示的に対処する必要がある。ただし、
  * 少なくともこのソフトウェアの観点からは、「トランザクション」と「パケット」は
  * 本質的に同じものである。
  *
@@ -57,11 +57,11 @@
  * ここではホストとして動作だけに関心があるのでドライバは簡潔にすることが
  * できる。
  *
- * USBコアソフトウェアを簡潔にするために（USB 2.0使用で推奨されており、
- * Linuxなどの他の実装で使用されている）有用な設計技法は、たとえルートハブが
+ * USBコアソフトウェアを簡潔にするために有用な設計技法（USB 2.0使用で
+ * 推奨されており、Linuxなどの他の実装で使用されている）は、ルートハブが
  * ホストコントローラと統合されており、ハードウェアレベルでは標準ハブとは
- * 見えないとしても、HCDにルートハブを標準USBハブとして提示させるという
- * ものです。これはDWCにも当てはまり、この設計を実装しています。したがって、
+ * 見えない場合でも、HCDにはルートハブを標準USBハブとして提示させるという
+ * ものである。これはDWCにも当てはまり、この設計を実装している。したがって、
  * このファイルのコードの一部はルートハブに送信するフェイクリクエストを
  * 扱っている。
  */
@@ -81,112 +81,146 @@
 #include "mmu.h"
 #include <dma_buf.h>
 
-/** ワードサイズの次の倍数まで数値を丸めあげる  */
+/** @ingroup usbhcd
+ * @def WORD_ALIGN
+ * @brief ワードサイズの次の倍数まで数値を丸めあげる  */
 #define WORD_ALIGN(n) (((n) + sizeof(ulong) - 1) & ~(sizeof(ulong) - 1))
 
-/** ポインタがワード境界にあるか判定する  */
+/** @ingroup usbhcd
+ * @def IS_WORD_ALIGNED
+ * @brief ポインタがワード境界にあるか判定する  */
 #define IS_WORD_ALIGNED(ptr) ((ulong)(ptr) % sizeof(ulong) == 0)
 
-/** Synopsys DesignWare Hi-Speed USB 2.0 OTG Controlleのメモリ
+/** @ingroup usbhcd
+ * @var regs
+ * Synopsys DesignWare Hi-Speed USB 2.0 OTG Controlleのメモリ
  * マップドレジスタへのポインタ.  */
 static volatile struct dwc_regs * const regs = (void*)DWC_REGS_BASE;
 
-/**
+/** @ingroup usbhcd
+ * @def USB_MAX_PACKET_SIZE
  * USBエンドポイントの最大パケットサイズ.  1024 はUSB 2.0で許された最大数。
  * ほとんどのエンドポイントはこれより小さな最大パケットサイズを与えることになる。
  */
 #define USB_MAX_PACKET_SIZE 1024
 
 
-/**
+/** @ingroup usbhcd
+ * @def XFER_SCHEDULER_THREAD_STACK_SIZE
  * USB転送リクエストスケジューラスレッドのスタックサイズ
  * （非常に小さくすることが可能）.
  */
 #define XFER_SCHEDULER_THREAD_STACK_SIZE 4096
 
-/**
+/** @ingroup usbhcd
+ * @def XFER_SCHEDULER_THREAD_PRIORITY
  * USB転送リクエストスケジューラスレッドの優先度（USB転送ができるだけ
  * 早く開始できるように非常に高くするべきである）.
  */
 #define XFER_SCHEDULER_THREAD_PRIORITY 60
 
-/** USB転送リクエストスケジューラスレッドの名前 */
+/** @ingroup usbhcd
+ * @def XFER_SCHEDULER_THREAD_NAME
+ * USB転送リクエストスケジューラスレッドの名前 */
 #define XFER_SCHEDULER_THREAD_NAME "USB scheduler"
 
-/** USB遅延転送スレッドのスタックサイズ（非常に小さくすることが可能） */
+/** @ingroup usbhcd
+ * @def DEFER_XFER_THREAD_STACK_SIZE
+ * USB遅延転送スレッドのスタックサイズ（非常に小さくすることが可能） */
 #define DEFER_XFER_THREAD_STACK_SIZE 4096
 
-/**
+/** @ingroup usbhcd
+ * @def DEFER_XFER_THREAD_PRIORITY
  * USB遅延転送スレッドの優先度（これらのスレッドは帯域幅が保証されている
  * 割り込みエンドポイントで必要なソフトウェアポーリングに使用される
  * ため、非常に高くするべきである）。
  */
 #define DEFER_XFER_THREAD_PRIORITY 100
 
-/**
+/** @ingroup usbhcd
+ * @def DEFER_XFER_THREAD_NAME
  * USB遅延転送スレッド名前.  注: ヌル終端を含んでNMLEN以下で
  * あること、そうでなければ切り詰められることになる。
  */
 #define DEFER_XFER_THREAD_NAME "USB defer xfer"
 
 /** TODO: 適切であればこれを削除する */
+/** @ingroup usbhcd
+ * @def START_SPLIT_INTR_TRANSFERS_ON_SOF
+ * SOF時に分割割り込み転送を開始するか.
+ */
 #define START_SPLIT_INTR_TRANSFERS_ON_SOF 1
 
-/** DWCハードウェアが認識するUSBパケットID定数  */
+/** @ingroup usbhcd
+ * @enum dwc_usb_pid
+ * DWCハードウェアが認識するUSBパケットID定数  */
 enum dwc_usb_pid {
-    DWC_USB_PID_DATA0 = 0,
-    DWC_USB_PID_DATA1 = 2,
-    DWC_USB_PID_DATA2 = 1,
-    DWC_USB_PID_SETUP = 3,
+    DWC_USB_PID_DATA0 = 0,  /**< 0: data0 */
+    DWC_USB_PID_DATA1 = 2,  /**< 1: data1 */
+    DWC_USB_PID_DATA2 = 1,  /**< 2: data2 */
+    DWC_USB_PID_SETUP = 3,  /**< 3: setup */
 };
 
-/** USB転送リクエストスケジューラスレッドのスレッドID  */
+/** @ingroup usbhcd
+ * @var dwc_xfer_scheduler_tid
+ * @brief USB転送リクエストスケジューラスレッドのスレッドID  */
 static tid_typ dwc_xfer_scheduler_tid;
 
-/** チャネルステータスを示すビットマップ: 1: 空き、0: 使用中  */
+/** @ingroup usbhcd
+ * @var chfree
+ * @brief チャネルステータスを示すビットマップ: 1: 空き、0: 使用中  */
 static uint chfree;
 
 #if START_SPLIT_INTR_TRANSFERS_ON_SOF
-/** SOF (start-of-frame) を待機しているチャネルビットマップ */
+/** @ingroup usbhcd
+ * @var softwait
+ * @brief SOF (start-of-frame) を待機しているチャネルビットマップ */
 static uint sofwait;
 #endif
 
-/** chfreeビットマップ内の空きチャネルを追跡するセマフォ  */
+/** @ingroup usbhcd
+ * @var chfree_sema
+ * @brief chfreeビットマップ内の空きチャネルを追跡するセマフォ  */
 static semaphore chfree_sema;
 
-/**
- * 各ハードウェアチャネルで現在完了しているUSB転送リクエスト
+/** @ingroup usbhcd
+ * @var channel_pending_xfers
+ * @brief 各ハードウェアチャネルで現在完了中のUSB転送リクエスト
  * （もしあれば）へのポインタを保持する配列.
  */
 static struct usb_xfer_request *channel_pending_xfers[DWC_NUM_CHANNELS];
 
-/**
- * DMA用のアラインされたバッファ.
+/** @ingroup usbhcd
+ * @var aligned_bufs
+ * @brief DMA用のアラインされたバッファ.
  * Embedded Xinu 2.01（2013年頃）においてこのドライバを構想する際、
- * DMAバッファには2つの可能性が存在した。
+ * DMAバッファには次の2つの可能性が存在した。
  *  1. データがワードアラインであればハードウェアでDMA
- * 	または
  *  2. 2次元の"aligned_bufs"バッファを介して手動でDMAを行い、
- *      memcpy()で読み書きを行う。
+ *     memcpy()で読み書きを行う。
  *
  * Embedded Xinu 3.0（2019年移植版）では、マルチコアのアトミック操作を
  * 容易にするためにL1データキャッシュを有効にしているため、キャッシュ
  * コヒーレンシを維持するためにDMAをガードする必要がある。ARM Cortex
- * A-53のキャッシュメンテナンス走査はやや曖昧なところがある。たとえば、
- * 無効化処理（DCIMVAC）は、データキャッシュラインも「クリーン」
+ * A-53のキャッシュメンテナンス操作はやや曖昧なところがある。たとえば、
+ * 無効化処理（DCIMVAC）がデータキャッシュラインも「クリーン」
  * （フラッシュ）する可能性がある。したがって、上記の#2だけを採用し、
  * セクションをキャッシュされないメモリ領域に割り当てるとという判断は
- * 容易だった（mmu.c を参照）。
+ * 容易だった（system/platform/arm-rpi3/mmu.c を参照）。
  */
 static uint8_t *aligned_bufs[DWC_NUM_CHANNELS];
 
-/** 非0のワード内で最初に1がセットされているビットの位置を探す.  */
+/** @ingroup usbhcd
+ * 非0のワード内で最初に1がセットされているビットの位置を探す.
+ * @param word 調べる非0のワード変数
+ * @return 最初に1がセットされているビット位置
+ */
 static inline ulong first_set_bit(ulong word)
 {
     return 31 - __builtin_clz(word);
 }
 
-/**
+/** @ingroup usbhcd
  * 未使用のDWC USBホストチャネルを見つけて予約する.
  * これはブロッキングであり、チャネルが利用可能になるまで待機する。
  *
@@ -207,8 +241,9 @@ dwc_get_free_channel(void)
     return chan;
 }
 
-/**
- * チャネルに秋マークを付ける.  秋チャネルを待っているスレッドに通知する。
+/** @ingroup usbhcd
+ * チャネルに空きマークを付ける.
+ * 空きチャネルを待っているスレッドに通知する。
  *
  * @param chan
  *      解放するDWC USBホストチャネルのインデックス.
@@ -224,7 +259,7 @@ dwc_release_channel(uint chan)
     restore(im);
 }
 
-/**
+/** @ingroup usbhcd
  * DWCハードウェアに電源を投入する.
  */
 static usb_status_t
@@ -238,6 +273,9 @@ dwc_power_on(void)
     return (retval == OK) ? USB_STATUS_SUCCESS : USB_STATUS_HARDWARE_ERROR;
 }
 
+/** @ingroup usbhcd
+ * DWCハードウェアの電源を切る.
+ */
 static void
 dwc_power_off(void)
 {
@@ -246,7 +284,7 @@ dwc_power_off(void)
     board_setpower(POWER_USB, FALSE);
 }
 
-/**
+/** @ingroup usbhcd
  * DWCハードウェアのソフトウェアリセットを実行する.  注: DWC は最初の電源
  * 投入後はリセット状態にあるだ。したがって、これは厳密にはDWCがすでに電源
  * 投入済みの状態で hcd_start() に入った場合にのみ必要である（たとえば、
@@ -257,18 +295,18 @@ dwc_soft_reset(void)
 {
     usb_debug("Resetting USB controller\n");
 
-    /* ソフトリセットフラグをセットして、クリアされるまで待つ  */
+    /* ソフトリセットフラグをセットして、クリアされるまで待つ (self-clear bit)  */
     regs->core_reset = DWC_SOFT_RESET;
     while (regs->core_reset & DWC_SOFT_RESET)
     {
     }
 }
 
-/**
+/** @ingroup usbhcd
  * DWC OTG USBホストコントローラをDMAモードに設定する.  これによりホスト
- * コントローラはUSB転送を行う際にインメモリッファに直接アクセスする
+ * コントローラはUSB転送を行う際にインメモリバッファに直接アクセスする
  * ことが可能になる。DMAでアクセスするバッファはすべて4バイトアライ
- * メントである必要があることに注意された。さらに、L1データキャッシュが
+ * メントである必要があることに注意されたい。さらに、L1データキャッシュが
  * 有効な場合は、キャッシュはARMプロセッサに内蔵されているため、キャッシュ
  * コヒーレンシを維持するために明示的にフラッシュする必要がある。
  * （XinuはL1データキャッシュを有効にしないので、現在、このドライバは
@@ -277,14 +315,14 @@ dwc_soft_reset(void)
 static void
 dwc_setup_dma_mode(void)
 {
-    const uint32_t rx_words = 1024;  /* Rx FIFOの4バイトワード単位のサイズ */
-    const uint32_t tx_words = 1024;  /* 非周期的Tx FIFO in 4-bytの4バイトワード単位のサイズ */
-    const uint32_t ptx_words = 1024; /* 周期的Tx FIFO in 4-bytの4バイトワード単位のサイズ */
+    const uint32_t rx_words = 1024;  /* Rx FIFO         の4バイトワード単位のサイズ */
+    const uint32_t tx_words = 1024;  /* 非周期的Tx FIFO の4バイトワード単位のサイズ */
+    const uint32_t ptx_words = 1024; /* 周期的Tx FIFO   の4バイトワード単位のサイズ */
 
     /* まず、ホストコントローラのFIFOサイズを設定する。これはデフォルト値
      * （少なくともBroadcomのSynopsys USBブロックのインスタンス）では正しく
      * 動作しないため必須である。ソフトウェアがこれを行わないと、データの
-     * 受信に失敗し、メモリ破壊が商事sて、事実上デバッグができない事態が
+     * 受信に失敗し、メモリ破壊が生じて、事実上デバッグができない事態が
      * 発生する。これはこのドライバでDMAを使用し、それ以外の方法ではホスト
      * コントローラのFIFOと相互作用しない場合でも当てはまる。 */
     usb_debug("%u words of RAM available for dynamic FIFOs\n", regs->hwcfg3 >> 16);
@@ -292,8 +330,10 @@ dwc_setup_dma_mode(void)
               regs->rx_fifo_size, regs->nonperiodic_tx_fifo_size,
               regs->host_periodic_tx_fifo_size);
     regs->rx_fifo_size = rx_words;
+    // 以下2つのレジスタの上位16ビットはワード単位のサイズ、下位16ビットはFIFO内のオフセット
     regs->nonperiodic_tx_fifo_size = (tx_words << 16) | rx_words;
     regs->host_periodic_tx_fifo_size = (ptx_words << 16) | (rx_words + tx_words);
+    // FIFO内で RX | TX | PTX の順に並ぶ
 
     /* 適切なフラグを設定することで実際にDMAを有効にする。同時に Synopsys USB
      * ブロックのBroadcomインスタンスでのみ利用可能な追加フラグも設定する
@@ -301,7 +341,7 @@ dwc_setup_dma_mode(void)
     regs->ahb_configuration |= DWC_AHB_DMA_ENABLE | BCM_DWC_AHB_AXI_WAIT;
 }
 
-/**
+/** @ingroup usbhcd
  * ホストポート制御およびステータスレジスタを変更を意図して読み込む.
  * このレジスタのビット設計には一貫性がないため、意図しない1の書き戻しで
  * クリアされないようにライトクリアビットをゼロにする必要がある。
@@ -318,7 +358,7 @@ dwc_get_host_port_ctrlstatus(void)
     return hw_status;
 }
 
-/**
+/** @ingroup usbhcd
  * DWCホストポート（ルートハブに論理的に接続されたUSBポート）に電源を投入する
  */
 static void
@@ -332,7 +372,7 @@ dwc_power_on_host_port(void)
     regs->host_port_ctrlstatus = hw_status;
 }
 
-/**
+/** @ingroup usbhcd
  * DWCホストポートをリセットする.
  */
 static void
@@ -351,7 +391,9 @@ dwc_reset_host_port(void)
     regs->host_port_ctrlstatus = hw_status;
 }
 
-/** フェイクルートハブ用のハードコードされたデバイスディスクリプタ  */
+/** @ingroup usbhcd
+ * @var root_hub_device_descriptor
+ * フェイクルートハブのデバイスディスクリプタ（ハードコーディング）  */
 static const struct usb_device_descriptor root_hub_device_descriptor = {
     .bLength = sizeof(struct usb_device_descriptor),
     .bDescriptorType = USB_DESCRIPTOR_TYPE_DEVICE,
@@ -369,9 +411,11 @@ static const struct usb_device_descriptor root_hub_device_descriptor = {
     .bNumConfigurations = 1,
 };
 
-/** フェイクルート用のハードコードされたコンフィグレーション
- * ディスクリプタと関連するインタフェースディスクリプタと
- * エンドポイントディスクリプタ  */
+/** @ingroup usbhcd
+ * @var root_hub_configuration
+ * フェイクルートハブのコンフィグレーションディスクリプタと
+ * 関連するインタフェースディスクリプタとエンドポイント
+ * ディスクリプタ （ハードコーディング） */
 static const struct {
     struct usb_configuration_descriptor configuration;
     struct usb_interface_descriptor interface;
@@ -409,7 +453,9 @@ static const struct {
     },
 };
 
-/** フェイクルート用のハードコードされた言語IDリスト  */
+/** @ingroup usbhcd
+ * @var root_hub_string_0
+ * フェイクルートハブの言語IDリスト（ハードコーディング）  */
 static const struct usb_string_descriptor root_hub_string_0 = {
     /* bLength is the base size plus the length of the bString */
     .bLength = sizeof(struct usb_string_descriptor) +
@@ -418,7 +464,9 @@ static const struct usb_string_descriptor root_hub_string_0 = {
     .bString = {USB_LANGID_US_ENGLISH},
 };
 
-/** フェイクルート用のハードコードされた製品文字列  */
+/** @ingroup usbhcd
+ * @var root_hub_string_1
+ * フェイクルートハブの製品文字列（ハードコーディング）  */
 static const struct usb_string_descriptor root_hub_string_1 = {
     /* bLength is the base size plus the length of the bString */
     .bLength = sizeof(struct usb_string_descriptor) +
@@ -433,13 +481,17 @@ static const struct usb_string_descriptor root_hub_string_1 = {
                 'H', 'u', 'b'},
 };
 
-/** フェイクルート用のハードコードされた文字列テーブル.  */
+/** @ingroup usbhcd
+ * @var root_hub_strings
+ * フェイクルートハブの文字列テーブル（ハードコーディング）.  */
 static const struct usb_string_descriptor * const root_hub_strings[] = {
     &root_hub_string_0,
     &root_hub_string_1,
 };
 
-/** フェイクルート用のハードコードされたハブディスクリプタ  */
+/** @ingroup usbhcd
+ * @var root_hub_hub_descriptor
+ * フェイクルートハブのハブディスクリプタ（ハードコーディング）  */
 static const struct usb_hub_descriptor root_hub_hub_descriptor = {
     /* bDescLength is the base size plus the length of the varData */
     .bDescLength = sizeof(struct usb_hub_descriptor) +
@@ -453,19 +505,23 @@ static const struct usb_hub_descriptor root_hub_hub_descriptor = {
                  0xff, /* PortPwrCtrlMask */ },
 };
 
-/** フェイクルート用のハードコードされたハブステータス */
+/** @ingroup usbhcd
+ * @var root_hub_device_status
+ * フェイクルートハブのハブステータス（ハードコーディング） */
 static const struct usb_device_status root_hub_device_status = {
     .wStatus = USB_DEVICE_STATUS_SELF_POWERED,
 };
 
-/**
+/** @ingroup usbhcd
+ * @var root_hub_status_change_request
  * ルートハブのステータス変化エンドポイントへの（もしあれば）
- * 保留中のインターラプト転送
+ * 保留中のインターラプト転送リクエスト
  */
 static struct usb_xfer_request *root_hub_status_change_request = NULL;
 
-/**
- * ホストポートのステータス保存。これはホストポートのステータス変化により
+/** @ingroup usbhcd
+ * @var host_port_status
+ * ホストポートのステータス保存用変数. これはホストポートのステータス変化により
  * ホストコントローラが割り込みを発行したときに変更される。直接ハードウェア
  * レジスタを使用せずに別の変数でこのステータスを追跡する必要があるのは、
  * 割り込みをクリアするためにハードウェアレジスタの変更をクリアする必要が
@@ -473,7 +529,7 @@ static struct usb_xfer_request *root_hub_status_change_request = NULL;
  */
 static struct usb_port_status host_port_status;
 
-/**
+/** @ingroup usbhcd
  * host_port_statusが更新された時に呼び出され、ルートハブに送信された
  * ステータス変化インターラプト転送を処理することができる。
  */
@@ -486,8 +542,8 @@ dwc_host_port_status_changed(void)
         root_hub_status_change_request = NULL;
         usb_debug("Host port status changed; "
                   "responding to status changed transfer on root hub\n");
-        *(uint8_t*)req->recvbuf = 0x2; /* 0x2 means Port 1 status changed (bit 0 is
-                                     used for the hub itself) */
+        *(uint8_t*)req->recvbuf = 0x2; /* 0x2 はポート1のステータスが変更された
+                                          ことを意味する（bit 1はハブ自身が使用する）*/
         req->actual_size = 1;
         req->status = USB_STATUS_SUCCESS;
         usb_complete_xfer(req);
@@ -495,8 +551,8 @@ dwc_host_port_status_changed(void)
 }
 
 
-/**
- * ルートハブへの標準（ハブ固有でない）コントロールメッセージを偽造する.
+/** @ingroup usbhcd
+ * ルートハブへの標準（ハブ固有でない）コントロールリクエストを偽造処理する.
  *
  * @param req
  *      偽造するルートハブへの標準リクエスト.
@@ -569,9 +625,9 @@ dwc_root_hub_standard_request(struct usb_xfer_request *req)
     return USB_STATUS_UNSUPPORTED_REQUEST;
 }
 
-/**
+/** @ingroup usbhcd
  * （USB標準形式の） <code>struct ::usb_hub_status</code> にルートハブの現在の
- * ステータスを設定する.
+ * ステータスを設定する（ハードコーディング）.
  *
  * @param status
  *      設定するハブステータス構造体
@@ -584,8 +640,12 @@ dwc_get_root_hub_status(struct usb_hub_status *status)
     status->local_power = 1;
 }
 
-/**
+/** @ingroup usbhcd
  * ルートハブに接続されたポートへのSetPortFeatureリクエストを処理する.
+ *
+ * @param feature セットするUSBポート機能
+ * @return 成功したら USB_STATUS_SUCCESS;
+ *         ポート電源のオン/オフ以外は USB_STATUS_UNSUPPORTED_REQUEST
  */
 static usb_status_t
 dwc_set_host_port_feature(enum usb_port_feature feature)
@@ -604,8 +664,12 @@ dwc_set_host_port_feature(enum usb_port_feature feature)
     return USB_STATUS_UNSUPPORTED_REQUEST;
 }
 
-/**
+/** @ingroup usbhcd
  * ルートハブに接続されたポートへのClearPortFeatureリクエストを処理する.
+ *
+ * @param feature クリアするUSBポート機能
+ * @return 成功したら USB_STATUS_SUCCESS;
+ *         サポートしていない機能は USB_STATUS_UNSUPPORTED_REQUEST
  */
 static usb_status_t
 dwc_clear_host_port_feature(enum usb_port_feature feature)
@@ -633,8 +697,8 @@ dwc_clear_host_port_feature(enum usb_port_feature feature)
     return USB_STATUS_SUCCESS;
 }
 
-/**
- * ルートハブへのハブクラス固有のコントロールメッセージを偽造する.
+/** @ingroup usbhcd
+ * ルートハブへのハブクラス固有のコントロールリクエストを偽造処理する.
  *
  * @param req
  *      偽造するルートハブへのハブ固有リクエスト.
@@ -719,8 +783,13 @@ dwc_root_hub_class_request(struct usb_xfer_request *req)
     return USB_STATUS_UNSUPPORTED_REQUEST;
 }
 
-/**
- * ルートハブとの間のコントロール転送を偽造する.
+/** @ingroup usbhcd
+ * ルートハブへのコントロールメッセージリクエストを偽造処理する.
+ *
+ * @param req コントロールメッセージリクエスト
+ * @return リクエストの処理が成功した場合は ::USB_STATUS_SUCCESS;
+ *      そうでない場合は ::USB_STATUS_UNSUPPORTED_REQUEST などの
+ *      ::usb_status_t エラーコード
  */
 static usb_status_t
 dwc_root_hub_control_msg(struct usb_xfer_request *req)
@@ -735,8 +804,11 @@ dwc_root_hub_control_msg(struct usb_xfer_request *req)
     return USB_STATUS_UNSUPPORTED_REQUEST;
 }
 
-/**
- * ルートハブへのリクエストを偽装する.
+/** @ingroup usbhcd
+ * ルートハブへのリクエストを偽装処理する.
+ * コントロールメッセージとステータス変化エンドポイントからのインターラプトリクエスト。
+ *
+ * @param req ルートハブへのリクエスト
  */
 static void
 dwc_process_root_hub_request(struct usb_xfer_request *req)
@@ -761,7 +833,7 @@ dwc_process_root_hub_request(struct usb_xfer_request *req)
     }
 }
 
-/**
+/** @ingroup usbhcd
  * USB上の低レベル転送を開始する.
  *
  * @param chan
@@ -820,7 +892,7 @@ dwc_channel_start_transaction(uint chan, struct usb_xfer_request *req)
     restore(im);
 }
 
-/**
+/** @ingroup usbhcd
  * DesignWare Hi-Speed USB 2.0 OTG ControllerのチャネルでUSB転送を
  * 開始または再開する.
  *
@@ -853,7 +925,7 @@ dwc_channel_start_xfer(uint chan, struct usb_xfer_request *req)
      * フレームあたりのパケット数を決定する */
     if (req->endpoint_desc != NULL)
     {
-        /* エンドポイントは明示的に指定されている。エンドポイント
+        /* エンドポイントが明示的に指定されている。エンドポイント
          * ディスクリプタから必要な情報を取得する */
         characteristics.endpoint_number =
                                     req->endpoint_desc->bEndpointAddress & 0xf;

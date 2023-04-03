@@ -287,8 +287,8 @@ struct usb_string_descriptor {
 
 /** @ingroup usbcore
  * @struct usb_device_status
- * usb_device_request::USB_DEVICE_REQUEST_GET_STATUS コントロール
- * メッセージにより返されるデバイスステータス情報のフォーマット.
+ * @ref usb_device_request::USB_DEVICE_REQUEST_GET_STATUS "get_status"
+ * コントロールッセージにより返されるデバイスステータス情報のフォーマット.
  * USB 2.0仕様のセクション9.4.6に記載 */
 struct usb_device_status {
     uint16_t wStatus;

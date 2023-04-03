@@ -15,12 +15,13 @@
 /**
  * @ingroup bcm2837
  *
- * メモリのセクションをキャシュ可能および指定のフラグでマーク付ける.
+ * メモリセクションをキャシュ可能および指定のフラグでマーク付ける.
  * @param vadd 仮想アドレス
  * @param padd 物理アドレス
  * @param flags セクションにマークつけるフラグ
  * @return 0
  */
+/* https://www.aps-web.jp/academy/ca/228/ 参照 */
 /* code from Github user dwelch67
  * https://github.com/dwelch67/raspberrypi/tree/master/mmu */
 unsigned int mmu_section(unsigned int vadd, unsigned int padd, unsigned int flags)
@@ -29,6 +30,7 @@ unsigned int mmu_section(unsigned int vadd, unsigned int padd, unsigned int flag
 
     ra = vadd >> 20;
     rb = MMUTABLEBASE | (ra << 2);
+    //                         RW可能         セクション
     rc = (padd & 0xFFF00000) | 0xC00 | flags | 2;
     PUT32(rb, rc);
 
@@ -45,8 +47,11 @@ unsigned int mmu_section(unsigned int vadd, unsigned int padd, unsigned int flag
 void mmu_init()
 {
     unsigned int ra;
+    // section (=1MB)
     for (ra = 0; ; ra += 0x00100000)
     {
+        // TEX=101, C=0, B=1. S=1, AP=011,
+        // 0_0_0_1_0_101_11_0_0000_0_0_1_10
         mmu_section(ra, ra, 0x15C06);
         //mmu_section(ra, ra, 0x0 | 0x8);
         if (ra >= 0x3F000000)

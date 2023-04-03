@@ -72,18 +72,26 @@
 /** 同時にサポートするUSBデバイスドライバの最大数  */
 #define MAX_NUSBDRV 16
 
-/** 必要に応じて実際のデバイスに動的に割り当てることができるUSB
+/** @ingroup usbcore
+ * @var usb_devices[MAX_NUSBDEV]
+ * 必要に応じて実際のデバイスに動的に割り当てることができるUSB
  * デバイス構造体のテーブル */
 struct usb_device usb_devices[MAX_NUSBDEV];
 
-/** USBコアに登録されているUSBデバイスドライバのテーブル */
+/** @ingroup usbcore
+ * @var usb_device_drivers[MAX_NUSBDEV]
+ * USBコアに登録されているUSBデバイスドライバのテーブル. */
 static const struct usb_device_driver *usb_device_drivers[MAX_NUSBDEV];
 
-/** 現在登録されているUSBデバイスドライバの数。登録されたデバイスドライバを
+/** @ingroup usbcore
+ * @var usb_num_device_drivers
+ * @brief 現在登録されているUSBデバイスドライバの数. 登録されたデバイスドライバを
  * 削除する方法は現在のところ存在しない。したがって、この数は増加だけが可能  */
 static uint usb_num_device_drivers = 0;
 
-/** ルートハブへのポインタ。USBサブシステムがまだ初期化されていない場合はNULL */
+/** @ingroup usbcore
+ * @var usb_root_hub
+ * @brief ルートハブへのポインタ. USBサブシステムがまだ初期化されていない場合はNULL */
 struct usb_device *usb_root_hub = NULL;
 
 /**

@@ -6,19 +6,31 @@
 #include <mutex.h>
 #include <platform.h>
 
-/** dma_buf用のメモリ容量 (1MB) */
+/** @ingroup dma_buf
+ * @def SECTION_SIZE
+ * dma_buf用のメモリ容量 (1MB) */
 #define SECTION_SIZE    0x00100000
 
-/** 未使用バイトの先頭アドレス */
+/** @ingroup dma_buf
+ * @var freespace_idx
+ * 未使用バイトの先頭アドレス */
 static int freespace_idx = 0;
-/** 未使用バイト数 */
+/** @ingroup dma_buf
+ * @var remaining_space
+ * 未使用バイト数 */
 static int remaining_space = SECTION_SIZE;
-/** 上の2つの変数を守るmutex */
+/** @ingroup dma_buf
+ * @var dma_buf_mutex
+ * freespace_idxとremaining_spaceを守るmutex */
 static mutex_t dma_buf_mutex;
 
+/** @ingroup dma_buf
+ * @var dma_buf_space
+ * @brief DMAバッファ空間. この領域はキャッシュされない
+*/
 uint8_t dma_buf_space[SECTION_SIZE] __aligned(SECTION_SIZE);
 
-/**
+/** @ingroup dma_buf
  * dma_bufを割り当てる.
  *
  * @param size 割り当てるサイズ
@@ -37,7 +49,7 @@ void *dma_buf_alloc(uint size)
     return retval;
 }
 
-/**
+/** @ingroup dma_buf
  * dma_bufを解放する.
  *
  * @param ptr dma_bufへのポインタ
@@ -54,7 +66,7 @@ syscall dma_buf_free(void *ptr, uint size)
     return OK;
 }
 
-/**
+/** @ingroup dma_buf
  * dma_bufを初期化する.
  *
  * @return 常にOK

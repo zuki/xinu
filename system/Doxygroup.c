@@ -10,6 +10,10 @@
  * @ingroup system
  * @brief ヒープまたはバッファプールメモリの割当と解放
  *
+ * @defgroup dma_buf DMAバッファ
+ * @ingroup memory_mgmt
+ * @brief DMAバッファの割り当てと解放
+ *
  * @defgroup misc その他関数
  * @ingroup system
  * @brief デバッグ, tar, その他の様々な関数
