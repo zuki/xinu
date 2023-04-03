@@ -29,7 +29,7 @@ int resched(void)
     unsigned int cpuid;
 
     if (resdefer > 0)
-    {                           /* 遅延されたら、countを増分して復帰 */
+    {                           /* 遅延設定されていたら、countを増分して復帰する */
         resdefer++;
         return (OK);
     }
