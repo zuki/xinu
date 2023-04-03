@@ -74,7 +74,7 @@ bcm2837_set_power_mask(uint mask)
  * @ingroup bcm2837
  *
  * BCM2837ハードウェアの現在のオン/オフ状態を与えるビットマスク.
- * これはキャッスされる値である.
+ * これはキャッシュされる値である.
  */
 static uint bcm2837_power_mask;
 
