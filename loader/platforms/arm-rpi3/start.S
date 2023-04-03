@@ -1,14 +1,14 @@
 /**
  * @file start.S
  *
- * Initialization code for Embedded Xinu on the Raspberry Pi.
+ * Embedded XinuのRaspberry Piポート用の初期化コード
  *
  * Embedded Xinu, Copyright (C) 2013.  All rights reserved.
  *
  * -----------------------------------------------------------------------------------------
  *
- * Specific for Raspberry Pi 3 (BCM2837) - Memory Layout (Not to scale)
- * 1GB OF RAM (PHYSICAL MEMORY) AVAILABLE. 1GB == 0x3FFFFFFF
+ * Raspberry Pi 3 (BCM2837)固有のメモリレイアウト（スケールは正しくない）
+ * 1GBのRAM (物理メモリ) が利用できる. 1GB == 0x3FFFFFFF
  * +----------+
  * |          |
  * | IO SPACE | -> 0x3F000000 - 0x3FFFFFFF IO用に予約 (GPIO, UART, SYS TIMER, USB CORE)
@@ -44,8 +44,8 @@
 
     .func _start
 _start:
-    /* atags (ARM boot tags)へのポインタを保存する。Pi 3はatagsを*渡して
-     * おり*、アドレス0x100に渡している。Pi 1と同じように、そこにアクセス
+    /* atags (ARM boot tags)へのポインタを保存する。Pi 3はatagsを
+     * アドレス0x100に*渡している*。Pi 1と同じように、そこにアクセス
      * する。Aarch32(ARMv8-A)の標準プロトコルではatagsポインタをレジスタr2に
      * 渡することになっている。なのでr3に格納し、atagsを解析するCコードから
      * アクセスできるようにする（実際はもうATAGは使用されていない）。 */
@@ -62,11 +62,12 @@ _start:
     beq    reset_handler
 
 
-    /* ブート時にデバイスはHYP（ハイパーバイザー）モードにロードされるが、
+    /* ブート時にデバイスはHYP（ハイパーバイザ）モードにロードされるが、
      * このモードはCPSオペコードにアクセスする権限を持っていない。そのため、
-     * 最も権限の高いモードであるSYSTEMモード（11111）に入るには、まず
-     * SUPERVISORモードに入る必要がある。これによりより多くの権限が与えられ
-     * "cps" オペコードを使用してSYSTEMモードに移行することができるようになる。
+     * 最も権限の高いモードであるSYSTEMモード（11111）に入る必要があるが、
+     * そのためには、まずSUPERVISORモードに入る必要がある。これによりより
+     * 多くの権限が与えられ "cps" オペコードを使用してSYSTEMモードに移行
+     * することができるようになる。
      * まず、CPSRのビットをクリアしてからスーパーバイザーモードに移行する。
      * プログラムカウンタを4つインクリメントして、32ビットワードをスキップする。
      * 例外から返ってくるとCPSRは変更され、SUPERVISORモードになっている。
