@@ -113,15 +113,17 @@ struct dwc_regs {
      * のではなく、他のどこかで割り込みをクリアしなければならないことに注意。
      */
     union dwc_core_interrupts {
+        /** レジスタ値 */
         uint32_t val;
         struct {
+            /** [2-0] : TODO */
             uint32_t stuff             : 3;
 
             /**
-             * [3] : Start of Frame.  TODO
+             * [3] : SOF, micro-SOF, Keep-Aliveが転送された.
              */
             uint32_t sof_intr          : 1;
-
+            /** [4-23] : TODO */
             uint32_t morestuff         : 20;
 
             /**
@@ -132,12 +134,12 @@ struct dwc_regs {
             uint32_t port_intr         : 1;     /* Bit 24 */
 
             /**
-             * [25] : チャネル割り込みが発生した。ソフトウェアはHAINTでどのチャネルで
-             * 割り込みが保留されているか調べて、その割り込みを処理して、その
-             * チャネルの割り込みをクリアする必要がある。
+             * [25] : ホストチャネル割り込みが発生した。ソフトウェアはHAINTで
+             * どのチャネルで割り込みが保留されているか調べ、その割り込みを
+             * 処理して、そのチャネルの割り込みをクリアする必要がある。
              */
             uint32_t host_channel_intr : 1;     /* Bit 25 */
-
+            /** [31-26] : TODO */
             uint32_t evenmorestuff     : 6;
         };
     } core_interrupts;
@@ -272,7 +274,11 @@ struct dwc_regs {
     /** [0x404] : HFIR: ホストフレーム間隔レジスタ */
     uint32_t host_frame_interval;
 
-    /** [0x408] : HFNUM: ホストフレーム番号/フレーム残り時間レジスタ */
+    /** [0x408] : HFNUM: ホストフレーム番号/フレーム残り時間レジスタ.
+     *
+     * - [31-16] : 現在のフレームの残り時間
+     * - [15-0]  : フレーム番号
+     */
     uint32_t host_frame_number;
 
     /** [0x40c] : 予約済み */
