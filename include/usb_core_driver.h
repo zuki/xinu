@@ -42,16 +42,16 @@ typedef void (*usb_xfer_completed_t)(struct usb_xfer_request *req);
  * この構造体を取得するには usb_alloc_xfer_request() を呼び出すか、
  * 別の方法で手動でメモリを割り当てて usb_init_xfer_request() を呼び
  * 出す。以下のメンバーを設定した後、usb_submit_xfer_request() を使って
- * USBコアに送信する。
+ * USBコアに送信する。設定すべきメンバーは
  * @ref usb_xfer_request::dev "dev",
  * @ref usb_xfer_request::endpoint_desc "endpoint_desc",
  * @ref usb_xfer_request::sendbuf "sendbuf" または
  * @ref usb_xfer_request::recvbuf "recvbuf",
  * @ref usb_xfer_request::size "size",
- * @ref usb_xfer_request::completion_cb_func "completion_cb_func"
- * 以下はオプション
- * @ref usb_xfer_request::private "private"
- * @ref usb_xfer_request::setup_data "setup_data" members.
+ * @ref usb_xfer_request::completion_cb_func "completion_cb_func"。
+ * 以下の設定はオプション。
+ * @ref usb_xfer_request::private "private",
+ * @ref usb_xfer_request::setup_data "setup_data"。残りのメンバーは出力用。
  */
 struct usb_xfer_request
 {
@@ -65,9 +65,9 @@ struct usb_xfer_request
      */
     const struct usb_endpoint_descriptor *endpoint_desc;
 
-    /**  [in] データバッファ: endpoint_number が INエンドポイント、
-     * OUTエンドポイントのいずれを指定するかにより sendbufか
-     * recvbufのいずれかが使用される。
+    /**  [in] データバッファ: endpoint_number に INエンドポイント、
+     * OUTエンドポイントのいずれが指定されるかにより sendbuf か
+     * recvbuf のいずれかが使用される。
      */
     union {
         /** 送信データのバッファ。sizeが0の場合は無視される。  */
@@ -84,7 +84,7 @@ struct usb_xfer_request
 
     /** [in] USBコントロール要求のためのデータを設定する。コントロール転送では
      * 必ず設定する必要がある。その他の場合は、無視される。注: コントロール
-     * 転送では代わりに usb_control_msg() の仕様を検討されたい。
+     * 転送では usb_control_msg() の仕様を検討されたい。
      */
     struct usb_control_setup_data setup_data;
 
@@ -99,8 +99,8 @@ struct usb_xfer_request
     void *private;
 
     /** [out] 転送のステータス: 転送に成功した場合は ::USB_STATUS_SUCCESS
-     * 失敗した場合は別の ::usb_status_t エラーコード。
-     * ::USB_STATUS_SUCCESS が設定されるのは、要求されたバイト数が正確に
+     * 失敗した場合は ::usb_status_t 型のエラーコード。
+     * ::USB_STATUS_SUCCESS が設定されるのは、要求したバイト数が正確に
      * エラーなく転送された場合、またはデバイスからホストへの (IN) 転送で
      * エラーなく完了したが要求より少ないバイト数で返された場合である。
      */
@@ -115,7 +115,7 @@ struct usb_xfer_request
 
     /*
      * プライベート変数（主にホストコントローラドライバ用でデバイス  *
-     * ドライバからは触れたはならない）                              *
+     * ドライバからは触れてはならない）                              *
      * TODO: デザインを良くすればHCDが使用できる変数をカスタマイズ   *
      * することを可能できるかもしれない、おそらくusb_xfer_requestを  *
      * 別の構造体に埋め込めばいけるのではないか。                    *
@@ -126,7 +126,7 @@ struct usb_xfer_request
     uint8_t complete_split : 1;
     /** [private] 分割転送か */
     uint8_t short_attempt  : 1;
-    /** [private] SOFが必要か */
+    /** [private] SOF時の処理が必要か */
     uint8_t need_sof       : 1;
     /** [private] コントロール転送のフェーズ */
     uint8_t control_phase  : 2;
@@ -138,7 +138,7 @@ struct usb_xfer_request
     uint attempted_packets_remaining;
     /** [private] 未転送のバイト数 */
     uint attempted_bytes_remaining;
-    /** [private] 分割リトライ数 */
+    /** [private] 分割転送の再試行回数 */
     uint csplit_retries;
     /** [private] 遅延転送スレッドのtid */
     tid_typ deferer_thread_tid;
@@ -151,9 +151,9 @@ struct usb_xfer_request
  *
  * @struct usb_device_driver
  *
- * USBデバイスドライバ構造体.  これはドライバにより静的に宣言され、
- * その後 usb_register_device_driver() を使ってUSBコアドライバに
- * 登録する必要がある。この構造体で指定されているコールバック関数は
+ * USBデバイスドライバ構造体.  ドライバはこの構造体を静的に宣言して、
+ * usb_register_device_driver() を使ってUSBコアドライバに
+ * 登録する必要がある。この構造体で指定されたコールバック関数は
  * USBコアドライバから適切なタイミングで自動的に呼び出される。
  */
 struct usb_device_driver
@@ -178,12 +178,12 @@ struct usb_device_driver
      * USBデバイスがドライバによってサポートされている場合、この関数は、デバイス固有
      * またはクラス固有のコントロールメッセージでデバイスを構成するなど、必要な
      * デバイス固有の設定を行い、デバイスをサポートするために必要なリソース（たとえば、
-     * @ref ::usb_xfer_request "USB transfer requests" など) を割り当てなければならない。
+     * @ref ::usb_xfer_request "USB転送要求構造体" など) を割り当てなければならない。
      * 完全に成功した場合は、USB_STATUS_SUCCESS を返さなければならない。そうでない場合は、
-     * デバイスに割り当てられたリソースをすべて解放し、 usb_status_t エラーコードを
+     * デバイスに割り当てられたリソースをすべて解放し、 usb_status_t 型のエラーコードを
      * 返さなければならない。必要であれば、デバイスドライバはUSBデバイス構造体の
      * @ref usb_device::driver_private "driver_private" メンバにドライバ固有のデータを
-     * デバイス毎に格納することができる。
+     * 格納することができる。
      *
      * この関数はドライバがあるUSBデバイスに正常にバインドされた後であっても
      * USBコアにより続けて @a 別のUSBデバイス を引数に呼び出される可能性がある。
@@ -201,9 +201,9 @@ struct usb_device_driver
 
     /**
      * デバイスがUSBから取り外されたために、USBデバイスドライバの
-     * バインドを解除するために呼び出される関数.  これは、
+     * バインドを解除するために呼び出される関数.  この関数は、
      * @ref usb_device_driver::bind_device "bind_device" が正常に
-     * 復帰した後は、USBコアから任意の時点で呼び出される可能性がある。
+     * 復帰した後であれば任意の時点でUSBコアから呼び出される可能性がある。
      * この関数は @ref usb_device_driver::bind_device "bind_device" で
      * USBデバイスに割り当てられたリソースを解放する役割を担っている。
      * デバイスドライバはこの関数の実装を厳密には要求されておらず、
@@ -219,9 +219,9 @@ struct usb_device_driver
      * usb_submit_xfer_request() の場合、完了コールバックは呼び出されない。
      * さらに、すべての保留中の転送で完了コールバックが呼び出され、
      * それらのステータスには ::USB_STATUS_DEVICE_DETACHED が設定される。
-     * この結果、このアンバインドコールバックが呼ばれる際には、割り当てられた
+     * この結果、このunbindコールバック関数が呼ばれる際には、割り当てられた
      * すべての ::usb_xfer_request 構造体はドライバが所有することに
-     * なる。したがって、これらの構造体はドライバがそれらの参照を追加で
+     * なる。したがって、ドライバはこれらの構造体の参照を続けて
      * 保持しない限り、直ちに解放することが可能である。
      *
      * この関数は、常にIRQが有効の状態で呼び出され、同じドライバにバインド
@@ -274,7 +274,7 @@ struct usb_device
     /** このデバイスがハブに接続されたスピード。USBコアによりセットされる  */
     enum usb_speed speed;
 
-    /** このUSBデバイスが接続されたハブ。または、これがルートハブの場合は @c NUL 。
+    /** このUSBデバイスが接続されたハブ。または、これがルートハブの場合は @c NULL 。
      * USBコアによりセットされる  */
     struct usb_device *parent;
 
@@ -439,7 +439,7 @@ void usb_lock_bus(void);
 
 void usb_unlock_bus(void);
 
-/** 以下の関数はUSBホストコントローラドライバとハブドライバが使用することを
+/* 以下の関数はUSBホストコントローラドライバとハブドライバが使用することを
  * 主に意図している。その他のドライバにはおそらく必要がない。
  * */
 
