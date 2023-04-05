@@ -33,29 +33,29 @@ struct usb_port_status {
     union {
         uint16_t wPortStatus;
         struct {
-            uint16_t connected : 1;                 /**< デバイスが接続されているか */
-            uint16_t enabled : 1;                   /**< ポートが有効か */
-            uint16_t suspended : 1;                 /**< デバイスが停止中か */
-            uint16_t overcurrent : 1;               /**< 過電流条件にあるか */
-            uint16_t reset : 1;                     /**< デバイスへのリセット信号があるか */
-            uint16_t wPortStatus_reserved1 : 3;     /**< 予約済み */
-            uint16_t powered : 1;                   /**< 電源オンか */
-            uint16_t low_speed_attached : 1;        /**< LSデバイスが接続されているか */
-            uint16_t high_speed_attached : 1;       /**< HSデバイスが接続されているか */
-            uint16_t test_mode : 1;                 /**< テストモードか */
-            uint16_t indicator_control : 1;         /**< ポートインジケータはソフトウェア制御か */
-            uint16_t wPortStatus_reserved2 : 3;     /**< 予約済み */
+            uint16_t connected : 1;                 /**< [0] : デバイスが接続されていると 1 */
+            uint16_t enabled : 1;                   /**< [1] : ポートが有効だと 1 */
+            uint16_t suspended : 1;                 /**< [2] : デバイスが停止中だと 1 */
+            uint16_t overcurrent : 1;               /**< [3] : 過電流条件にあると 1 */
+            uint16_t reset : 1;                     /**< [4] : リセット信号がAssertされていると 1 */
+            uint16_t wPortStatus_reserved1 : 3;     /**< [5-7] : 予約済み */
+            uint16_t powered : 1;                   /**< [8] : 電源オンされていると 1 */
+            uint16_t low_speed_attached : 1;        /**< [9] : LSデバイスが接続されていると 1 */
+            uint16_t high_speed_attached : 1;       /**< [10] : HSデバイスが接続されていると 1 */
+            uint16_t test_mode : 1;                 /**< [11] : テストモードだと 1 */
+            uint16_t indicator_control : 1;         /**< [12] : ポートインジケータがソフトウェア制御だと 1 */
+            uint16_t wPortStatus_reserved2 : 3;     /**< [13-15] : 予約済み */
         };
     };
     union {
         uint16_t wPortChange;
         struct {
-            uint16_t connected_changed : 1;         /**< カレント接続状態が変化したか */
-            uint16_t enabled_changed : 1;           /**< 有効/無効が変化したか*/
-            uint16_t suspended_changed : 1;         /**< デバイスの停止状態が変化したか*/
-            uint16_t overcurrent_changed : 1;       /**< 過電流状態が変化したか*/
-            uint16_t reset_changed : 1;             /**< リセット信号の有無が変化したか*/
-            uint16_t wPortChange_reserved : 11;     /**< 予約済み */
+            uint16_t connected_changed : 1;         /**< [0] : カレント接続状態が変化したら 1 */
+            uint16_t enabled_changed : 1;           /**< [1] : ポートが無効になったら 1 */
+            uint16_t suspended_changed : 1;         /**< [2] : デバイスの停止から復帰したら 1 */
+            uint16_t overcurrent_changed : 1;       /**< [3] : 過電流状態が変化したら 1 */
+            uint16_t reset_changed : 1;             /**< [4] : リセット処理が完了したら 1 */
+            uint16_t wPortChange_reserved : 11;     /**< [5-15] : 予約済み */
         };
     };
 } __packed;
@@ -87,17 +87,17 @@ struct usb_hub_status {
     union {
         uint16_t wHubStatus;
         struct {
-            uint16_t local_power : 1;           /**< ハブパワーに電源が供給されているか */
-            uint16_t overcurrent : 1;           /**< 過電流条件か */
-            uint16_t wHubStatus_reserved : 14;  /**< 予約済み */
+            uint16_t local_power : 1;           /**< [0] : ハブパワーに電源が供給されているか */
+            uint16_t overcurrent : 1;           /**< [1] : 過電流条件か */
+            uint16_t wHubStatus_reserved : 14;  /**< [2-15] : 予約済み */
         };
     };
     union {
         uint16_t wHubChange;
         struct {
-            uint16_t local_power_changed : 1;   /**< ハブパワーの状態が変化したか */
-            uint16_t overcurrent_changed : 1;   /**< 過電流条件が変化したか */
-            uint16_t wHubChange_reserved : 14;  /**< 予約済み */
+            uint16_t local_power_changed : 1;   /**< [0] : ハブパワーの状態が変化したか */
+            uint16_t overcurrent_changed : 1;   /**< [1] : 過電流条件が変化したか */
+            uint16_t wHubChange_reserved : 14;  /**< [2-15] : 予約済み */
         };
     };
 } __packed;
