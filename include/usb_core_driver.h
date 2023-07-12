@@ -163,39 +163,40 @@ struct usb_device_driver
 
     /**
      * このUSBデバイスドライバをUSBデバイスにバインドするために呼び出される関数.
-     * すべてのUSBデバイスドライバはこの関数を実装する必要があるため @c NULL を指定
-     * することはできない。
+     * すべてのUSBデバイスドライバはこの関数を実装する必要があるため @c NULL
+     * を指定することはできない。
      *
-     * この関数の実装では、まずUSBデバイスがドライバによってサポートされているかを
-     * チェックし、サポートされていない場合は ::USB_STATUS_DEVICE_UNSUPPORTED を
-     * 返さなければならない。USBデバイスがサポートされているかどうかを判断するために
-     * 実装は @ref usb_device::descriptor "デバイスディスクリプタ" の
+     * この関数の実装では、まずUSBデバイスがドライバによってサポートされている
+     * かをチェックし、サポートされていない場合は ::USB_STATUS_DEVICE_UNSUPPORTED
+     * を返さなければならない。USBデバイスがサポートされているかどうかを判断
+     * するために実装は @ref usb_device::descriptor "デバイスディスクリプタ" の
      * @ref usb_device_descriptor::idVendor "製造者" と
      * @ref usb_device_descriptor::idProduct "製品" ID、または利用可能な
      * @ref usb_device::interfaces "インタフェース" と
      * @ref usb_device::endpoints "エンドポイント" を調べることができる。
      *
-     * USBデバイスがドライバによってサポートされている場合、この関数は、デバイス固有
-     * またはクラス固有のコントロールメッセージでデバイスを構成するなど、必要な
-     * デバイス固有の設定を行い、デバイスをサポートするために必要なリソース（たとえば、
-     * @ref ::usb_xfer_request "USB転送要求構造体" など) を割り当てなければならない。
-     * 完全に成功した場合は、USB_STATUS_SUCCESS を返さなければならない。そうでない場合は、
-     * デバイスに割り当てられたリソースをすべて解放し、 usb_status_t 型のエラーコードを
-     * 返さなければならない。必要であれば、デバイスドライバはUSBデバイス構造体の
-     * @ref usb_device::driver_private "driver_private" メンバにドライバ固有のデータを
-     * 格納することができる。
+     * USBデバイスがドライバによってサポートされている場合、この関数は、デバイス
+     * 固有またはクラス固有のコントロールメッセージでデバイスを構成するなど、
+     * 必要なデバイス固有の設定を行い、デバイスをサポートするために必要な
+     * リソース（たとえば、 @ref ::usb_xfer_request "USB転送要求構造体" など)
+     * を割り当てなければならない。
+     * 完全に成功した場合は、::USB_STATUS_SUCCESS を返さなければならない。
+     * そうでない場合は、デバイスに割り当てられたリソースをすべて解放し、
+     * ::usb_status_t 型 のエラーコードを返さなければならない。必要であれば、
+     * デバイスドライバはUSBデバイス構造体の @ref usb_device::driver_private "driver_private"
+     * メンバにドライバ固有のデータを格納することができる。
      *
      * この関数はドライバがあるUSBデバイスに正常にバインドされた後であっても
      * USBコアにより続けて @a 別のUSBデバイス を引数に呼び出される可能性がある。
      * デバイスが複数のUSBデバイスを同時に制御できない場合、この関数は
-     * ::USB_STATUS_DEVICE_UNSUPPORTED を返さなければならない。ただし、この関数は
-     * 他の @ref usb_device_driver::bind_device "bind_device" や
+     * ::USB_STATUS_DEVICE_UNSUPPORTED を返さなければならない。ただし、
+     * この関数は他の @ref usb_device_driver::bind_device "bind_device" や
      * @ref usb_device_driver::unbind_device "unbind_device" の呼び出しと
      * @a 同時に 呼び出されることはない。
      *
-     * この関数が呼ばれたとき、USBデバイスはリストの先頭にあるコンフィグレーションで
-     * 構成されている。現在のところ、デバイスドライバが別のコンフィグレーションを選択
-     * する方法はない。
+     * この関数が呼ばれたとき、USBデバイスはリストの先頭にあるコンフィグ
+     * レーションで構成されている。現在のところ、デバイスドライバが別の
+     * コンフィグレーションを選択する方法はない。
      */
     usb_status_t (*bind_device)(struct usb_device *dev);
 

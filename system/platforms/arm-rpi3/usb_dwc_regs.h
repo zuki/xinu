@@ -104,12 +104,12 @@ struct dwc_regs {
 #define DWC_SOFT_RESET      (1 << 0)
 
     /**
-     * [0x014] : GINTSTS: コア割り込みレジスタ.
+     * [0x014] : GINTSTS: DWCコア割り込みレジスタ.
      *
      * このレジスタは保留されているトップレベルのDWC割り込みの状態を含んでいる。
      * 1は割り込みが保留されていることを、0は保留されていないことを意味する。
      *
-     * 少なくともport_intrとhost_channel_intrについては、このレジスタに書き込む
+     * 少なくともport_intr[b24]とhost_channel_intr[b25]については、このレジスタに書き込む
      * のではなく、他のどこかで割り込みをクリアしなければならないことに注意。
      */
     union dwc_core_interrupts {

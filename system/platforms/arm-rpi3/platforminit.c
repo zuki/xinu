@@ -92,7 +92,7 @@ int platforminit(void)
     platform.serial_low = mailbuffer[MBOX_HEADER_LENGTH + TAG_HEADER_LENGTH];
     platform.serial_high = mailbuffer[MBOX_HEADER_LENGTH + TAG_HEADER_LENGTH+1];
 
-    uint32_t cache_encoding = _getcacheinfo();
+    uint32_t cache_encoding = _getcacheinfo();  // Read CCSIDR
     switch (cache_encoding) {
         case 0x7003E01A:
             platform.dcache_size = 8;       // 8 KB

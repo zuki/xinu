@@ -185,11 +185,11 @@ void usb_free_xfer_request(struct usb_xfer_request *req)
  * 必ずしもすべてのUSB転送タイプと速度がサポートされているわけではない。
  * これはホストコントローラドライバ次第である。ホストコントローラは渡された
  * 転送要求がサポートしているタイプと速度であるかを判断し、していない場合は
- * :USB_STATUS_INVALID_PARAMETER を返すことが期待されている。現在のところ
+ * ::USB_STATUS_INVALID_PARAMETER を返すことが期待されている。現在のところ
  * （Raspberry Piに搭載されている）Synopsys DesignWare High-Speed USB 2.0
  * On-The-Go ControllerのホストコントローラドライバはLS,FS,HSのコントロール
  * 転送、バルク転送、インターラプト転送に対応する予定であるが、まだ実際に
- * すべての転送タイプと速度の組み合わせをテストしたわけではない。
+ * すべての転送タイプと速度の組み合わせがテストされたわけではない。
  *
  * @param req
  *      発呼するUSB転送要求へのポインタ.  入力として定義されている
@@ -1159,7 +1159,7 @@ syscall usbinit(void)
     {
         goto err_free_usb_bus_lock;
     }
-    /* USｂホストコントローラを起動する */
+    /* USbホストコントローラを起動する */
     status = hcd_start();
     if (status != USB_STATUS_SUCCESS)
     {

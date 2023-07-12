@@ -50,11 +50,11 @@ Embedded XinuはBSDスタイルのライセンスでライセンスされて
    各サポートプラットフォームは ``compile/platforms/`` の
    サブディレクトリに該当します。
 
-「本物の組み込みハードウェア」を持っておらず、単にノートPCや
+「組み込みハードウェアの実機」を持っておらず、ノートPCや
 デスクトップPCからEmbedded Xinuを試したいだけであれば
 :doc:`mipsel-qemu <mips/Mipsel-qemu>` か
-QEMU system emulator <http://qemu.org>`__ のいずれかのポートを
-使うことができます。これらは `QEMUシステムエミュレータ <http://qemu.org>`__
+:doc:`arm-qemu <arm/ARM-qemu>` のいずれかを使うことができます。
+これらは `QEMUシステムエミュレータ <http://qemu.org>`__
 で実行されます。
 
 .. _cross_compiler:
