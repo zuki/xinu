@@ -1,7 +1,13 @@
 {
 	"C_Cpp.default.includePath": [
         "${workspaceFolder}/**",
-        "include/**"
+        "include/",
+        "system/platforms/arm-rpi3",
+        "device/uart-ns16550",
+        "device/lan7800",
+        "device/uart-pl011",
+        "device/smsc9512",
+        "device/flash"
     ],
     "C_Cpp.errorSquiggles": "disabled",
     "files.associations": {
