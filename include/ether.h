@@ -118,7 +118,7 @@ struct ether
 };
 
 /**
- * \ingroup ether
+ * \ingroup etherdriver
  *
  * Ethernetデバイスのグローバルテーブル.  Xinuは複数のタイプのEthernet
  * デバイスを同時にはサポートしておらず、すべて同じ種類しかサポートして
@@ -129,7 +129,7 @@ extern struct ether ethertab[];
 /* Ethernetドライバ関数 */
 
 /**
- * \ingroup ether
+ * \ingroup etherdriver
  *
  * Ethernetデバイスの一回限りの初期化を行う.  Ethernetコントロールブロック
  * の初期化やハードウェアパラメータの設定など、etherOpen() の呼び出しから
@@ -143,7 +143,7 @@ extern struct ether ethertab[];
 devcall etherInit(device *devptr);
 
 /**
- * \ingroup ether
+ * \ingroup etherdriver
  *
  * Ethernetデバイスをオープンする.   TxとRxの機能を有効にし、デバイスの
  * 状態を ::ETH_STATE_UP に設定する。 open() 関数から呼び出す必要が
@@ -158,7 +158,7 @@ devcall etherInit(device *devptr);
 devcall etherOpen(device *devptr);
 
 /**
- * \ingroup ether
+ * \ingroup etherdriver
  *
  * Ethernetデバイスをクローズする。 TxとRxの機能を無効にし、デバイスの
  * 状態を ::ETH_STATE_DOWN に設定する。 close() 関数から呼び出す必要が
@@ -172,7 +172,7 @@ devcall etherOpen(device *devptr);
 devcall etherClose(device *devptr);
 
 /**
- * \ingroup ether
+ * \ingroup etherdriver
  *
  * EthernetデバイスからEthernetフレームを読み込む.  read() 関数から
  * 呼び出す必要がある。
@@ -194,7 +194,7 @@ devcall etherClose(device *devptr);
 devcall etherRead(device *devptr, void *buf, uint len);
 
 /**
- * \ingroup ether
+ * \ingroup etherdriver
  *
  * Ethernetフレーム（一部フィールドは除く）をEthernetデバイスに書き出す.
  * write() 関数から呼び出す必要がある。
@@ -219,7 +219,7 @@ devcall etherRead(device *devptr, void *buf, uint len);
 devcall etherWrite(device *devptr, const void *buf, uint len);
 
 /**
- * \ingroup ether
+ * \ingroup etherdriver
  *
  * Ethernetデバイス上で制御関数を実行する.  control() 関数から呼び出す
  * 必要がある。
@@ -240,7 +240,7 @@ devcall etherWrite(device *devptr, const void *buf, uint len);
 devcall etherControl(device *devptr, int req, long arg1, long arg2);
 
 /**
- * \ingroup ether
+ * \ingroup etherdriver
  *
  * Ethernetデバイスに関する情報を表示する.
  *
@@ -250,7 +250,7 @@ devcall etherControl(device *devptr, int req, long arg1, long arg2);
 void etherStat(ushort minor);
 
 /**
- * \ingroup ether
+ * \ingroup etherdriver
  *
  * Ethernetデバイスに関するスループットデータを表示する.
  *
