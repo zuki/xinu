@@ -205,7 +205,8 @@ USBに関する一般的な情報を示したので、USBソフトウェアス�
    ソフトウェアスタックで必ず実装されなければならない非常に重要なSUB
    デバイスドライバが **USBハブドライバ** です。このドライバは、USBハブの
    状態の監視とデバイスの着脱をUSBコアドライバに報告する役割を担っています。
-   Embedded XinuのUSBハブドライはたとえば。 :source:`device/smsc9512/`
+   Embedded XinuのUSBハブドライは :source:`device/usb/usbhub.c` にあります。
+   その他のUSBデバイスドライバは、たとえば、 :source:`device/smsc9512/`
    のように  :source:`device/` にあります。
 
 .. note:: Linuxのスタックのようなより完全（で複雑）なUSBソフトウェア
@@ -226,8 +227,8 @@ Embedded Xinuの特定のビルドにUSBのサポートを含めるには
 必要があります。たとえば、 :source:`system/platforms/arm-rpi/usb_dwc_hcd.c`
 はRaspberry Piハードウェアで使用されるホストコントローラデバイスです。
 
-最後に、サポートしたい実際のUSBデバイスを対応するデバイスディレクトリを ``platformVars`` の ``DEVICES`` 変数に追加し、 ``xinu.conf`` で適切な
-スタティックデバイスを定義することにより有効にする必要があります。たとえば、Raspberry Piでは :source:`device/smsc9512` にあるSMSC LAN9512 USB Ethernet
+最後に、サポートしたい実際のUSBデバイスを、対応するデバイスディレクトリを ``platformVars`` の ``DEVICES`` 変数に追加し、 ``xinu.conf`` で適切な
+スタティックデバイスを定義することにより、有効にする必要があります。たとえば、Raspberry Piでは :source:`device/smsc9512` にあるSMSC LAN9512 USB Ethernet
 Adapterのドライバを有効にするために ``DEVICES`` に ``smsc9512`` を追加し、
 ``xinu.conf`` で ``ETH0`` デバイスを定義しています。
 

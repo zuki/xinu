@@ -879,9 +879,9 @@ dwc_channel_start_transaction(uint chan, struct usb_xfer_request *req)
      * dwc_interrupt_handler() が呼び出されるようにチャネルの
      * 割り込みマスクを必要な値にセットする。さらに、この
      * チャネルからの割り込みがホスト全チャネル割り込みマスク
-     * レジスタで有効になっていることを確認する。注: ここで
-     * さらに多くのチャネルの割り込みを有効にした場合は、
-     * 停止されているチャネル以外の割り込みを考慮して
+     * レジスタで有効になるようにする。
+     * 注: ここでさらに多くのチャネルの割り込みを有効にする
+     * 場合は、停止されているチャネル以外の割り込みを考慮して
      * dwc_interrupt_handler() を変更する必要がある。
      */
     interrupt_mask.val = 0;
@@ -936,6 +936,10 @@ dwc_channel_start_xfer(uint chan, struct usb_xfer_request *req)
         characteristics.packets_per_frame = 1;
         if (req->dev->speed == USB_SPEED_HIGH)
         {
+            // Bits [12:11] frameあたりの追加トランザクション数を指定
+            // 00 = None (1 transaction per microframe)
+            // 01 = 1 additional (2 per microframe)
+            // 10 = 2 additional (3 per microframe)
             characteristics.packets_per_frame +=
                         ((req->endpoint_desc->wMaxPacketSize >> 11) & 0x3);
         }
@@ -1020,7 +1024,8 @@ dwc_channel_start_xfer(uint chan, struct usb_xfer_request *req)
         /* このハードウェアは1（マイクロ）フレームにフィットするデータ
          * （エンドポイントが許容するフレームあたりの最大パケット数に
          * エンドポイントが許容する最大パケットサイズをかけたもの）以上の
-         * データを持つインターラプト転送の開始を受け入れない。 */
+         * データを持つインターラプト転送の開始を受け入れない
+         * （インターラプト転送の場合のみ） */
         if (characteristics.endpoint_type == USB_TRANSFER_TYPE_INTERRUPT &&
             transfer.size > characteristics.packets_per_frame *
                             characteristics.max_packet_size)
@@ -1073,7 +1078,6 @@ dwc_channel_start_xfer(uint chan, struct usb_xfer_request *req)
     /* DMAバッファを設定する。データはARM物理アドレスからVideoCore
      * アドレスに変換するために0xC0000000とORする必要がある */
     chanptr->dma_address = (uint32_t)aligned_bufs[chan] | 0xC0000000;
-    /* DMAバッファを設定する  */
 
     /* OUTエンドポイントでは送信するデータをDMAバッファにコピーする */
     if (characteristics.endpoint_direction == USB_DIRECTION_OUT)
@@ -1081,7 +1085,7 @@ dwc_channel_start_xfer(uint chan, struct usb_xfer_request *req)
        memcpy(aligned_bufs[chan], data, transfer.size);
     }
 
-    /* 送受信する次のデータチャンクの開始位置へのポインタをセットする */
+    /* 送受信するデータチャンクの開始位置のポインタをセットする */
     req->cur_data_ptr = data;
 
     /* この転送用に設定するパケット数を計算する  */
@@ -1089,8 +1093,8 @@ dwc_channel_start_xfer(uint chan, struct usb_xfer_request *req)
                                          characteristics.max_packet_size);
     if (transfer.packet_count == 0)
     {
-        /* ハードウェアはたとえゼロ長の転送であっても、少なくても1パケットを
-         * 指定することを要求する */
+        /* ハードウェアはたとえゼロ長の転送であっても、少なくとも
+         * 1パケットを指定することを要求する */
         transfer.packet_count = 1;
     }
 
@@ -1318,7 +1322,7 @@ dwc_handle_normal_channel_halted(struct usb_xfer_request *req, uint chan,
 
     usb_dev_debug(req->dev, "%u packets transferred on channel %u\n",
                   packets_transferred, chan);
-    /* 転送されたポケットあり */
+    /* 転送されたパケットあり */
     if (packets_transferred != 0)
     {
         uint bytes_transferred = 0;
@@ -1381,12 +1385,12 @@ dwc_handle_normal_channel_halted(struct usb_xfer_request *req, uint chan,
             (dir == USB_DIRECTION_IN &&
              bytes_transferred < packets_transferred * max_packet_size))
         {
-            /* transfer_completed フラグがハードウェアによって
-             * 設定されるはずであるが、他のタイミングでも設定される
+            /* transfer_completedフラグはハードウェアによって
+             * 設定されるが、他のタイミングでも設定される場合がある
              * ため本質的に意味がない（たとえば、分割トランザクションが
              * 完了すると、転送すべきパケットがまだ残っていても設定
-             * されるようだ）  */
-            /* 完了フラグがあっていない場合はエラー */
+             * されるようだ）。ただし、完了フラグが立っていなければ
+             * それはエラー */
             if (!interrupts.transfer_completed)
             {
                 usb_dev_error(req->dev, "transfer_completed flag not "
@@ -1525,7 +1529,7 @@ dwc_handle_channel_halted_interrupt(uint chan)
         (interrupts.data_toggle_error &&
          chanptr->characteristics.endpoint_direction == USB_DIRECTION_OUT))
     {
-        /* エラーが発生した。エラーステータスを付けて転送を直ちに完了させる  */
+        /* エラーが発生した。エラーステータスを付けて転送を直ちに終了させる  */
         usb_dev_error(req->dev, "Transfer error on channel %u "
                       "(interrupts pending: 0x%08x, packet_count=%u)\n",
                       chan, interrupts.val, chanptr->transfer.packet_count);

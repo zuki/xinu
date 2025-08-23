@@ -2,8 +2,8 @@
 
 ## データのUSB転送関数
 
-- usb_control_msg()          : 同期コントロール転送
-- usb_submit_xfer_request() : 非同期バルク、インターラクティブ転送
+- usb_control_msg()          : 同期転送（コントロール転送のみ）
+- usb_submit_xfer_request()  : 非同期転送（バルク、インターラクティブ、コントロール転送）
 
 ## USB関連の構造体
 
