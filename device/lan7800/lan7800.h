@@ -176,7 +176,7 @@ usb_status_t lan7800_mdio_wait_for_bit(struct usb_device *udev,
 #define LAN7800_HW_CFG_LED0_EN_     0x00100000
 #define LAN7800_HW_CFG_MEF_         0x00000010
 #define LAN7800_HW_CFG_LRST_        0x00000002
-#define LAN7800_PMT_CTL                 0x014
+#define LAN7800_PMT_CTL         0x014
 #define LAN7800_PMT_CTL_PHY_RST_            0x00000010
 #define LAN7800_PMT_CTL_READY_              0x00000080
 #define LAN7800_USB_CFG0        0x080

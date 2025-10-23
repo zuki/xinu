@@ -57,7 +57,7 @@
  * ここではホストとして動作だけに関心があるのでドライバは簡潔にすることが
  * できる。
  *
- * USBコアソフトウェアを簡潔にするために有用な設計技法（USB 2.0使用で
+ * USBコアソフトウェアを簡潔にするために有用な設計技法（USB 2.0仕様で
  * 推奨されており、Linuxなどの他の実装で使用されている）は、ルートハブが
  * ホストコントローラと統合されており、ハードウェアレベルでは標準ハブとは
  * 見えない場合でも、HCDにはルートハブを標準USBハブとして提示させるという
@@ -1612,7 +1612,7 @@ dwc_handle_channel_halted_interrupt(uint chan)
     /* データパケットIDを保存  */
     req->next_data_pid = chanptr->transfer.packet_id;
 
-    /* このチャネルの割り込みをっクリアして無効にする  */
+    /* このチャネルの割り込みをクリアして無効にする  */
     chanptr->interrupt_mask.val = 0;
     chanptr->interrupts.val = 0xffffffff;
 
@@ -1843,7 +1843,7 @@ dwc_setup_interrupts(void)
 static mailbox hcd_xfer_mailbox;
 
 /** @ingroup usbhcd
- * USB転送リクエストスケジューラスレッド. このスレッドはスケジュー
+ * USB転送リクエストをスケジュールするスレッド. このスレッドはスケジュー
  * リングが必要なUSB転送リクエストを繰り返し待ち、チャンネルが空くのを
  * 待ち、確保したチャンネルで転送リクエストを開始する。これは帯域幅の
  * 要件やどのエンドポイントに対する転送であるかを考慮していないので
@@ -1900,7 +1900,7 @@ dwc_start_xfer_scheduler(void)
         return USB_STATUS_OUT_OF_MEMORY;
     }
     STATIC_ASSERT(DWC_NUM_CHANNELS <= 8 * sizeof(chfree));
-    chfree = (1 << DWC_NUM_CHANNELS) - 1;
+    chfree = (1 << DWC_NUM_CHANNELS) - 1;   // chfree = 0xff
 
     /* スケジューラスレッドを作成する */
     dwc_xfer_scheduler_tid = create(dwc_schedule_xfer_requests,
@@ -1928,7 +1928,7 @@ hcd_start(void)
     int i;
 
     /* キャッシュメンテナンス操作をしなくてもすむように、DMAバッファを
-       アンキャッシュ領域に作成する */
+     *  アンキャッシュ領域に作成する */
     for (i = 0; i < DWC_NUM_CHANNELS; i++)
     {
         aligned_bufs[i] = dma_buf_alloc(WORD_ALIGN(USB_MAX_PACKET_SIZE));

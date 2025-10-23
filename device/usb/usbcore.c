@@ -967,6 +967,7 @@ usb_attach_device(struct usb_device *dev)
         return status;
     }
 
+/* 当面は対象: include/usb_util.h: USB_EMBEDDED = FALSE */
 #if !USB_EMBEDDED
     /* もしあれば、商品名と製造者名を読み込む  */
     if (dev->descriptor.iProduct != 0)
@@ -1070,7 +1071,7 @@ void usb_unlock_bus(void)
  * 現在では、この関数は usbinit() の前に安全に呼び出すことができる。
  *
  * @param drv
- *      登録するUSｂデバイスドライバ構造体へのポインタ
+ *      登録するUSBデバイスドライバ構造体へのポインタ
  *
  * @return
  *      ドライバの登録に成功した場合は ::USB_STATUS_SUCCESS; それ以外は

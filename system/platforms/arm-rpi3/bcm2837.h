@@ -33,7 +33,7 @@
 /** 電源管理 / ウォッチドッグタイマー  */
 #define PM_REGS_BASE           (PERIPHERALS_BASE + 0x100000)
 
-/* GPIO */
+/** GPIO */
 #define GPIO_REGS_BASE         (PERIPHERALS_BASE + 0x200000)
 
 /** PL011 UART  */
@@ -74,7 +74,7 @@
 /** PL011 UART  */
 #define IRQ_PL011          57
 
-/** SDカードホストコントローラ  */
+/** SDカードホストコントローラ (ARASAN SDIO) */
 #define IRQ_SD             62
 
 

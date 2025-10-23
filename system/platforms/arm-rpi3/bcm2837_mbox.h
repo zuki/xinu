@@ -44,7 +44,7 @@ static volatile uint *const mailbox_regs = (volatile uint*)MAILBOX_REGS_BASE;
 
 /* BCM2837 メールボックスは28ビットのメッセージ交換用に使用される。
  * 32ビットの下位4ビットはメッセーが送信されるチャンネルを指定するのに
- * 使用あれる。 */
+ * 使用される。 */
 #define MAILBOX_CHANNEL_MASK        0xf
 
 /* メールボックバッファの長さ. */

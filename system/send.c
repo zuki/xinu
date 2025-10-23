@@ -29,7 +29,7 @@ syscall send(tid_typ tid, message msg)
         return SYSERR;
     }
     thrptr = &thrtab[tid];
-    if ((THRFREE == thrptr->state) || thrptr->hasmsg)   // すでのメッセージがあればエラー
+    if ((THRFREE == thrptr->state) || thrptr->hasmsg)   // すでにメッセージがあればエラー
     {
         restore(im);
         return SYSERR;

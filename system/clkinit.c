@@ -18,9 +18,9 @@
 /**
  * @ingroup timer
  *
- * ::clktime 以降に発生したタイマー割り込みの数は増分される。
- * ::clkticks が ::CLKTICKS_PER_SEC に達したら、::clktime は
- * 再び増分し、::clkticks は 0 にリセットされる。
+ * ::clktime 以降に発生したタイマー割り込みの数. タイマー割り込みが発生する
+ * たびに増分される。 ::clkticks が ::CLKTICKS_PER_SEC に達したら、::clktime は
+ * 増分され、::clkticks は 0 にリセットされる。
  */
 volatile ulong clkticks;
 

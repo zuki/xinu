@@ -14,6 +14,7 @@
  * スレッドをCPUサービスの対象とする
  * @param tid 対象のスレッド
  * @param resch RESCHED_YESの場合、再スケジュールする
+ * @param core 実行させるコアの番号
  * @return スレッドをreadylistに追加したら OK、それ以外は SYSERR
  */
 int ready(tid_typ tid, bool resch, unsigned int core)
@@ -30,8 +31,8 @@ int ready(tid_typ tid, bool resch, unsigned int core)
     thrptr = &thrtab[tid];
     thrptr->state = THRREADY;
 
-    /* コアアフィニティがセットされていない場合は、現在このコードを
-       実行しているコアにアフィニティをセットする（ほとんど場合は0） */
+    /* コアアフィニティ（このスレッドを実行するコア）がセットされて
+     * いない場合は core をセットする。FIXME: 実行が少ないコアへの割当て */
     unsigned int cpuid;
     cpuid = getcpuid();
     if (-1 == thrptr->core_affinity)

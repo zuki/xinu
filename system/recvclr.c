@@ -10,7 +10,7 @@
  * @ingroup threads
  *
  * メッセージをクリアする。（あれば）待機中のメッセージを返す
- * @return メッセージがあればそのメッセージ、なければ NOBSG
+ * @return メッセージがあればそのメッセージ、なければ NOMSG
  */
 message recvclr(void)
 {

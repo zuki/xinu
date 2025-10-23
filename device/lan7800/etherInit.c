@@ -91,6 +91,8 @@ lan7800_bind_device(struct usb_device *udev)
 }
 
 /**
+ * @ingroup lan7800
+ * 
  * デタッチされたLAN7800からLAN7800ドライバをアンバインドする。
  * これはLAN7800ドライバの @ref usb_device_driver::unbind_device
  * "unbind_device"の実装であり、ドキュメントに記載されている動作に準ずる。
@@ -108,6 +110,8 @@ lan7800_unbind_device(struct usb_device *udev)
 }
 
 /**
+ * @ingroup lan7800
+ * 
  * LAN7800のUSBデバイスドライバの仕様。これはUSBコアに特化したものであり、
  * Xinuの主要なデバイスとドライバの（静的な）モデルとは関係しない。
  */
@@ -117,14 +121,17 @@ static const struct usb_device_driver lan7800_driver = {
     .unbind_device = lan7800_unbind_device,
 };
 
-/* Get static MAC address from Pi 3 B+ chip, based on the XinuPi
- * mailbox technique.
+/**
+ * @ingroup lan7800
+ * 
+ * XinuPiのメールボックス技法に基づいてPi 3 B+チップから静的MAC
+ * アドレスを取得する.
  *
  * @details
  *
- * Get the Pi 3 B+'s MAC address using its ARM->VideoCore (VC) mailbox
- * and assign corresponding values to a global array containing the MAC.
- * This array is then assigned to the devAddress member of the ether structure.
+ * ARM->VideoCore (VC)のメールボックスを使ってPi 3 B+のMACアドレスを
+ * 取得し、その値をMACを保管するグローバル配列に割り当てる。
+ * その後、この配列はether構造体のdevAddressメンバに割り当てられる。
  */
 static void
 getEthAddr(uint8_t *addr)
@@ -190,17 +197,20 @@ lan7800_wait_device_attached(ushort minor)
     return USB_STATUS_SUCCESS;
 }
 
-/* LAN7800用の etherInit() の実装; この関数に関するドキュメントは
- * ether.h を参照 */
 /**
+ * @ingroup lan7800
+ *
+ * LAN7800用の etherInit() の実装; この関数に関するドキュメントは
+ * ether.h を参照
+ * 
  * @details
  *
  * LAN7800-固有の注記:  この関数はEthernetドライバがUSBコアに
  * 正常に登録された場合は ::OK; そうでない場合は ::SYSERR を返す。
  * これはUSBの動的デバイスモデルとXinuの静的デバイスモデルを同時に
  * 使用するための回避策であり、この関数が復帰した時に実際にデバイスが
- * 存在する保証はない(存在しない場合、etherOpen() で実際にデバイスを
- * オープンするまで問題は引き伸ばされる)。
+ * 存在する保証はない（存在しない場合、etherOpen() で実際にデバイスを
+ * オープンするまで問題は引き伸ばされる）。
  */
 devcall etherInit(device *devptr)
 {

@@ -71,7 +71,7 @@ static volatile struct bcm2835_interrupt_registers * const regs =
 interrupt_handler_t interruptVector[BCM2835_NUM_IRQS];
 
 /**
- * ARMで有効化されたIRQのビットビットテーブル. */
+ * 各enableIRQレジスタで有効にされたIRQビットを記憶するためのテーブル. */
 static unsigned int arm_enabled_irqs[3];
 
 /**
@@ -179,8 +179,9 @@ void enable_irq(irqmask irq_num)
 {
     if (irq_num < 32)
     {
-        regs->Enable_IRQs_1 = 1 << irq_num;
-        arm_enabled_irqs[0] |= 1 << irq_num;
+        // enableIRQレジスタの書き込みは他のビットに影響を与えないのでorにする必要はない
+        regs->Enable_IRQs_1 = 1 << irq_num;     
+        arm_enabled_irqs[0] |= 1 << irq_num;    // enableにしたビットを記憶する
     }
     else if (irq_num < 64)
     {

@@ -42,7 +42,9 @@ CoreSetup:
     mov  r0, #MMUTABLEBASE      /* MMUTABLEBASE from mmu.h */
     bl   start_mmu
 
-    /* corestart: セットアップ完了後に実行する各コア用の命令アドレスの配列 */
+    /* corestart. init_args: 各コアのセットアップ完了後に実行する
+     *  関数とその引数: unparkcore()でセットされちる
+     *  pcに関数アドレスをロードすることで実行が開始される */
     ldr  r0, =init_args
     ldr  r0, [r0, r4]
     ldr  r2, =corestart

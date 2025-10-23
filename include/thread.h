@@ -18,7 +18,8 @@
 /* スレッドスタックのトップをマークするありえない値                     */
 #define STACKMAGIC  0x0A0AAAA9
 
-/* スレッド状態定位数                                                   */
+/** @ingroup threads
+ * スレッド状態定数.                                                    */
 #define THRCURR     1           /**< スレッドは現在実行中               */
 #define THRFREE     2           /**< スレッドスロットは空いている       */
 #define THRREADY    3           /**< スレッドはreadyキューにある        */
@@ -29,7 +30,7 @@
 #define THRTMOUT    8           /**< スレッドはタイムアウト付きで受信中 */
 #define THRMIGRATE  9           /**< スレッドはmigrate中                */
 
-/* 様々なスレッド定義                                                   */
+/** 様々なスレッド定義                                                   */
 #define TNMLEN      16          /**< スレッド"名"の長さ                 */
 #define NULLTHREAD  0           /**< nullスレッドのID                   */
 #define NULLTHREAD1 1		    /**< セカンダリcpuのullスレッドのID     */
@@ -50,26 +51,36 @@
 #define INITRET   userret       /**< スレッド復帰アドレス               */
 #endif                          /* JTAG_DEBUG */
 
-/* ready用の再スケジュール定数 */
-#define RESCHED_YES 1           /**< readyに再スケジュールを通知        */
-#define RESCHED_NO  0           /**< readyに再スケジュールしないよう通知*/
+/** @ingroup threads
+ *  threadsready用の再スケジュール定数: readyに再スケジュールを通知.  */
+#define RESCHED_YES 1 
+/** @ingroup threads
+ *  threadsready用の再スケジュール定数: readyに再スケジュールしないよう通知.  */
+#define RESCHED_NO  0 
 
-/* 不正なスレッドIDをチェックする。ステートメント間でtrueを保持する     */
-/* ための条件のために割り込みは無効でなければならないことに注意         */
+/** @ingroup threads
+ * 不正なスレッドIDをチェックする。ステートメント間でtrueを保持する     */
+ * ための条件のために割り込みは無効でなければならないことに注意         */
 #define isbadtid(x) ((x)>=NTHREAD || (x)<0 || THRFREE == thrtab[(x)].state)
 
-/** 1スレッドが保持できるファイルディスクリプタの最大数 */
+/** @ingroup threads
+ * 1スレッドが保持できるファイルディスクリプタの最大数 */
 #define NDESC       5
 
-/** ローカルデバイスの最大数 */
+/** @ingroup threads
+ * ローカルデバイスの最大数 */
 #define NLOCDEV     10
 
-/* アセンブリファイルに公開する sizeof(struct thrent) と */
-/* offsetof(struct thrent, stkdiv)  */
+/** @ingroup threads
+ *  sizeof(struct thrent). アセンブリファイルに公開する */
 #define THRENTSIZE      148
+/** @ingroup threads
+ *  offsetof(struct thrent, stkdiv). アセンブリファイルに公開する */
 #define STKDIVOFFSET    104
 
 /**
+ * @ingroup threads
+ * 
  * スレッドテーブルエントリが何であるかを定義する
  */
 struct thrent

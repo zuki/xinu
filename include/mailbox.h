@@ -10,23 +10,30 @@
 #include <stddef.h>
 #include <conf.h>
 
+/** @ingroup mailbox
+ * メールボックスは未使用 */
 #define MAILBOX_FREE     0
+/** @ingroup mailbox
+ * メールボックスは割当て済み */
 #define MAILBOX_ALLOC    1
 
 /**
- * Defines what an entry in the mailbox table looks like.
+ * @ingroup mailbox
+ * 
+ * メールテーブルエントリの定義. 
  */
 struct mbox
 {
-    semaphore sender;           /**< count of free spaces in mailbox    */
-    semaphore receiver;         /**< count of messages ready to recieve */
-    uint max;                   /**< max #of messages mailbox can hold  */
-    uint count;                 /**< #of msgs currently in mailbox      */
-    uint start;                 /**< index into buffer of first msg     */
-    uchar state;                /**< state of the mailbox               */
-    int *msgs;                  /**< message queue for the mailbox      */
+    semaphore sender;           /**< メールボックスの空きスペースの数       */
+    semaphore receiver;         /**< 受信可能なメッセージの数               */
+    uint max;                   /**< 保持できるメッセー師の最大数           */
+    uint count;                 /**< 現在メールボックスにあるメッセージの数 */
+    uint start;                 /**< 最初のメッセージのbっファ内でのindex   */
+    uchar state;                /**< メールボックスるの状態                 */
+    int *msgs;                  /**< このメールボックス用のメッセージキュー */
 };
 
+/** @ingroup mailbox */
 typedef uint mailbox;
 
 extern semaphore mboxtabsem;

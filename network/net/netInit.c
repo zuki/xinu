@@ -73,7 +73,7 @@ syscall netInit()
         return SYSERR;
     }
 
-    /* 6. TCPを初期化する:  tcptimerプロセスを実行する */
+    /* 6. TCPを初期化する:  tcptimerプロセスを実行する NTCP = 7 */
 #if NTCP
     i = create((void *)tcpTimer, INITSTK, INITPRIO, "tcpTimer", 0);
     if (SYSERR == i)

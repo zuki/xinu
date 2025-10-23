@@ -62,8 +62,8 @@ smsc9512_bind_device(struct usb_device *udev)
     }
 
     /* この関数の残りの部分ではSMSC LAN9512を使用可能な状態にするが
-     * 実際にRxとTxを有効にすることはない（これはetherOpen() で行う）。
-     * 個々での作業は主にSMSC LAN9512のレジスタへの書き込むである。
+     * 実際にRxとTxを有効にすることはしない（これはetherOpen() で行う）。
+     * 個々での作業は主にSMSC LAN9512のレジスタへの書き込みである。
      * ただし、これはUSBに接続されたUSBイーサネットアダプタなので
      * メモリマップドレジスタではない。レジスタの読み書きはUSBの
      * コントロール転送を利用して行われる。少し面倒であり、メモリ
@@ -86,8 +86,8 @@ smsc9512_bind_device(struct usb_device *udev)
      * また、機能不明のフラグをいくつかセットする。 */
     smsc9512_set_reg_bits(udev, HW_CFG, HW_CFG_MEF | HW_CFG_BIR | HW_CFG_BCE);
 
-    /* USB Rx転送あたりの最大USB（ネットワークではない！）パケットをセットする。
-     * HW_CFG_MEFが設定された場合に必要になる */
+    /* USB Rx転送あたりの最大USB（ネットワークではない！）パケットを
+     * セットする。HW_CFG_MEFが設定された場合に必要になる */
     smsc9512_write_reg(udev, BURST_CAP,
                        SMSC9512_DEFAULT_HS_BURST_CAP_SIZE / SMSC9512_LAN7800_HS_USB_PKT_SIZE);
 

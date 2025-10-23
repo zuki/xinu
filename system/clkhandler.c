@@ -24,19 +24,20 @@ int resched(void);
  */
 interrupt clkhandler(void)
 {
+    /* 次のタイマー発生をセットする */
     clkupdate(platform.clkfreq / CLKTICKS_PER_SEC);
 
-    /* Another clock tick passes. */
+    /* clkticksを増分. */
     clkticks++;
 
-    /* グローバル秒カウンタを更新する */
+    /* clkticksが1秒に該当する数に達したらグローバル秒カウンタを更新する */
     if (CLKTICKS_PER_SEC == clkticks)
     {
         clktime++;
         clkticks = 0;
     }
 
-    /* sleepqが空でない場合は、第一キーを減ずる     */
+    /* sleepqが空でない場合は、先頭のキーの値を減ずる     */
     /* キーがゼロに達したら、wakeupを呼び出す         */
     if (nonempty(sleepq) && (--firstkey(sleepq) <= 0))
     {

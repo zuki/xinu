@@ -160,13 +160,15 @@ bssloopb:
     stmia r0!, {r2-r5}
 
 bssloopa:
-    cmp r0, r1      /* まだbssの終わりに届いていないかチェックする */
+    cmp r0, r1      /* bssの終わりに届いていないかチェックする */
     blo bssloopb    /* if (r0 < r1) goto bssloopb; */
 
 /* 以下はマルチコアの各NULLタスク用のスタックの初期化 */
+/* core_init_sp[4]はsystem/platforms/arm-rpi3/unparkcore.cで定義 */
+/* NULLSTK = 8192 */
     ldr r3, =core_init_sp
 
-    // Put the null thread's stack directly after the kernel image.
+    /* カーネルイメージの直後にnullスレッドのスタックを置く */
     add sp, r1, #NULLSTK    // Core 0 stack pointer
     str sp, [r3, #0]
 
@@ -181,6 +183,7 @@ bssloopa:
 
     /* ARMが使用できる残りのメモリはXinuの"memheap"領域となり
      * 動的メモリ割り当てに使用される。その開始アドレスを設定する。  */
+     /* memheapはsystem/initialize.cで定義 */
     ldr r0, =memheap
     str r2, [r0]        // コア3に割り当てた最後のスタックアドレスのr2を使う
 

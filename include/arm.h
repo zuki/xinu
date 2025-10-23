@@ -8,7 +8,9 @@
 #define ARM_MODE_FIQ 0x11    /* FIQ Processing Fast Interrupts Mode                    */
 #define ARM_MODE_IRQ 0x12    /* IRQ Processing Standard Interrupts Mode                */
 #define ARM_MODE_SVC 0x13    /* Supervisor Processing Software Interrupts Mode         */
+#define ARM_MODE_MON 0x16    /* Secure Monitor Mode         */
 #define ARM_MODE_ABT 0x17    /* Abort Processing memory Faults Mode                    */
+#define ARM_MODE_HYP 0x1a    /* Non-secure hypervisor Mode         */
 #define ARM_MODE_UND 0x1B    /* Undefined Processing Undefined Instructions Mode       */
 #define ARM_MODE_SYS 0x1F    /* System Running Priviledged Operating System Tasks Mode */
 

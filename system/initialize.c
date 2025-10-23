@@ -45,21 +45,21 @@ int thrcount;                   /* 生きているユーザスレッド数     *
 tid_typ thrcurrent[NCORES];     /* 現在実行中のスレッドのID       */
 
 /* startup.S でセットされるパラメタ */
-void *memheap;                  /* ヒープの底（O/Sスタックのトップ） */
+void *memheap;                  /* ヒープの底 = OSスタックのトップ   */
 ulong cpuid;                    /* プロセッサID                      */
 struct platform platform;       /* プラットフォーム固有の構成        */
 
 /**
  * @ingroup boot
  *
- * システムを初期化して、NULLスレッドとなる.
+ * システムを初期化して、NULLスレッドとする.
  *
  * C環境の確立後にシステムが開始する地点である。割り込みは初期状態では
- * "無効"になっており、最終的には明示的に有効にする必要がある。この関数は
+ * "無効"になっており、最後に明示的に有効にする必要がある。この関数は
  * 初期化後、自身をNULLスレッドにする。NULLスレッドは常に実行可能な状態を
  * 維持しなければならないので、サスペンド、セマフォ待ち、スリープ、終了などの
- * 原因となるコードを実行することはできない。特に、同期出力用の kprintf を
- * 使用しない限り、I/Oを行ってはならない。
+ * 原因となるコードを実行することはできない。特に、同期出力用の kprintf 以外の
+ * I/Oを行ってはならない。
  */
 void nulluser(void)
 {
@@ -199,7 +199,7 @@ static int sysinit(void)
         readylist[i] = queinit();
     }
 
-
+// シリコンバックプレーンの初期化(対象外)
 #if SB_BUS
     backplaneInit(NULL);
 #endif                          /* SB_BUS */
@@ -209,6 +209,7 @@ static int sysinit(void)
     clkinit();
 #endif                          /* RTCLOCK */
 
+/* (対象外) */
 #ifdef UHEAP_SIZE
     /* ユーザメモリマネージャを初期化する */
     {
@@ -228,6 +229,7 @@ static int sysinit(void)
     }
 #endif
 
+/* 対象外 */
 #if USE_TLB
     /* TLBを初期化する */
     tlbInit();
@@ -253,6 +255,7 @@ static int sysinit(void)
     usbinit();
 #endif
 
+/* 対象外 */
 #if NVRAM
     /* NVRAMを初期化する */
     nvramInit();
@@ -263,6 +266,7 @@ static int sysinit(void)
     netInit();
 #endif
 
+/* 対象外 */
 #if GPIO
     /* LEDを初期化する */
     gpioLEDOn(GPIO_LED_CISCOWHT);

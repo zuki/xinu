@@ -842,7 +842,7 @@ arm-rpi3を作成
 https://github.com/7043mcgeep/xinu のmakeと実行
 ----------------------------------------------------
 
-`parse.y` を修正し、`xinu.boot` を`kernel7.img` に解明して/bootにコピーして実行した。
+`parse.y` を修正し、`xinu.boot` を`kernel7.img` に改名して/bootにコピーして実行した。
 
 .. code-block:: none
 
@@ -1506,21 +1506,25 @@ testsuite
       Test Suite 32: User Memory[PASS]
       Test Suite 33: Simple TLB[SKIP]
 
-## Test Suite 23: Ethernet
+Test Suite 23: Ethernet
+-----------------------
 
-### loopback設定を外す
+loopback設定を外す
+^^^^^^^^^^^^^^^^^^
 
-xsh$ testsuite -v 23
-Test Suite 23: Ethernet Driver
-  ETH0 1516 byte packet[PASS]
-  ETH0 1514 byte packet (write)[PASS]
-  ETH0 1514 byte packet (read)[FAIL]
-        ../test/test_ether.c:120
-  ETH0  700 byte packet (write)[PASS]
-  ETH0  700 byte packet (read)[FAIL]
-        ../test/test_ether.c:132
-  ETH0   30 byte packet (write)[PASS]
-  ETH0   30 byte packet (read)[FAIL]
-        ../test/test_ether.c:144
-  ETH0   12 byte packet[PASS]
-  ETH0  512 random-sized packets
+.. code-block:: none
+
+      xsh$ testsuite -v 23
+      Test Suite 23: Ethernet Driver
+      ETH0 1516 byte packet[PASS]
+      ETH0 1514 byte packet (write)[PASS]
+      ETH0 1514 byte packet (read)[FAIL]
+            ../test/test_ether.c:120
+      ETH0  700 byte packet (write)[PASS]
+      ETH0  700 byte packet (read)[FAIL]
+            ../test/test_ether.c:132
+      ETH0   30 byte packet (write)[PASS]
+      ETH0   30 byte packet (read)[FAIL]
+            ../test/test_ether.c:144
+      ETH0   12 byte packet[PASS]
+      ETH0  512 random-sized packets
