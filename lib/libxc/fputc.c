@@ -3,6 +3,7 @@
  */
 /* Embedded Xinu, Copyright (C) 2009, 2013.  All rights reserved. */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <device.h>
 
@@ -21,7 +22,7 @@
  *      char</code> cast to an @c int.  On write error or invalid device,
  *      returns @c EOF.
  */
-int fputc(int c, int dev)
+int fputc(int c, uintptr_t dev)
 {
     int ret;
 

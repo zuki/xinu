@@ -22,7 +22,7 @@
 syscall mailboxFree(mailbox box)
 {
     struct mbox *mbxptr;
-    int retval;
+    long retval;
 
     if (!(0 <= box && box < NMAILBOX))
     {
@@ -44,7 +44,7 @@ syscall mailboxFree(mailbox box)
         semfree(mbxptr->receiver);
 
         /* メッセージキューに使用したメモリを解放する */
-        memfree(mbxptr->msgs, sizeof(int) * (mbxptr->max));
+        memfree(mbxptr->msgs, sizeof(mbxmess) * (mbxptr->max));
 
         retval = OK;
     }

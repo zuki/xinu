@@ -9,6 +9,7 @@
 #include <ether.h>
 #include <ipv4.h>
 #include <network.h>
+#include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
 #include <udp.h>
@@ -53,7 +54,7 @@ syscall dhcpRecvReply(int descrp, struct dhcpData *data, uint timeout)
     int retval;
 
     pkt = netGetbuf();
-    if (SYSERR == (int)pkt)
+    if (SYSERR == (uintptr_t)pkt)
     {
         return SYSERR;
     }

@@ -103,11 +103,11 @@ int framebufferInit(void)
     mbox[31] = 4;
     mbox[34] = MBOX_TAG_LAST;
 
-    bcm2837_mailbox_write(8, ((unsigned int)&mbox));
+    bcm2837_mailbox_write(8, ((unsigned int)(uintptr_t)&mbox));
 
     /* Wait for a response to our mailbox message... */
     while(1) {
-        if(bcm2837_mailbox_read(8) == ((unsigned int)&mbox))
+        if(bcm2837_mailbox_read(8) == ((unsigned int)(unsigned long)&mbox))
         {
             if (mbox[28] != 0) {
                 mbox[28] &= 0x3FFFFFFF;

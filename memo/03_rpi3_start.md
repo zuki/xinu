@@ -1,6 +1,9 @@
 # Raspi 3B+ 起動シーケンス（詳細版）
 
-## _start
+## _start : loader/platform/arm-rpi3-64/start.S
+
+- core 0だけ実行
+- 他のコアはstub内でparkさせられているのでこの関数は実行されない
 
 ```bash
 	supervisor modeに移行
@@ -15,7 +18,9 @@
 		nulluser()を呼び出す
 ```
 
-## nulluser()
+## nulluser() : system/initialize.c
+
+- core 0による初期化の続き
 
 ```bash
 	platforminit():
@@ -74,9 +79,11 @@
 		sev(): コアをunpark
 		Core N Mailbox 3 Setレジスタにunaprk後に実行する関数(CoreSetup)のアドレスをセット
 			CoreSetup(): SYSTEMモードに切り替え、vectorsをVBARにセット、コアのindexを計算、
-					　　　spをセット、mmuを起動(コア毎に起動する必要あり）、corestart()を実行
+						spをセット、mmuを起動(コア毎に起動する必要あり）、corestart()を実行
 			core_nulluser(): readylist[cpuid]をresched()することを永久に繰り返す
 	enable(): 割り込みの有効化
 	ready(create(main, INITSTK, INITPRIO, "MAIN", 0), RESCHED_YES, CORE_ZERO): メインスレッドの起動
 	while(1){}: 
 ```
+
+## CoreSetup() : system/platform/arm-rpi3-64/setupCore.S

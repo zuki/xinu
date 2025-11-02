@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <memory.h>
 #include <interrupt.h>
 #include <platform.h>
@@ -24,7 +25,7 @@
  *      これはスタックが下に伸びるベースとなることを意図している。
  *      スタックを使い終わったら stkfree() でスタックを解放すること。
  */
-void *stkget(uint nbytes)
+void *stkget(uint32_t nbytes)
 {
     irqmask im;
     struct memblock *prev, *next, *fits, *fitsprev;
@@ -35,7 +36,7 @@ void *stkget(uint nbytes)
     }
 
     /* memblockサイズの倍数に丸める */
-    nbytes = (uint)roundmb(nbytes);
+    nbytes = (uint32_t)roundvalue(nbytes);
 
     im = disable();
 

@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009, 2013.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <stdarg.h>
 #include <device.h>
 #include <stdio.h>
@@ -52,7 +53,7 @@ syscall fbprintf(char *fmt, ...)
 	irqmask mask = disable();
 
     va_start(ap, fmt);
-    _doprnt(fmt, ap, (int (*)(int, int))fbputc, (int)&devtab[FRAMEBUF]);
+    _doprnt(fmt, ap, (int (*)(int, uintptr_t))fbputc, (uintptr_t)&devtab[FRAMEBUF]);
     va_end(ap);
 
 	restore(mask);

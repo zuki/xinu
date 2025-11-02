@@ -19,7 +19,7 @@ semaphore mboxtabsem;
  */
 syscall mailboxInit(void)
 {
-    uint i;
+    uint32_t i;
 
     /* すべてのメールボックスの状態に MAILBOX_FREE をセットする */
     for (i = 0; i < NMAILBOX; i++)

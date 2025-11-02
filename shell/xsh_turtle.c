@@ -67,7 +67,7 @@ void drawLineMap(void);
 int commandfinder(char*, char*);
 int newcommandfinder(int, char*[]);
 int repeatcommand(int, int, char*[]);
-int def(char[], char[]);
+int def(char[COMMANDNAMELENGTH], char[COMMANDLENGTH]);
 void test(void);
 
 /* built in default colors */

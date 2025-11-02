@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <interrupt.h>
 #include <memory.h>
 #include <bufpool.h>
@@ -24,7 +25,7 @@
  *      成功の場合、bufget(), bfpfree()にわたすことができる
  *      バッファプールの識別子を返す。失敗の場合は ::SYSERR を返す。
  */
-int bfpalloc(uint bufsize, uint nbuf)
+int bfpalloc(uint32_t bufsize, uint32_t nbuf)
 {
     struct bfpentry *bfpptr;
     struct poolbuf *bufptr;
@@ -80,7 +81,7 @@ int bfpalloc(uint bufsize, uint nbuf)
     for (buffer = 0; buffer < nbuf; buffer++)
     {
         bufptr->poolid = id;
-        bufptr->next = (struct poolbuf *)((ulong)bufptr + bufsize);
+        bufptr->next = (struct poolbuf *)((uint64_t)bufptr + bufsize);
         bufptr = bufptr->next;
     }
     signaln(bfpptr->freebuf, nbuf);

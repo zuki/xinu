@@ -4,6 +4,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <snoop.h>
 
 /**
@@ -24,7 +25,7 @@ struct packet *snoopRead(struct snoop *cap)
     }
 
     pkt = (struct packet *)mailboxReceive(cap->queue);
-    if ((SYSERR == (int)pkt) || (NULL == pkt))
+    if ((SYSERR == (uintptr_t)pkt) || (NULL == pkt))
     {
         return (struct packet *)SYSERR;
     }

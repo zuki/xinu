@@ -3,6 +3,7 @@
  */
 /* Embedded Xinu, Copyright (C) 2009, 2013.  All rights reserved. */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdarg.h>
 

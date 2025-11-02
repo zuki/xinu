@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <ipv4.h>
 #include <network.h>
 #include <tcp.h>
@@ -39,7 +40,7 @@ int tcpSendRst(struct packet *pkt, struct netaddr *src,
 
     /* Get space to construct packet */
     out = netGetbuf();
-    if (SYSERR == (int)out)
+    if (SYSERR == (uintptr_t)out)
     {
         return SYSERR;
     }

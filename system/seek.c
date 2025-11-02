@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <device.h>
 
 /**
@@ -16,7 +17,7 @@
  * @param pos seekする位置
  * @return 成功時にはデバイスのseek位置、失敗時はSYSERR
  */
-devcall seek(int descrp, uint pos)
+devcall seek(int descrp, uint32_t pos)
 {
     device *devptr;
 

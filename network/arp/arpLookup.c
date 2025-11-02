@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <arp.h>
 #include <clock.h>
 #include <interrupt.h>
@@ -55,7 +56,7 @@ syscall arpLookup(struct netif *netptr, const struct netaddr *praddr,
         {
             ARP_TRACE("Entry does not exist");
             entry = arpAlloc();
-            if (SYSERR == (int)entry)
+            if (SYSERR == (uintptr_t)entry)
             {
                 restore(im);
                 return SYSERR;

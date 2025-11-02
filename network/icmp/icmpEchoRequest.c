@@ -4,6 +4,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <icmp.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <clock.h>
 #include <interrupt.h>
@@ -27,7 +28,7 @@ syscall icmpEchoRequest(struct netaddr *dst, ushort id, ushort seq)
 
     ICMP_TRACE("echo request(%d, %d)", id, seq);
     pkt = netGetbuf();
-    if (SYSERR == (int)pkt)
+    if (SYSERR == (uintptr_t)pkt)
     {
         ICMP_TRACE("Failed to acquire packet buffer");
         return SYSERR;

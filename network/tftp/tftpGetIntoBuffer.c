@@ -3,6 +3,7 @@
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
+#include <stdint.h>
 #include <tftp.h>
 #include <memory.h>
 #include <string.h>
@@ -69,9 +70,9 @@ syscall tftpGetIntoBuffer(const char *filename, const struct netaddr *local_ip,
         return SYSERR;
     }
 
-    /* ブロックリストの戦闘を割り当てる */
+    /* ブロックリストの先頭を割り当てる */
     head = memget(TFTP_FILE_DATA_BLOCK_SIZE);
-    if (SYSERR == (int)head)
+    if (SYSERR == (uintptr_t)head)
     {
         TFTP_TRACE("Out of memory.");
         return SYSERR;
@@ -102,7 +103,7 @@ syscall tftpGetIntoBuffer(const char *filename, const struct netaddr *local_ip,
 
         TFTP_TRACE("Allocating buffer for file data (%u bytes).", totallen);
         finalbuf = memget(totallen);
-        if (SYSERR == (int)finalbuf)
+        if (SYSERR == (uintptr_t)finalbuf)
         {
             TFTP_TRACE("Out of memory.");
         }
@@ -124,7 +125,7 @@ syscall tftpGetIntoBuffer(const char *filename, const struct netaddr *local_ip,
     {
         ptr = next;
         next = ptr->next;
-        if (SYSERR != (int)finalbuf)
+        if (SYSERR != (uintptr_t)finalbuf)
         {
             memcpy(&finalbuf[totallen], ptr->data, ptr->bytes_filled);
         }
@@ -133,7 +134,7 @@ syscall tftpGetIntoBuffer(const char *filename, const struct netaddr *local_ip,
     } while (NULL != next);
 
     /* 成功の場合、ファイル長を呼び出し側が指定した場所に保存する */
-    if (SYSERR != (int)finalbuf)
+    if (SYSERR != (uintptr_t)finalbuf)
     {
         *len_ret = totallen;
         TFTP_TRACE("TFTP download into buffer successful "
@@ -141,7 +142,7 @@ syscall tftpGetIntoBuffer(const char *filename, const struct netaddr *local_ip,
     }
 
     /* ファイルデータを含むバッファ、あるいはSYSERRを返す */
-    return (int)finalbuf;
+    return (syscall)finalbuf;
 }
 
 /*
@@ -165,7 +166,7 @@ static int tftpCopyIntoBufferCb(const uchar *data, uint len, void *ctx)
         {
             /* ブロックは満杯: 新しいブロックを追加する */
             newtail = memget(TFTP_FILE_DATA_BLOCK_SIZE);
-            if (SYSERR == (int)newtail)
+            if (SYSERR == (uintptr_t)newtail)
             {
                 TFTP_TRACE("Out of memory.");
                 return SYSERR;

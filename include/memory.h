@@ -9,11 +9,15 @@
 #define _MEMORY_H_
 
 #include <stddef.h>
+#include <stdint.h>
 
+#define MBSIZE  (sizeof(struct memblock) - 1)
 /* roundmb - アドレスをメモリブロックサイズに丸めあげる */
-#define roundmb(x)  (void *)( (7 + (ulong)(x)) & ~0x07 )
+#define roundmb(x)  (void *)( (MBSIZE + (uintptr_t)(x)) & ~MBSIZE )
 /* truncmb - アドレスをメモリブロックサイズに切り捨てる */
-#define truncmb(x)  (void *)( ((ulong)(x)) & ~0x07 )
+#define truncmb(x)  (void *)( ((uintptr_t)(x)) & ~MBSIZE )
+/* roundvalue - 値をメモリブロックサイズに丸めあげる */
+#define roundvalue(x)  ( (MBSIZE + (uintptr_t)(x)) & ~MBSIZE )
 
 /**
  * @ingroup memory_mgmt
@@ -27,10 +31,10 @@
  *      割り当てられたスタックのサイズ（バイト単位、stkget()に
  *      渡された値と同じ）
  */
-#define stkfree(p, len) memfree((void *)((ulong)(p)         \
-                                - (ulong)roundmb(len)       \
-                                + (ulong)sizeof(ulong)),    \
-                                (ulong)roundmb(len))
+#define stkfree(p, len) memfree((void *)((uint64_t)(p)         \
+                                - (uint64_t)roundvalue(len)       \
+                                + (uint64_t)sizeof(uint64_t)),    \
+                                (uint64_t)roundvalue(len))
 
 
 /**
@@ -39,7 +43,7 @@
 struct memblock
 {
     struct memblock *next;          /**< 次のメモリブロックへのポインタ */
-    uint length;                    /**< メモリブロック（と構造体）のサイズ */
+    uint32_t length;                /**< メモリブロック（と構造体）のサイズ */
 };
 
 extern struct memblock memlist;     /**< フリーメモリリストの先頭          */
@@ -48,11 +52,11 @@ extern struct memblock memlist;     /**< フリーメモリリストの先頭   
 
 extern void *_end;              /**< リンカが提供するイメージの終端アドレス   */
 extern void *_etext;            /**< リンカが提供するテキストセグメント終端アドレス */
-extern void *memheap;           /**< ヒープの底                               */
+extern void *memheap;           /**< ヒープの底 */
 
 /* メモリ関数プロトタイプ */
-void *memget(uint);
-syscall memfree(void *, uint);
-void *stkget(uint);
+void *memget(uint32_t);
+syscall memfree(void *, uint32_t);
+void *stkget(uint32_t);
 
 #endif                          /* _MEMORY_H_ */

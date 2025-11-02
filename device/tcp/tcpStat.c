@@ -66,7 +66,11 @@ void tcpStat(struct tcb *tcbptr)
     /* Skip interface if not allocated */
     if (devstate != TCP_ALLOC)
     {
+#ifdef __aarch64__
+        printf("BLOCK%-3ld   Inactive\n", tcbptr - tcptab);
+#else
         printf("BLOCK%-3d   Inactive\n", tcbptr - tcptab);
+#endif
         return;
     }
 

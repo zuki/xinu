@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <bufpool.h>
 #include <network.h>
 #include <stdlib.h>
@@ -21,7 +22,7 @@ struct packet *netGetbuf(void)
 
     /* Obtain a buffer for the packet */
     pkt = bufget(netpool);
-    if (SYSERR == (int)pkt)
+    if (SYSERR == (uintptr_t)pkt)
     {
         return (struct packet *)SYSERR;
     }

@@ -6,6 +6,8 @@
 #ifndef _CORE_H_
 #define _CORE_H_
 
+#include <stdint.h>
+
 #ifdef _XINU_PLATFORM_ARM_RPI_3_
 #define CORE_MBOX_BASE      0x4000008C
 #define CORE_MBOX_OFFSET    0x10
@@ -18,7 +20,7 @@
 
 extern unsigned int getmode(void);
 extern unsigned int getcpuid(void);
-extern unsigned int core_init_sp[];
+extern uintptr_t core_init_sp[];
 extern void unparkcore(int, void *, void *);
 extern void pld(void *);
 extern void pldw(void *);

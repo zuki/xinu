@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 
 /* Number of bits in an 'unsigned long'.  */
 #define LONG_BITS (8 * sizeof(unsigned long))
@@ -84,7 +85,7 @@ enum integer_size {
  *      number of characters written on success, or @c EOF on failure
  */
 int _doprnt(const char *fmt, va_list ap,
-            int (*putc_func) (int, int), int putc_arg)
+            int (*putc_func) (int, uintptr_t), uintptr_t putc_arg)
 {
     int chars_written = 0;      /* Number of characters written so far  */
 

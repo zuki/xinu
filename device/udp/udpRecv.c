@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 #include <interrupt.h>
 #include <ipv4.h>
@@ -106,7 +107,7 @@ syscall udpRecv(struct packet *pkt, const struct netaddr *src,
     /* パケットを格納するバッファを取得する */
     tpkt = udpGetbuf(udpptr);
 
-    if (SYSERR == (int)tpkt)
+    if (SYSERR == (uintptr_t)tpkt)
     {
         UDP_TRACE("Unable to get UDP buffer from pool. Dropping packet.");
         restore(im);

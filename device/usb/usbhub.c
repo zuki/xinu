@@ -559,7 +559,7 @@ void usb_hub_for_device_in_tree(struct usb_device *dev,
         (*callback)(dev);
         if (is_hub(dev))
         {
-            int hub_id = (int)dev->driver_private;
+            int hub_id = (int)(long)dev->driver_private;
             struct usb_hub *hub = &hub_structs[hub_id];
             uint i;
 
@@ -879,7 +879,7 @@ hub_bind_device(struct usb_device *dev)
     /* ステータス変化リクエストを発行する  */
     hub_status_change_requests[hub_id].dev = dev;
     hub_status_change_requests[hub_id].endpoint_desc = dev->endpoints[0][0];
-    dev->driver_private = (void*)hub_id;
+    dev->driver_private = (void*)(long)hub_id;
     status = usb_submit_xfer_request(&hub_status_change_requests[hub_id]);
     if (status != USB_STATUS_SUCCESS)
     {
@@ -898,7 +898,7 @@ hub_bind_device(struct usb_device *dev)
 static void
 hub_unbind_device(struct usb_device *hub_device)
 {
-    int hub_id = (int)hub_device->driver_private;
+    int hub_id = (int)(long)hub_device->driver_private;
     struct usb_hub *hub = &hub_structs[hub_id];
     irqmask im;
     uint i;

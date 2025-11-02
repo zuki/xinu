@@ -4,6 +4,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <snoop.h>
 
 /**
@@ -41,7 +42,7 @@ int snoopCapture(struct snoop *cap, struct packet *pkt)
 
     /* パケットを収めるバッファを取得する */
     buf = netGetbuf();
-    if (SYSERR == (int)buf)
+    if (SYSERR == (uintptr_t)buf)
     {
         SNOOP_TRACE("Failed to get buffer");
         return SYSERR;
@@ -67,7 +68,7 @@ int snoopCapture(struct snoop *cap, struct packet *pkt)
         SNOOP_TRACE("Capture queue full");
         return SYSERR;
     }
-    if (SYSERR == mailboxSend(cap->queue, (int)buf))
+    if (SYSERR == mailboxSend(cap->queue, (mbxmess)buf))
     {
         netFreebuf(buf);
         SNOOP_TRACE("Failed to enqueue packet");

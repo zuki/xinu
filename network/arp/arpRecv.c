@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <arp.h>
 #include <clock.h>
 #include <ethernet.h>
@@ -107,7 +108,7 @@ syscall arpRecv(struct packet *pkt)
         if (NULL == entry)
         {
             entry = arpAlloc();
-            if (SYSERR == (int)entry)
+            if (SYSERR == (uintptr_t)entry)
             {
                 restore(im);
                 netFreebuf(pkt);
@@ -134,7 +135,7 @@ syscall arpRecv(struct packet *pkt)
                 netFreebuf(pkt);
                 return SYSERR;
             }
-            mailboxSend(arpqueue, (int)pkt);
+            mailboxSend(arpqueue, (mbxmess)pkt);
             ARP_TRACE("Enqueued request for daemon to reply");
             restore(im);
             return OK;

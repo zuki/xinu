@@ -4,6 +4,7 @@
  */
 /* Embedded Xinu, Copyright (C) 2009, 2013.  All rights reserved. */
 
+#include <stdint.h>
 #include <ipv4.h>
 #include <network.h>
 #include <string.h>
@@ -48,7 +49,7 @@ syscall udpSend(struct udp *udpptr, ushort datalen, const void *buf)
     int result;
 
     pkt = netGetbuf();
-    if (SYSERR == (int)pkt)
+    if (SYSERR == (uintptr_t)pkt)
     {
         UDP_TRACE("Failed to allocate buffer");
         return SYSERR;

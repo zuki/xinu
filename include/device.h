@@ -12,6 +12,7 @@
 
 #include <conf.h>
 #include <stddef.h>
+#include <stdint.h>
 
 /**
  * @ingroup devcalls
@@ -25,11 +26,11 @@
 /* 標準デバイス関数 */
 devcall open(int, ...);
 devcall close(int);
-devcall read(int, void *, uint);
-devcall write(int, const void *, uint);
+devcall read(int, void *, uint32_t);
+devcall write(int, const void *, uint32_t);
 devcall getc(int);
 devcall putc(int, char);
-devcall seek(int, uint);
+devcall seek(int, uint32_t);
 devcall control(int, int, long, long);
 syscall getdev(const char *);
 

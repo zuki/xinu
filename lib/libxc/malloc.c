@@ -7,6 +7,7 @@
 
 #include <memory.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 /**
  * @ingroup libxc
@@ -35,7 +36,7 @@ void *malloc(size_t size)
 
     /* acquire memory from kernel */
     pmem = (struct memblock *)memget(size);
-    if (SYSERR == (uint)pmem)
+    if (SYSERR == (uintptr_t)pmem)
     {
         return NULL;
     }

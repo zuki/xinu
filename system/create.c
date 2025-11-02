@@ -4,6 +4,7 @@
 /* Embedded Xinu, Copyright (C) 2007, 2013.  All rights reserved. */
 
 #include <platform.h>
+#include <stdint.h>
 #include <string.h>
 #include <thread.h>
 #include <core.h>
@@ -31,14 +32,14 @@ static int thrnew(void);
  *      新規スレッドのid, （メモリ不足やスレッドエントリがフル
  *      などで）新規スレッドが作成できなかった場合は ::SYSERR
  */
-tid_typ create(void *procaddr, uint ssize, int priority,
+tid_typ create(void *procaddr, uint32_t ssize, int priority,
                const char *name, int nargs, ...)
 {
-    irqmask im;                 /* saved interrupt state               */
-    ulong *saddr;               /* stack address                       */
-    tid_typ tid;                /* new thread ID                       */
-    struct thrent *thrptr;      /* pointer to new thread control block */
-    va_list ap;                 /* list of thread arguments            */
+    irqmask im;             /* saved interrupt state */
+    uint64_t *saddr;        /* stack address */
+    tid_typ tid;            /* new thread ID */
+    struct thrent *thrptr;  /* pointer to new thread control block */
+    va_list ap;             /* list of thread arguments */
 
     im = disable();
 
@@ -49,7 +50,7 @@ tid_typ create(void *procaddr, uint ssize, int priority,
 
     /* 新規スタックを割り当てる  */
     saddr = stkget(ssize);
-    if (SYSERR == (int)saddr)
+    if (SYSERR == (long)saddr)
     {
         restore(im);
         return SYSERR;

@@ -6,6 +6,7 @@
 
 #include <kernel.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <interrupt.h>
 #include <thread.h>
 #include <queue.h>
@@ -25,7 +26,7 @@
  *      システムタイマーがサポートされていない場合は、常に
  *      ::SYSERR を返す
  */
-syscall sleep(uint ms)
+syscall sleep(uint32_t ms)
 {
 #if RTCLOCK
     irqmask im;

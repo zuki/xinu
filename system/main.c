@@ -8,6 +8,7 @@
 #include <platform.h>
 #include <shell.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <thread.h>
 #include <version.h>
 #include <stdlib.h>
@@ -28,7 +29,7 @@ thread main(void)
 {
 #if HAVE_SHELL
     int shelldevs[4][3];
-    uint nshells = 0;
+    uint32_t nshells = 0;
 #endif
 
     /* オペレーティングシステムに関する情報を表示する  */
@@ -37,7 +38,7 @@ thread main(void)
     /* すべてのethernetデバイスをオープンする */
 #if NETHER
     struct ether *ethptr;
-    ushort i;
+    uint16_t i;
     int result;
     for (i = 0; i < NETHER; i++)
     {
@@ -119,7 +120,7 @@ thread main(void)
     /* シェルを開始する  */
 #if HAVE_SHELL
     {
-        uint i;
+        uint32_t i;
         char name[16];
 
         for (i = 0; i < nshells; i++)
@@ -152,35 +153,35 @@ static void print_os_info(void)
     kprintf("\r\n\r\n");
 
     /* 検知したプラットフォームを出力する */
-    //kprintf("Processor identification: 0x%08X\r\n", cpuid);
+    //kprintf("Processor identification: 0x%016lX\r\n", cpuid);
     kprintf("Detected platform as: %s, %s\r\n\r\n",
             platform.family, platform.name);
 
     /* Xinuのメモリレイアウトを出力する */
-    kprintf("%10d bytes physical memory.\r\n",
-            (ulong)platform.maxaddr - (ulong)platform.minaddr);
-    kprintf("           [0x%08X to 0x%08X]\r\n",
-            (ulong)platform.minaddr, (ulong)(platform.maxaddr - 1));
+    kprintf("%10ld bytes physical memory.\r\n",
+            (uint64_t)platform.maxaddr - (uint64_t)platform.minaddr);
+    kprintf("           [0x%016lX to 0x%016lX]\r\n",
+            (uint64_t)platform.minaddr, (uint64_t)(platform.maxaddr - 1));
 
     /* 利用可能なデータキャッシュを出力する */
-    kprintf("%10d kilobytes L1 data cache.\r\n", platform.dcache_size);
+    kprintf("%10ld kilobytes L1 data cache.\r\n", platform.dcache_size);
 
-    kprintf("%10d bytes reserved system area.\r\n",
-            (ulong)_start - (ulong)platform.minaddr);
-    kprintf("           [0x%08X to 0x%08X]\r\n",
-            (ulong)platform.minaddr, (ulong)_start - 1);
+    kprintf("%10ld bytes reserved system area.\r\n",
+            (uint64_t)_start - (uint64_t)platform.minaddr);
+    kprintf("           [0x%016lX to 0x%016lX]\r\n",
+            (uint64_t)platform.minaddr, (uint64_t)_start - 1);
 
-    kprintf("%10d bytes Xinu code.\r\n", (ulong)&_end - (ulong)_start);
-    kprintf("           [0x%08X to 0x%08X]\r\n",
-            (ulong)_start, (ulong)&_end - 1);
+    kprintf("%10ld bytes Xinu code.\r\n", (uint64_t)&_end - (uint64_t)_start);
+    kprintf("           [0x%016lX to 0x%016lX]\r\n",
+            (uint64_t)_start, (uint64_t)&_end - 1);
 
-    kprintf("%10d bytes stack space.\r\n", (ulong)memheap - (ulong)&_end);
-    kprintf("           [0x%08X to 0x%08X]\r\n",
-            (ulong)&_end, (ulong)memheap - 1);
+    kprintf("%10ld bytes stack space.\r\n", (uint64_t)memheap - (uint64_t)&_end);
+    kprintf("           [0x%016lX to 0x%016lX]\r\n",
+            (uint64_t)&_end, (uint64_t)memheap - 1);
 
-    kprintf("%10d bytes heap space.\r\n",
-            (ulong)platform.maxaddr - (ulong)memheap);
-    kprintf("           [0x%08X to 0x%08X]\r\n\r\n",
-            (ulong)memheap, (ulong)platform.maxaddr - 1);
+    kprintf("%10ld bytes heap space.\r\n",
+            (uint64_t)platform.maxaddr - (uint64_t)memheap);
+    kprintf("           [0x%016lX to 0x%016lX]\r\n\r\n",
+            (uint64_t)memheap, (uint64_t)platform.maxaddr - 1);
     kprintf("\r\n");
 }

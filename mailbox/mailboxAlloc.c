@@ -5,6 +5,7 @@
 
 #include <mailbox.h>
 #include <memory.h>
+#include <stdint.h>
 
 /**
  * @ingroup mailbox
@@ -20,10 +21,10 @@
  *      すべてのメールボックスがすでに使用されている、または、
  *      その他のリソースが割り当てられなかった場合は ::SYSERR
  */
-syscall mailboxAlloc(uint count)
+syscall mailboxAlloc(uint32_t count)
 {
-    static uint nextmbx = 0;
-    uint i;
+    static uint32_t nextmbx = 0;
+    uint32_t i;
     struct mbox *mbxptr;
     int retval = SYSERR;
 
@@ -40,10 +41,10 @@ syscall mailboxAlloc(uint count)
         if (MAILBOX_FREE == mbxptr->state)
         {
             /* メッセージキューのためのメモリを取得する */
-            mbxptr->msgs = memget(sizeof(int) * count);
+            mbxptr->msgs = memget(sizeof(long) * count);
 
             /* メモリが割り当てられたかチェックする */
-            if (SYSERR == (int)mbxptr->msgs)
+            if (SYSERR == (mbxmess)mbxptr->msgs)
             {
                 break;
             }
@@ -57,7 +58,7 @@ syscall mailboxAlloc(uint count)
             if ((SYSERR == (int)mbxptr->sender) ||
                 (SYSERR == (int)mbxptr->receiver))
             {
-                memfree(mbxptr->msgs, sizeof(int) * (mbxptr->max));
+                memfree(mbxptr->msgs, sizeof(long) * (mbxptr->max));
                 semfree(mbxptr->sender);
                 semfree(mbxptr->receiver);
                 break;

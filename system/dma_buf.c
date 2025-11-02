@@ -1,6 +1,7 @@
 /**
  * @file dma_buf.c
  */
+#include <stdint.h>
 #include <dma_buf.h>
 #include <compiler.h>
 #include <mutex.h>
@@ -8,8 +9,8 @@
 
 /** @ingroup dma_buf
  * @def SECTION_SIZE
- * dma_buf用のメモリ容量 (1MB) */
-#define SECTION_SIZE    0x00100000
+ * dma_buf用のメモリ容量 (2MB) */
+#define SECTION_SIZE    0x00200000
 
 /** @ingroup dma_buf
  * @var freespace_idx
@@ -36,7 +37,7 @@ uint8_t dma_buf_space[SECTION_SIZE] __aligned(SECTION_SIZE);
  * @param size 割り当てるサイズ
  * @return 割り当てたdma_bufへのポインタ
  */
-void *dma_buf_alloc(uint size)
+void *dma_buf_alloc(uint32_t size)
 {
     void *retval;
     retval = (void *)(dma_buf_space + freespace_idx);
@@ -56,7 +57,7 @@ void *dma_buf_alloc(uint size)
  * @param size 解放するサイズ
  * @return 常にOK
 */
-syscall dma_buf_free(void *ptr, uint size)
+syscall dma_buf_free(void *ptr, uint32_t size)
 {
     mutex_acquire(dma_buf_mutex);
     freespace_idx -= size;

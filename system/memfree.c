@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <platform.h>
+#include <stdint.h>
 #include <memory.h>
 #include <interrupt.h>
 
@@ -24,22 +25,22 @@
  *      メモリの破損や間違ったメモリブロックが指定された場合にのみ
  *      失敗する可能性がある。
  */
-syscall memfree(void *memptr, uint nbytes)
+syscall memfree(void *memptr, uint32_t nbytes)
 {
     register struct memblock *block, *next, *prev;
     irqmask im;
-    ulong top;
+    uint64_t top;
 
     /* ブロックがヒープにあること */
     if ((0 == nbytes)
-        || ((ulong)memptr < (ulong)memheap)
-        || ((ulong)memptr > (ulong)platform.maxaddr))
+        || ((uint64_t)memptr < (uint64_t)memheap)
+        || ((uint64_t)memptr > (uint64_t)platform.maxaddr))
     {
         return SYSERR;
     }
 
     block = (struct memblock *)memptr;
-    nbytes = (ulong)roundmb(nbytes);
+    nbytes = (uint32_t)roundvalue(nbytes);
 
     im = disable();
 
@@ -58,12 +59,12 @@ syscall memfree(void *memptr, uint nbytes)
     }
     else
     {
-        top = (ulong)prev + prev->length;
+        top = (uint64_t)prev + prev->length;
     }
 
     /* ブロックが前方または後方のブロックと重ならないこと */
-    if ((top > (ulong)block)
-        || ((next != NULL) && ((ulong)block + nbytes) > (ulong)next))
+    if ((top > (uint64_t)block)
+        || ((next != NULL) && ((uint64_t)block + nbytes) > (uint64_t)next))
     {
         restore(im);
         return SYSERR;
@@ -72,7 +73,7 @@ syscall memfree(void *memptr, uint nbytes)
     memlist.length += nbytes;
 
     /* 前方のブロックと隣接している場合は合体する */
-    if (top == (ulong)block)
+    if (top == (uint64_t)block)
     {
         prev->length += nbytes;
         block = prev;
@@ -85,7 +86,7 @@ syscall memfree(void *memptr, uint nbytes)
     }
 
     /* 後方のブロックと隣接している場合は合体する */
-    if (((ulong)block + block->length) == (ulong)next)
+    if (((uint64_t)block + block->length) == (uint64_t)next)
     {
         block->length += next->length;
         block->next = next->next;

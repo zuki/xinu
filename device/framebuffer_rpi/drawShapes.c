@@ -39,7 +39,7 @@ void drawPixel(int x, int y, ulong color)
         dmb();
         *address = color;
         dmb();
-        _inval_area((uint32_t)address);
+        _inval_area((uint32_t)(uintptr_t)address);
         dmb();
     }
 }

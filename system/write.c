@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <device.h>
 
 /**
@@ -29,7 +30,7 @@
  * デバイスによってはこの関数は単にデータをバッファリングするだけで
  * 後で割り込み処理コードにより書き出す場合もあることに注意されたい。
  */
-devcall write(int descrp, const void *buffer, uint count)
+devcall write(int descrp, const void *buffer, uint32_t count)
 {
     device *devptr;
 

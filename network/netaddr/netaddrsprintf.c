@@ -19,10 +19,8 @@
  * @param addr
  *      フォーマットするネットワークアドレス
  *
- * @return
- *      @c int にキャストした作成文字列へのポインタ
  */
-int netaddrsprintf(char *str, const struct netaddr *addr)
+void netaddrsprintf(char *str, const struct netaddr *addr)
 {
     switch (addr->type)
     {
@@ -42,5 +40,4 @@ int netaddrsprintf(char *str, const struct netaddr *addr)
     default:
         sprintf(str, "ERROR");
     }
-    return (int)str;
 }

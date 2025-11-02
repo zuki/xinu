@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <arp.h>
 #include <mailbox.h>
 
@@ -21,7 +22,7 @@ thread arpDaemon(void)
     {
         pkt = (struct packet *)mailboxReceive(arpqueue);
         ARP_TRACE("Daemon received ARP packet");
-        if (SYSERR == (int)pkt)
+        if (SYSERR == (uintptr_t)pkt)
         {
             continue;
         }

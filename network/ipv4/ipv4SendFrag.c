@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <ipv4.h>
 #include <icmp.h>
 #include <network.h>
@@ -99,7 +100,7 @@ syscall ipv4SendFrag(struct packet *pkt, struct netaddr *nxthop)
     // 発信フラグメント用にスタックからメモリを取得する
     outpkt = netGetbuf();
 
-    if (SYSERR == (int)outpkt)
+    if (SYSERR == (uintptr_t)outpkt)
     {
         IPv4_TRACE("allocating outpkt");
         return SYSERR;

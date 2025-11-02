@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <interrupt.h>
+#include <stdint.h>
 #include <memory.h>
 
 /**
@@ -21,7 +22,7 @@
  *      返されるポインタは8バイト境界にあることが保証される。
  *      使用が終わったら memfree() でブロックを解放すること。
  */
-void *memget(uint nbytes)
+void *memget(uint32_t nbytes)
 {
     register struct memblock *prev, *curr, *leftover;
     irqmask im;
@@ -32,7 +33,7 @@ void *memget(uint nbytes)
     }
 
     /* memblockサイズの倍数に丸める   */
-    nbytes = (ulong)roundmb(nbytes);
+    nbytes = (uint32_t)roundvalue(nbytes);
 
     /* 割り込みを禁止する */
     im = disable();
@@ -52,7 +53,7 @@ void *memget(uint nbytes)
         else if (curr->length > nbytes)
         {
             /* ブロックを2つに分割する */
-            leftover = (struct memblock *)((ulong)curr + nbytes);
+            leftover = (struct memblock *)((uint64_t)curr + nbytes);
             prev->next = leftover;
             leftover->next = curr->next;
             leftover->length = curr->length - nbytes;

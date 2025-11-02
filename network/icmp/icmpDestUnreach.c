@@ -5,6 +5,7 @@
 
 #include <ipv4.h>
 #include <icmp.h>
+#include <stdint.h>
 #include <string.h>
 
 /**
@@ -26,7 +27,7 @@ syscall icmpDestUnreach(const struct packet *unreached, uchar code)
 
     ICMP_TRACE("destination unreachable (%d)", code);
     pkt = netGetbuf();
-    if (SYSERR == (int)pkt)
+    if (SYSERR == (uintptr_t)pkt)
     {
         ICMP_TRACE("Failed to acquire packet buffer");
         return SYSERR;

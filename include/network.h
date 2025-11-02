@@ -8,6 +8,7 @@
 #define _NETWORK_H_
 
 #include <stddef.h>
+#include <stdint.h>
 #include <conf.h>
 #include <ethernet.h>
 #include <string.h>
@@ -81,7 +82,7 @@ syscall netaddrmask(struct netaddr *, const struct netaddr *);
 syscall netaddrhost(struct netaddr *, const struct netaddr *);
 /** ネットワークアドレスをコピーする */
 #define netaddrcpy(dst, src)     memcpy(dst, src, sizeof(struct netaddr))
-int netaddrsprintf(char *, const struct netaddr *);
+void netaddrsprintf(char *, const struct netaddr *);
 
 /** 標準的な基礎となるネットワークデバイスドライバ制御機能 */
 #define NET_GET_MTU         200     /**< MTUを取得する */

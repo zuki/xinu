@@ -59,7 +59,7 @@
 #define RESCHED_NO  0 
 
 /** @ingroup threads
- * 不正なスレッドIDをチェックする。ステートメント間でtrueを保持する     */
+ * 不正なスレッドIDをチェックする。ステートメント間でtrueを保持する     
  * ための条件のために割り込みは無効でなければならないことに注意         */
 #define isbadtid(x) ((x)>=NTHREAD || (x)<0 || THRFREE == thrtab[(x)].state)
 

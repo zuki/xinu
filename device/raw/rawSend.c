@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <ipv4.h>
 #include <network.h>
 #include <raw.h>
@@ -55,7 +56,7 @@ syscall rawSend(struct raw *rawptr, void *buf, uint len)
 
     /* Get buffer for packet */
     pkt = netGetbuf();
-    if (SYSERR == (int)pkt)
+    if (SYSERR == (uintptr_t)pkt)
     {
         RAW_TRACE("Failed to get buffer");
         return SYSERR;

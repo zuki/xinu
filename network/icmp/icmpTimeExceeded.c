@@ -4,6 +4,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <ipv4.h>
 #include <icmp.h>
 #include <stdlib.h>
@@ -27,7 +28,7 @@ syscall icmpTimeExceeded(struct packet *unreached, uchar code)
 
     ICMP_TRACE("Time exceeded (%d)", code);
     pkt = netGetbuf();
-    if (SYSERR == (int)pkt)
+    if (SYSERR == (uintptr_t)pkt)
     {
         ICMP_TRACE("Failed to acquire packet buffer");
         return SYSERR;

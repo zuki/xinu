@@ -282,7 +282,7 @@ devcall telnetRead(device *devptr, void *buf, uint len)
                     thrtab_acquire(thrcurrent[cpuid]);
                     if (strncmp(thrtab[thrcurrent[cpuid]].name, "SHELL", 5) != 0)
                     {
-                        kill((tid_typ) thrcurrent);
+                        kill((int)thrcurrent[cpuid]);
                     }
                     thrtab_release(thrcurrent[cpuid]);
                     break;

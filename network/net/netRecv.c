@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <arp.h>
 #include <device.h>
 #include <ethernet.h>
@@ -41,7 +42,7 @@ thread netRecv(struct netif *netptr)
 
         /* Get a buffer for incoming packet */
         pkt = netGetbuf();
-        if (SYSERR == (int)pkt)
+        if (SYSERR == (uintptr_t)pkt)
         {
             continue;
         }

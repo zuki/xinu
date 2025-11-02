@@ -3,6 +3,7 @@
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
 
+#include <stdint.h>
 #include <conf.h>
 #include <device.h>
 #include <kexec.h>
@@ -192,9 +193,9 @@ static void kexec_from_network(int netdev)
            data.bootfile, str_ip);
     kernel = (void*)tftpGetIntoBuffer(data.bootfile, &nif->ip,
                                       &data.next_server, &size);
-    printf("kernel=0x%08X, *kernel=0x%08X\n", (uint)kernel, *(uint *)kernel);
+    printf("kernel=0x%p, *kernel=0x%08X\n", kernel, *(uint *)kernel);
 
-    if (SYSERR == (int)kernel)
+    if (SYSERR == (uintptr_t)kernel)
     {
         fprintf(stderr, "ERROR: TFTP failed.\n");
         return;

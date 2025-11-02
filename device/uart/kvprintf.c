@@ -4,6 +4,7 @@
 
 /* Embedded Xinu, Copyright (C) 2009, 2013.  All rights reserved. */
 
+#include <stdint.h>
 #include <device.h>
 #include <kernel.h>
 #include <stdarg.h>
@@ -34,7 +35,7 @@ syscall kvprintf(const char *format, va_list ap)
      * つま先を踏んでしまうのを防ぐために無効にする。
      */
     im = disable();
-    retval = _doprnt(format, ap, (int (*)(int, int))kputc, (int)&devtab[SERIAL0]);
+    retval = _doprnt(format, ap, (int (*)(int, uintptr_t))kputc, (uintptr_t)&devtab[SERIAL0]);
     restore(im);
     return retval;
 }

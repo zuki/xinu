@@ -4,6 +4,7 @@
 /* Embedded Xinu, Copyright (C) 2009, 2013.  All rights reserved. */
 
 #include <conf.h>
+#include <stdint.h>
 
 #if RTCLOCK
 
@@ -26,20 +27,20 @@
  * @param us
  *    待機するマイクロ秒数
  */
-void udelay(ulong us)
+void udelay(uint64_t us)
 {
     /* delay = 待機するタイマーティック数  */
     /* TODO: 除数に1000000を設定するとtestsuiteがうごかない */
-    ulong delay = (platform.clkfreq / 1000) * us;
+    uint64_t delay = (platform.clkfreq / 1000) * us;
 
     /* start = 開始時のティックカウント  */
-    ulong start = clkcount();
+    uint64_t start = clkcount();
 
     /* end = 終了時のティックカウント（ラップする可能性あり）  */
-    ulong target = start + delay;
+    uint64_t target = start + delay;
 
     /* 一時変数 */
-    ulong count;
+    uint64_t count;
 
     if (target >= start)
     {

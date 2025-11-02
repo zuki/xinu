@@ -8,6 +8,7 @@
 #include <ethloop.h>
 #include <interrupt.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 
 /**
@@ -65,7 +66,7 @@ devcall ethloopWrite(device *devptr, const void *buf, uint len)
     /* バッファスペースを割り当てる。ブロックされるのでプールIDが
      * 衝突する場合のみ失敗する  */
     pkt = (char *)bufget(elpptr->poolid);
-    if (SYSERR == (int)pkt)
+    if (SYSERR == (uintptr_t)pkt)
     {
         restore(im);
         return SYSERR;

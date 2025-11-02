@@ -4,10 +4,12 @@
 /* Embedded Xinu, Copyright (C) 2009, 2013.  All rights reserved. */
 
 #include <conf.h>
+#include <stdint.h>
 
 #if RTCLOCK
 
 #include <clock.h>
+
 
 /**
  * @ingroup timer
@@ -19,7 +21,7 @@
  * @param ms
  *    待機するミリ秒数
  */
-void mdelay(ulong ms)
+void mdelay(uint64_t ms)
 {
     while (ms--)
     {

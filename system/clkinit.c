@@ -10,6 +10,7 @@
 
 #include <kernel.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <platform.h>
 #include <interrupt.h>
 #include <clock.h>
@@ -22,14 +23,14 @@
  * たびに増分される。 ::clkticks が ::CLKTICKS_PER_SEC に達したら、::clktime は
  * 増分され、::clkticks は 0 にリセットされる。
  */
-volatile ulong clkticks;
+volatile uint64_t clkticks;
 
 /**
  * @ingroup timer
  *
  * システム起動からの経過秒数
  */
-volatile ulong clktime;
+volatile uint64_t clktime;
 
 /** スリープ中のプロセスのキュー  */
 qid_typ sleepq;
@@ -39,7 +40,7 @@ qid_typ sleepq;
 extern void clockIRQ(void);
 #define CLOCKBASE 0x40         /* I/O base port of clock chip for x86 */
 #define CLOCKCTL (CLOCKBASE+3) /* chip CSW I/O port for x86           */
-ulong time_intr_freq = 0;     /** frequency of XINU clock interrupt   */
+uint64_t time_intr_freq = 0;     /** frequency of XINU clock interrupt   */
 #endif
 
 /**
@@ -67,7 +68,7 @@ void clkinit(void)
 	outb(CLOCKBASE, time_intr_freq);
 	outb(CLOCKBASE, time_intr_freq >> 8);
 	outb(CLOCKBASE, time_intr_freq >> 8); /* why??? */
-	set_evec(IRQBASE, (ulong)clockIRQ);
+	set_evec(IRQBASE, (uint64_t)clockIRQ);
 #else
     /* クロック割り込みを登録する */
     interruptVector[IRQ_TIMER] = clkhandler;

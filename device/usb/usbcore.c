@@ -343,7 +343,7 @@ static void
 signal_control_msg_done(struct usb_xfer_request *req)
 {
     /* privateにはセマフォが設定されており、このセマフォでwaitしている */
-    signal((semaphore)req->private);
+    signal((semaphore)(unsigned long)req->private);
 }
 
 /**
@@ -437,7 +437,7 @@ usb_control_msg(struct usb_device *dev,
     req->setup_data.wIndex = wIndex;
     req->setup_data.wLength = wLength;
     req->completion_cb_func = signal_control_msg_done;
-    req->private = (void*)sem;      // privateデータにセマフォを設定。
+    req->private = (void*)(unsigned long)sem;      // privateデータにセマフォを設定。
     /* 転送実行を要求 */
     status = usb_submit_xfer_request(req);
     if (status == USB_STATUS_SUCCESS)

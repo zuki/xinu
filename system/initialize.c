@@ -8,6 +8,7 @@
 
 #include <xinu.h>
 #include <stdint.h>
+#include <stdint.h>
 #include <platform.h>
 #include <mutex.h>
 
@@ -19,6 +20,8 @@
 
 #include "platforms/arm-rpi3/mmu.h"
 #include <dma_buf.h>
+
+extern void *_end;
 
 /* 関数プロトタイプ */
 extern thread main(void);       /* mainは最初に作成されるスレッド */
@@ -46,7 +49,7 @@ tid_typ thrcurrent[NCORES];     /* 現在実行中のスレッドのID       */
 
 /* startup.S でセットされるパラメタ */
 void *memheap;                  /* ヒープの底 = OSスタックのトップ   */
-ulong cpuid;                    /* プロセッサID                      */
+uint64_t cpuid;                 /* プロセッサID                      */
 struct platform platform;       /* プラットフォーム固有の構成        */
 
 /**
@@ -112,9 +115,9 @@ static int sysinit(void)
     memheap = roundmb(memheap);
     platform.maxaddr = truncmb(platform.maxaddr);
     memlist.next = pmblock = (struct memblock *)memheap;
-    memlist.length = (uint)(platform.maxaddr - memheap);
+    memlist.length = (uint32_t)(platform.maxaddr - memheap);
     pmblock->next = NULL;
-    pmblock->length = (uint)(platform.maxaddr - memheap);
+    pmblock->length = (uint32_t)(platform.maxaddr - memheap);
 
     /* スレッドテーブルを初期化する */
     for (i = 0; i < NTHREAD; i++)
@@ -127,7 +130,7 @@ static int sysinit(void)
     thrptr->state = THRCURR;
     thrptr->prio = 0;
     strlcpy(thrptr->name, "prnull", TNMLEN);
-    thrptr->stkbase = (void *)&_end;
+    thrptr->stkbase = (void *)_end;
     thrptr->stklen = 8192;  /* NULLSTK */
     thrptr->stkptr = 0;
     thrptr->memlist.next = NULL;
@@ -140,7 +143,7 @@ static int sysinit(void)
     thrptr->state = THRCURR;
     thrptr->prio = 0;
     strlcpy(thrptr->name, "prnull01", TNMLEN);
-    thrptr->stkbase = (void *)(&_end + 8192);
+    thrptr->stkbase = (void *)(_end + 8192);
     thrptr->stklen = 8192;  /* NULLSTK */
     thrptr->stkptr = 0;
     thrptr->memlist.next = NULL;
@@ -153,7 +156,7 @@ static int sysinit(void)
     thrptr->state = THRCURR;
     thrptr->prio = 0;
     strlcpy(thrptr->name, "prnull02", TNMLEN);
-    thrptr->stkbase = (void *)(&_end + 16384);
+    thrptr->stkbase = (void *)(_end + 16384);
     thrptr->stklen = 8192;  /* NULLSTK */
     thrptr->stkptr = 0;
     thrptr->memlist.next = NULL;
@@ -166,7 +169,7 @@ static int sysinit(void)
     thrptr->state = THRCURR;
     thrptr->prio = 0;
     strlcpy(thrptr->name, "prnull03", TNMLEN);
-    thrptr->stkbase = (void *)(&_end + 24576);
+    thrptr->stkbase = (void *)(_end + 24576);
     thrptr->stklen = 8192;  /* NULLSTK */
     thrptr->stkptr = 0;
     thrptr->memlist.next = NULL;
@@ -199,7 +202,7 @@ static int sysinit(void)
         readylist[i] = queinit();
     }
 
-// シリコンバックプレーンの初期化(対象外)
+/* シリコンバックプレーンの初期化(対象外) */
 #if SB_BUS
     backplaneInit(NULL);
 #endif                          /* SB_BUS */
@@ -215,9 +218,9 @@ static int sysinit(void)
     {
         void *userheap;             /* ユーザメモリヒープへのポインタ */
         userheap = stkget(UHEAP_SIZE);
-        if (SYSERR != (int)userheap)
+        if (SYSERR != (long)userheap)
         {
-            userheap = (void *)((uint)userheap - UHEAP_SIZE + sizeof(int));
+            userheap = (void *)((uint64_t)userheap - UHEAP_SIZE + sizeof(int));
             memRegionInit(userheap, UHEAP_SIZE);
 
             /* メモリプロテクションを初期化する */
@@ -248,6 +251,7 @@ static int sysinit(void)
     {
         devtab[i].init((device*)&devtab[i]);
     }
+    kprintf("device ok\n");
 #endif
 
 #ifdef WITH_USB

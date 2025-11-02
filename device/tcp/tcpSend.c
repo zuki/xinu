@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <memory.h>
 #include <stdlib.h>
 #include <string.h>
@@ -57,7 +58,7 @@ int tcpSend(struct tcb *tcbptr, uchar ctrl, uint seqnum,
         return SYSERR;
     }
     pkt = netGetbuf();
-    if (SYSERR == (int)pkt)
+    if (SYSERR == (uintptr_t)pkt)
     {
         TCP_TRACE("Failed to get buffer");
         return SYSERR;

@@ -21,15 +21,22 @@ typedef unsigned long ulong;    /**< unsigned long type                 */
 typedef char bool;              /**< boolean type                       */
 typedef unsigned long size_t;   /**< size type                          */
 
-/* Function declaration return types */
+#ifdef __aarch64__
+typedef long syscall;           /**< system call declaration            */
+typedef long message;           /**< message passing content            */
+typedef long mbxmess;           /**< mailbox message                    */
+#else
 typedef int syscall;            /**< system call declaration            */
+typedef int message;            /**< message passing content            */
+typedef int mbxmess;            /**< mailbox message                    */
+#endif
+
+/* Function declaration return types */
 typedef int devcall;            /**< device call declaration            */
 typedef int shellcmd;           /**< shell command declaration          */
 typedef int thread;             /**< thread declaration                 */
 typedef void interrupt;         /**< interrupt procedure                */
 typedef void exchandler;        /**< exception procedure                */
-typedef int message;            /**< message passing content            */
-
 typedef int tid_typ;            /**< thread ID type                     */
 
 /* Boolean type and constants */

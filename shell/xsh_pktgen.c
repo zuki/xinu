@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <shell.h>
@@ -213,7 +214,7 @@ thread pktgen(struct pktgen_info *info)
 
         /* prepare the packet */
         pkt = netGetbuf();
-        if (SYSERR == (int)pkt)
+        if (SYSERR == (uintptr_t)pkt)
         {
             info->errors += 1;
             continue;

@@ -3,7 +3,7 @@
  *
  */
 /* Embedded Xinu, Copyright (C) 2008, 2013.  All rights reserved. */
-
+#include <stdint.h>
 #include <clock.h>
 #include <device.h>
 #include <dhcp.h>
@@ -97,7 +97,7 @@ syscall dhcpSendRequest(int descrp, struct dhcpData *data)
 
     /* 2. パケット用のバッファを取得する */
     pkt = netGetbuf();
-    if (SYSERR == (int)pkt)
+    if (SYSERR == (uintptr_t)pkt)
     {
         return SYSERR;
     }

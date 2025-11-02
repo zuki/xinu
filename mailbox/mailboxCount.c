@@ -22,7 +22,7 @@ syscall mailboxCount(mailbox box)
 {
     const struct mbox *mbxptr;
     irqmask im;
-    int retval;
+    long retval;
 
     if (!(0 <= box && box < NMAILBOX))
     {
@@ -33,7 +33,7 @@ syscall mailboxCount(mailbox box)
     im = disable();
     if (MAILBOX_ALLOC == mbxptr->state)
     {
-        retval = mbxptr->count;
+        retval = (long)mbxptr->count;
     }
     else
     {

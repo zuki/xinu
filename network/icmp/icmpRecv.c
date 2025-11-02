@@ -2,7 +2,7 @@
  * @file icmpRecv.c
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
-
+#include <stddef.h>
 #include <icmp.h>
 #include <clock.h>
 #include <interrupt.h>
@@ -79,7 +79,7 @@ syscall icmpRecv(struct packet *pkt)
 
     case ICMP_ECHO:
         ICMP_TRACE("Enqueued Echo Request for daemon to reply");
-        mailboxSend(icmpqueue, (int)pkt);
+        mailboxSend(icmpqueue, (mbxmess)pkt);
         return OK;
 
     case ICMP_UNREACH:

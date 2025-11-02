@@ -3,10 +3,11 @@
  */
 /* Embedded Xinu, Copyright (C) 2009, 2013.  All rights reserved. */
 
+#include <stdint.h>
 #include <stdarg.h>
 #include <stdio.h>
 
-static int sprntf(int, int);
+static int sprntf(int, uintptr_t);
 
 /**
  * @ingroup libxc
@@ -33,7 +34,7 @@ int sprintf(char *str, const char *format, ...)
 
     s = str;
     va_start(ap, format);
-    _doprnt(format, ap, sprntf, (int)&s);
+    _doprnt(format, ap, sprntf, (uintptr_t)&s);
     va_end(ap);
     *s = '\0';
 
@@ -43,7 +44,7 @@ int sprintf(char *str, const char *format, ...)
 /*
  * Routine called by _doprnt() to output each character.
  */
-static int sprntf(int c, int _sptr)
+static int sprntf(int c, uintptr_t _sptr)
 {
     char **sptr = (char **)_sptr;
     char *s = *sptr;

@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <device.h>
 #include <interrupt.h>
 #include <network.h>
@@ -52,8 +53,8 @@ devcall tcpOpen(device *devptr, va_list ap)
     }
 
     /* Obtain remaining arguments */
-    localip = (struct netaddr *)va_arg(ap, uint);
-    remoteip = (struct netaddr *)va_arg(ap, uint);
+    localip = (struct netaddr *)va_arg(ap, uintptr_t);
+    remoteip = (struct netaddr *)va_arg(ap, uintptr_t);
     localpt = va_arg(ap, uint);
     remotept = va_arg(ap, uint);
     mode = va_arg(ap, uint);

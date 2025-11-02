@@ -5,11 +5,12 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <thread.h>
+#include <stdint.h>
 #include <clock.h>
 #include <queue.h>
 #include <memory.h>
 
-extern void ctxsw(void *, void *, uchar);
+extern void ctxsw(void *, void *, uint8_t);
 int resdefer;                   /* 再スケジュールが遅延されたら >0 */
 
 /**
@@ -23,7 +24,7 @@ int resdefer;                   /* 再スケジュールが遅延されたら >0
  */
 int resched(void)
 {
-    uchar asid;                 /* address space identifier */
+    uint8_t asid;                 /* address space identifier */
     struct thrent *throld;      /* old thread entry */
     struct thrent *thrnew;      /* new thread entry */
     unsigned int cpuid;

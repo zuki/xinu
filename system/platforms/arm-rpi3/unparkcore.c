@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009. All rights reserved */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <thread.h>
 #include <core.h>
 #include <mmu.h>
@@ -25,7 +26,7 @@ void *corestart[4];
  * 各コアの初期スタックポインタを保管する配列.
  * 値はstart.Sでセットされる
  */
-unsigned int core_init_sp[4];
+uintptr_t core_init_sp[4];
 
 /**
  * @ingroup bcm2837

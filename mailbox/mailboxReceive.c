@@ -25,7 +25,7 @@ syscall mailboxReceive(mailbox box)
 {
     struct mbox *mbxptr;
     irqmask im;
-    int retval;
+    mbxmess retval;
 
     if (!(0 <= box && box < NMAILBOX))
     {

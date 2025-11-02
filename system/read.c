@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <device.h>
 
 /**
@@ -27,7 +28,7 @@
  *      データを読み込むのに成功する前に読み込みエラーが発生
  *      した場合は ::SYSERR が返される。
  */
-devcall read(int descrp, void *buffer, uint count)
+devcall read(int descrp, void *buffer, uint32_t count)
 {
     device *devptr;
 

@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <network.h>
 #include <route.h>
 #include <stdlib.h>
@@ -49,7 +50,7 @@ syscall rtDefault(const struct netaddr *gate, struct netif *nif)
 
     /* 4. ルートテーブルエントリを割り当てる */
     rtptr = rtAlloc();
-    if ((SYSERR == (int)rtptr) || (NULL == rtptr))
+    if ((SYSERR == (uintptr_t)rtptr) || (NULL == rtptr))
     {
         RT_TRACE("Failed to allocate route entry");
         return SYSERR;

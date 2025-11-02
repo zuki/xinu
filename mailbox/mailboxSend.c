@@ -23,11 +23,11 @@
  *         あるいは、キューに空きが出るまで待機中にメールボックスが
  *         解放された場合は ::SYSERR
  */
-syscall mailboxSend(mailbox box, int mailmsg)
+syscall mailboxSend(mailbox box, mbxmess mailmsg)
 {
     struct mbox *mbxptr;
     irqmask im;
-    int retval;
+    mbxmess retval;
 
     if (!(0 <= box && box < NMAILBOX))
     {

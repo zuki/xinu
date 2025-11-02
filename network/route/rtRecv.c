@@ -37,7 +37,7 @@ syscall rtRecv(struct packet *pkt)
     }
 
     /* 3. パケットをキューに置く */
-    if (SYSERR == mailboxSend(rtqueue, (int)pkt))
+    if (SYSERR == mailboxSend(rtqueue, (mbxmess)pkt))
     {
         restore(im);
         RT_TRACE("Failed to enqueue packet");

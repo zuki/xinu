@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <mailbox.h>
 #include <network.h>
 #include <route.h>
@@ -25,7 +26,7 @@ thread rtDaemon(void)
         /* 1. rtqueueメールボックスからパケットを受信する */
         pkt = (struct packet *)mailboxReceive(rtqueue);
         RT_TRACE("Daemon received packet");
-        if (SYSERR == (int)pkt)
+        if (SYSERR == (uintptr_t)pkt)
         {
             RT_TRACE("Daemon received packet has an error");
             continue;

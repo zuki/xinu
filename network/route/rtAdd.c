@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <network.h>
 #include <route.h>
 
@@ -42,7 +43,7 @@ syscall rtAdd(const struct netaddr *dst, const struct netaddr *gate,
 
     /* 2. ルートテーブルにエントリを割り当てる */
     rtptr = rtAlloc();
-    if ((SYSERR == (int)rtptr) || (NULL == rtptr))
+    if ((SYSERR == (uintptr_t)rtptr) || (NULL == rtptr))
     {
         return SYSERR;
     }

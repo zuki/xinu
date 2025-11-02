@@ -14,7 +14,7 @@
 #
 # $ make PLATFORM=arm-rpi
 #
-PLATFORM := arm-rpi3
+PLATFORM := arm-rpi3-64
 
 # Filename of boot image to create (platform can override it if really needed)
 BOOTIMAGE := xinu.boot
@@ -165,6 +165,7 @@ endif
 # make PLATFORM=arm-rpi COMPILER_ROOT=/opt/arm-dev/bin/arm-none-eabi-
 #
 COMPILER_ROOT := $(ARCH_ROOT)$(ARCH_PREFIX)
+#COMPILER_ROOT := /usr/local/bin/aarch64-elf-
 
 # Set the actual compiler and several binutils programs.
 CC       := $(COMPILER_ROOT)gcc

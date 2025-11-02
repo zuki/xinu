@@ -6,17 +6,18 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <debug.h>
 
-static void hexdump_print(uchar, uchar);
+static void hexdump_print(uint8_t, uint8_t);
 
 /**
  * Print a byte of data in mode.
  * @param data   byte of data to print
  * @param mode   ASCII or HEX
  */
-static void hexdump_print(uchar data, uchar mode)
+static void hexdump_print(uint8_t data, uint8_t mode)
 {
     switch (mode)
     {
@@ -40,15 +41,15 @@ static void hexdump_print(uchar data, uchar mode)
  * @param length  length of buffer to print
  * @param canon   canonical representation (hex+ASCII)
  */
-void hexdump(void *buffer, ulong length, bool canon)
+void hexdump(void *buffer, uint64_t length, bool canon)
 {
-    ulong m, n, remain;
+    uint64_t m, n, remain;
 
-    uchar *b = (uchar *)buffer;
+    uint8_t *b = (uint8_t *)buffer;
 
     for (n = 0; n < length; n += 0x10)
     {
-        fprintf(stdout, "%08lx ", (ulong)buffer + n);
+        fprintf(stdout, "%08lx ", (uint64_t)buffer + n);
 
         remain = length - n;
 

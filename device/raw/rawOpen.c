@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <device.h>
 #include <network.h>
 #include <raw.h>
@@ -33,8 +34,8 @@ devcall rawOpen(device *devptr, va_list ap)
     rawptr = &rawtab[devptr->minor];
 
     /* Obtain arguments */
-    localip = (struct netaddr *)va_arg(ap, int);
-    remoteip = (struct netaddr *)va_arg(ap, int);
+    localip = (struct netaddr *)va_arg(ap, uintptr_t);
+    remoteip = (struct netaddr *)va_arg(ap, uintptr_t);
     proto = va_arg(ap, int);
 
     im = disable();

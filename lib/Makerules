@@ -24,6 +24,15 @@ SOBJ    := $(SFILES:%.S=%.o)
 # All object files
 OBJ     := $(COBJ) $(SOBJ)
 
+COMPILER_ROOT ?= /usr/local/bin/aarch64-elf-
+
+# Set the actual compiler and several binutils programs.
+CC       ?= $(COMPILER_ROOT)gcc
+AR       ?= $(COMPILER_ROOT)ar
+LD       ?= $(COMPILER_ROOT)ld
+STRIP    ?= $(COMPILER_ROOT)strip
+OBJCOPY  ?= $(COMPILER_ROOT)objcopy
+
 all: $(LIBNAME).a
 
 $(COBJ): %.o: %.c

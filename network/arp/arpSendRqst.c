@@ -5,6 +5,7 @@
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <arp.h>
 #include <ethernet.h>
 #include <network.h>
@@ -36,7 +37,7 @@ syscall arpSendRqst(struct arpEntry *entry)
 
     /* パケット用のバッファを取得する */
     pkt = netGetbuf();
-    if (SYSERR == (int)pkt)
+    if (SYSERR == (uintptr_t)pkt)
     {
         ARP_TRACE("Failed to acquire packet buffer");
         return SYSERR;

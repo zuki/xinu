@@ -5,6 +5,7 @@
 
 #include <ipv4.h>
 #include <icmp.h>
+#include <stdint.h>
 #include <string.h>
 #include <route.h>
 
@@ -29,7 +30,7 @@ syscall icmpRedirect(struct packet *redir, uchar code,
 
     ICMP_TRACE("ICMP redirect, code(%d)", code);
     pkt = netGetbuf();
-    if (SYSERR == (int)pkt)
+    if (SYSERR == (uintptr_t)pkt)
     {
         ICMP_TRACE("Failed to acquire packet buffer");
         return SYSERR;
