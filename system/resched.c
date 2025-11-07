@@ -40,12 +40,13 @@ int resched(void)
     thrtab_acquire(thrcurrent[cpuid]);
     throld = &thrtab[thrcurrent[cpuid]];
     throld->intmask = disable();
-
     if (THRCURR == throld->state)
     {
         // readylistの先頭のスレッドよりカレントスレッドの優先度が高い
         quetab_acquire();
-        if (nonempty(readylist[cpuid]) && (throld->prio > firstkey(readylist[cpuid])))
+        //kprintf("prio: %d, key: %d\n", throld->prio, firstkey(readylist[cpuid]));
+        //if (nonempty(readylist[cpuid]) && (throld->prio > firstkey(readylist[cpuid])))
+        if (isempty(readylist[cpuid]) || (throld->prio > firstkey(readylist[cpuid])))
         {
             // カレントスレッドを続ける
             quetab_release();
@@ -70,6 +71,7 @@ int resched(void)
 
     /* アドレス空間識別子をスレッドidに変更する: mips only, armは無視 */
     asid = thrcurrent[cpuid] & 0xff;
+    //kprintf("&old [%s]: 0x%x (0x%x), &new [%s]: 0x%x (0x%x)\n", throld->name, &throld->stkptr, throld->stkptr, thrnew->name, &thrnew->stkptr, thrnew->stkptr);
     ctxsw(&throld->stkptr, &thrnew->stkptr, asid);
 
     /* 再開された時、もとのスレッドはここに返る */

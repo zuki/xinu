@@ -14,6 +14,7 @@
 #define _ARM_BCM2837_H_
 
 #include <stddef.h>
+#include <stdint.h>
 
 /********************************************************************
  * BCM2835ペリフェラルのARM物理メモリアドレス                       *
@@ -45,6 +46,10 @@
 /** Synopsys DesignWare Hi-Speed USB 2.0 On-The-Go (DWC) コントローラ  */
 #define DWC_REGS_BASE          (PERIPHERALS_BASE + 0x980000)
 
+/** 物理メモリの上限 */
+#define PHYSTOP             (0x3B400000)
+/** DMA用メモリの基底アドレス */
+#define DMA_BASE            0x3B200000
 
 /** ***********************************************************************
  * BCM2835ペリフェラルのIRQラインの一部. ここで使用されている番号に       *
@@ -89,9 +94,8 @@ enum board_power_feature {
     POWER_USB    = 3,
 };
 
-extern int bcm2837_setpower(enum board_power_feature feature, bool on);
-extern void bcm2837_power_init(void);
-#define board_setpower bcm2837_setpower
+extern int set_power_mailbox(volatile uint32_t* mailbuffer, uint32_t devid, bool on, bool wait);
+#define board_setpower set_power_mailbox
 
 
 /** *********************************************************************

@@ -16,9 +16,9 @@
 extern void _start(void);       /* start of Xinu code */
 
 /**
- * Initialize kernel mappings to include statically configured kernel
- * memory.  Includes kernel text, data, stack, memory region table, and 
- * page table table.
+ * カーネルマッピングを初期化し、静的に構成されたカーネルメモリを含める。
+ * これにはカーネルテキスト、データ、スタック、メモリ領域テーブル、
+ * ページテーブルが含まれる。
  */
 void safeKmapInit(void)
 {

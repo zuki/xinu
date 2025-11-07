@@ -6,6 +6,8 @@
 #include <compiler.h>
 #include <mutex.h>
 #include <platform.h>
+#include <bcm2837.h>
+#include <string.h>
 
 /** @ingroup dma_buf
  * @def SECTION_SIZE
@@ -29,7 +31,7 @@ static mutex_t dma_buf_mutex;
  * @var dma_buf_space
  * @brief DMAバッファ空間. この領域はキャッシュされない
 */
-uint8_t dma_buf_space[SECTION_SIZE] __aligned(SECTION_SIZE);
+uint8_t *dma_buf_space = (uint8_t *)DMA_BASE;
 
 /** @ingroup dma_buf
  * dma_bufを割り当てる.
@@ -41,6 +43,7 @@ void *dma_buf_alloc(uint32_t size)
 {
     void *retval;
     retval = (void *)(dma_buf_space + freespace_idx);
+    memset(retval, 0, size);
 
     mutex_acquire(dma_buf_mutex);
     freespace_idx += size;

@@ -11,7 +11,7 @@
 //#include <usbkbd.h>
 //#include <stdio.h>
 //#include <usb_util.h>
-#include "bcm2837_mbox.h"
+#include "mbox.h"
 #include "bcm2837.h"
 #include <rpi_gpio.h>
 #include "../../../device/uart-pl011/pl011.h"
@@ -73,24 +73,24 @@ void led_off(void)
  */
 int platforminit(void)
 {
-    uint32_t  __attribute__((aligned(16))) mailbuffer[8];
-
     strlcpy(platform.family, "BCM2837B0", PLT_STRMAX);
     strlcpy(platform.name, "Raspberry Pi 3 B+", PLT_STRMAX);
     platform.minaddr = 0;
-    platform.maxaddr = (void *)0x3EFFFFFC;
+    platform.maxaddr = (void *)PHYSTOP;
+    //platform.maxaddr = 0;
     platform.clkfreq = 1000000;
-    platform.serial_low = 0;
+    platform.serial_low = 0x4aabe848;
     platform.serial_high = 0;
+    platform.dcache_size = 32;
 
     // maxaddr
-    get_armmemory_mailbox(&mailbuffer[0]);
-    platform.maxaddr = (void *)(uint64_t)(mailbuffer[MBOX_HEADER_LENGTH + TAG_HEADER_LENGTH] + mailbuffer[MBOX_HEADER_LENGTH + TAG_HEADER_LENGTH+1]);
-
+#if 0
+    uint32_t maxmem = mbox_get_arm_memory();
+    kprintf("maxaddr: 0x%x\n", maxmem);
     /// serial_low/high
-    get_serial_mailbox(&mailbuffer[0]);
-    platform.serial_low = mailbuffer[MBOX_HEADER_LENGTH + TAG_HEADER_LENGTH];
-    platform.serial_high = mailbuffer[MBOX_HEADER_LENGTH + TAG_HEADER_LENGTH+1];
+    uint32_t low, high;
+    mbox_get_serial(&low, &high);
+    kprintf("serial: low=0x%x, high=0x%x\n", low, high);
 
     uint32_t cache_encoding = _getcacheinfo();  // Read CCSIDR
     switch (cache_encoding) {
@@ -112,12 +112,7 @@ int platforminit(void)
     }
     //id.Raw32 = rpi_getModel();
     //platform.model_id = id.model;
-
-    /* BCM2837の電源を初期化する */
-    bcm2837_power_init();
-
-    /* メモリ管理ユニットを初期化する */
-    mmu_init();
+#endif
 
     /* mutexテーブルを初期化する */
     for (int i = 0; i < NMUTEX; i++) {

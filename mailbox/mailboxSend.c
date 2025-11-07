@@ -35,6 +35,7 @@ syscall mailboxSend(mailbox box, mbxmess mailmsg)
     }
 
     mbxptr = &mboxtab[box];
+    //kprintf("mbSend: sende: %d, recv: %d, max: %d, count: %d, start: %d, state: %d\n", mbxptr->sender, mbxptr->receiver, mbxptr->max, mbxptr->count, mbxptr->start, mbxptr->state);
     im = disable();
     retval = SYSERR;
     if (MAILBOX_ALLOC == mbxptr->state)
@@ -56,7 +57,6 @@ syscall mailboxSend(mailbox box, mbxmess mailmsg)
             retval = OK;
         }
     }
-
     restore(im);
     return retval;
 }

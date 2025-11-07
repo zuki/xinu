@@ -15,11 +15,16 @@
 #include <semaphore.h>
 #include <stdlib.h>
 #include <usb_core_driver.h>
-#include "../../system/platforms/arm-rpi3/bcm2837_mbox.h"
 #include <string.h>
 #include <kernel.h>
-#include "../../system/platforms/arm-rpi3/bcm2837.h"
 #include <dma_buf.h>
+#ifdef __aarch64__
+#include "../../system/platforms/arm-rpi3-64/bcm2837.h"
+#include "../../system/platforms/arm-rpi3-64/mbox.h"
+#else
+#include "../../system/platforms/arm-rpi3/bcm2837_mbox.h"
+#include "../../system/platforms/arm-rpi3/bcm2837.h"
+#endif
 
 bool lan7800_isattached = 0;
 
@@ -136,6 +141,9 @@ static const struct usb_device_driver lan7800_driver = {
 static void
 getEthAddr(uint8_t *addr)
 {
+#ifdef __aarch64__
+    mbox_get_macaddr(addr);
+#else
     /* Initialize the mailbox buffer */
     uint32_t *mailbuffer;
     mailbuffer = dma_buf_alloc(MBOX_BUFLEN / 4);
@@ -164,6 +172,7 @@ getEthAddr(uint8_t *addr)
             addr[5] = (value >> 8)  & 0xff;
         }
     }
+#endif
 }
 
 

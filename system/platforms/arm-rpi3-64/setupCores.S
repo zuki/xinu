@@ -48,6 +48,9 @@ el2:
     eret
 
 el1:
+    /* disable fiq, irq */
+    msr daifset, #3
+
     adr     x9, kpgdir
  
     /* Higher and lower half map to same physical memory region. */
@@ -62,22 +65,18 @@ el1:
  
     isb
  
-    /* mask fiq, irq */
-    msr daifclr, #3
+    /* MMUを有効にする. I/DキャッシュはON設定になっているので */
+    /* SCTLR_MMU_ENABLEDフラグを立てるだけ */
+    mrs     x9, sctlr_el1
+    orr     x9, x9, #SCTLR_MMU_ENABLED
+    msr     sctlr_el1, x9
+
+    isb
+    
     /* VBARに例外テーブルのアドレスを書き込む */
     ldr x0, =vectors
     msr vbar_el1, x0
 
-    /* bssのクリア */
-    ldr x1, =_bss
-    ldr x2, =_end
-1:
-    cmp x1, x2
-    beq 2f
-    stp xzr, xzr, [x1], #16
-    b 1b
-
-2:
     /* 各コアのspをセットする。ore_init_sp配列は各コア用の初期スタックポインタ
      * system/p/unparkcore.cで定義して、loader/p/a/start.Sで設定 */
     mrs  x0, mpidr_el1
@@ -96,4 +95,4 @@ el1:
     ldr  x0, =init_args
     ldr  x0, [x0, x4]
     ldr  x2, =corestart
-    ret  x2
+    br   x2

@@ -94,7 +94,14 @@ tid_typ create(void *procaddr, uint32_t ssize, int priority,
     va_start(ap, nargs);
     thrptr->stkptr = setupStack(saddr, procaddr, INITRET, nargs, ap);
     va_end(ap);
-
+#if 0
+    kprintf("[%s] stkptr=0x%lx\n", thrptr->name, thrptr->stkptr);
+    uint64_t **stack = (uint64_t **)thrptr->stkptr;
+    for (int j=0; j < 14; j++) {
+        kprintf("saddr[%d] = 0x%lx (0x%lx)\n", j, &stack[j], stack[j]);
+    }
+    kprintf("\n");
+#endif
     thrtab_release(tid);
 
     /* 割り込み状態を復元して新規スレッドのTIDを返す  */

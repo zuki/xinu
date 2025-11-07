@@ -11,24 +11,26 @@
  * 1GBのRAM (物理メモリ) が利用できる. 1GB == 0x3FFFFFFF
  * +----------+
  * |          |
- * | IO SPACE | -> 0x3F000000 - 0x3FFFFFFF IO用に予約 (GPIO, UART, SYS TIMER, USB CORE)
+ * | IO SPACE | -> 0x3F00_0000 - 0x3FFF_FFFF IO用に予約 (GPIO, UART, SYS TIMER, USB CORE)
  * |          |
  * +----------+
- * |          |
+ * +----------+ -> PHYSTOP  : 0x3B40_0000
+ * |  DMA Mem |    2MB
+ * +----------+ -> DMA_BASE : 0x3B20_0000
  * |          |
  * |   HEAP   | -> getmem はここから割り当てる
  * |          |
  * |          |
- * +----------+
- * | OS STACK | -> null プロセスのスタックになる
- * +----------+
+ * +----------+ -> memheap
+ * | OS STACK | -> null0-3のスタック（各8192バイト）
+ * +----------+ -> _end
  * |   BSS    | -> C 環境で必要
  * +----------+
  * |   TEXT   | -> XINUのコード
  * |          |
- * +----------+
- * | RESERVED | -> 割り込みハンドラとベクタ
- * +----------+
+ * +----------+ -> KERNEL_LINK : 0x0008_0000  
+ * | RESERVED | -> 
+ * +----------+ -> KERNEL_BASE : 0x0000_0000
  */
 
 #include <sysregs_64.h>
@@ -81,6 +83,10 @@ el2:
     eret
 
 el1:
+    /* disable fiq, irq */
+    msr daifset, #3
+
+    /* カーネルページテーブルをセット */
     adr     x9, kpgdir
  
     /* Higher and lower half map to same physical memory region. */
@@ -95,8 +101,14 @@ el1:
  
     isb
 
-    /* mask fiq, irq */
-    msr daifclr, #3
+    /* MMUを有効にする. I/DキャッシュはON設定になっているので */
+    /* SCTLR_MMU_ENABLEDフラグを立てるだけ */
+    mrs     x9, sctlr_el1
+    orr     x9, x9, #SCTLR_MMU_ENABLED
+    msr     sctlr_el1, x9
+
+    isb
+    
     /* VBARに例外テーブルのアドレスを書き込む */
     ldr x0, =vectors
     msr vbar_el1, x0

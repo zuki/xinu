@@ -437,7 +437,7 @@ usb_control_msg(struct usb_device *dev,
     req->setup_data.wIndex = wIndex;
     req->setup_data.wLength = wLength;
     req->completion_cb_func = signal_control_msg_done;
-    req->private = (void*)(unsigned long)sem;      // privateデータにセマフォを設定。
+    req->private = (void*)sem;      // privateデータにセマフォを設定。
     /* 転送実行を要求 */
     status = usb_submit_xfer_request(req);
     if (status == USB_STATUS_SUCCESS)
@@ -1152,12 +1152,14 @@ syscall usbinit(void)
     usb_bus_lock = semcreate(0);
     if (isbadsem(usb_bus_lock))
     {
+        usb_error("usbinit: semcreate failed\n");
         goto err;
     }
     /* USBハブドライバを登録する （usb_hub_driverはdevice/usb/usbhub.cで宣言されている）*/
     status = usb_register_device_driver(&usb_hub_driver);
     if (status != USB_STATUS_SUCCESS)
     {
+        usb_error("usbinit: usb_register_device_driver failed\n");
         goto err_free_usb_bus_lock;
     }
     /* USbホストコントローラを起動する */

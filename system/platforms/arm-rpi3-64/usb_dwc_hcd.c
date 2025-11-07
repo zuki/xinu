@@ -78,6 +78,7 @@
 #include <usb_std_defs.h>
 #include <usb_util.h>
 #include "bcm2837.h"
+#include "mbox.h"
 #include <mmu_64.h>
 #include <dma_buf.h>
 
@@ -268,8 +269,8 @@ dwc_power_on(void)
     int retval;
 
     usb_info("Powering on Synopsys DesignWare Hi-Speed "
-             "USB 2.0 On-The-Go Controller\n");
-    retval = board_setpower(POWER_USB, TRUE);
+             "USB 2.0 On-The-Go Controller (64)\n");
+    retval = mbox_set_power_state(POWER_USB, TRUE, TRUE);
     return (retval == OK) ? USB_STATUS_SUCCESS : USB_STATUS_HARDWARE_ERROR;
 }
 
@@ -281,7 +282,7 @@ dwc_power_off(void)
 {
     usb_info("Powering off Synopsys DesignWare Hi-Speed "
              "USB 2.0 On-The-Go Controller\n");
-    board_setpower(POWER_USB, FALSE);
+    mbox_set_power_state(POWER_USB, FALSE, FALSE);
 }
 
 /** @ingroup usbhcd
@@ -1857,11 +1858,12 @@ dwc_schedule_xfer_requests(void)
 {
     uint chan;
     struct usb_xfer_request *req;
-
+    usb_debug("start dwc_schedule_xfer_requests\n");
     for (;;)
     {
         /* 次の転送リクエストが来るまで待って取得する  */
         req = (struct usb_xfer_request*)mailboxReceive(hcd_xfer_mailbox);
+        usb_debug("req: 0x%p\n", req);
         if (is_root_hub(req->dev))
         {
             /* 特殊なケース: リクエストはルートハブ向け。偽装する */
@@ -1914,6 +1916,7 @@ dwc_start_xfer_scheduler(void)
         mailboxFree(hcd_xfer_mailbox);
         return USB_STATUS_OUT_OF_MEMORY;
     }
+
     return USB_STATUS_SUCCESS;
 }
 
@@ -1933,7 +1936,6 @@ hcd_start(void)
     {
         aligned_bufs[i] = dma_buf_alloc(WORD_ALIGN(USB_MAX_PACKET_SIZE));
     }
-
     /* dwcの電源を入れる */
     status = dwc_power_on();
     if (status != USB_STATUS_SUCCESS)

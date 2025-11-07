@@ -22,6 +22,7 @@ bcm2837_mailbox_write(uint channel, uint value)
     while (mailbox_regs[MAILBOX_STATUS] & MAILBOX_FULL)
     {
     }
+    kprintf("write ok\n");
     mailbox_regs[MAILBOX_WRITE] = (value & ~MAILBOX_CHANNEL_MASK) | channel;
 }
 
@@ -93,7 +94,7 @@ int bcm2837_setpower(enum board_power_feature feature, bool on)
     uint bit;
     uint newmask;
     bool is_on;
-
+    
     bit = 1 << feature;
     is_on = (bcm2837_power_mask & bit) != 0;
     if (on != is_on)

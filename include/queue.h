@@ -1,21 +1,18 @@
 /**
  * @file queue.h
  *
- * The thread queue system allows a statically-allocated array to
- * model sorted thread queueing before more complex operating system
- * services, like dynamic memory allocation, are up and running.
- *
- * These thread queues assume several important invariants:
- *  1) A fixed number of thread queues in the system, known
- *     at compile time,
- *  2) A thread queue can contain only threads and their
- *     associated key values, and thus queue length is at
- *     most NTHREAD, the total number of threads, and
- *  3) A thread can be in at most one queue at a time.
- *
- * Ordering of threads within a given queue depends upon the sorting
- * functions called when maintaining that particular system queue.
- *
+ * スレッドキューシステムは、動的メモリ割り当てのようなより複雑な
+ * OSサービスが稼働する前に、静的に割り当てられた配列を用いてソート
+ * 済みスレッドキューをモデル化することを可能にする。
+ * 
+ * これらのスレッドキューはいくつかの重要な不変条件を前提とする.
+ *   1) コンパイル時に既知の、システム内の固定数のスレッドキュー
+ *   2) スレッドキューにはスレッドとその関連キー値のみが含まれる。
+ *      そのため、キュー長は最大でNTHREAD（スレッド総数）となる。
+ *   3) スレッドは同時に最大1つのキューにしか存在できない。
+ * 
+ * 特定のキュー内のスレッド順序は、そのシステムキューを維持する際に
+ * 呼び出されるソート関数に依存する。
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
 

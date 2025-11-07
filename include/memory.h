@@ -11,6 +11,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+// MBSIZE = 16 - 1 = 15
 #define MBSIZE  (sizeof(struct memblock) - 1)
 /* roundmb - アドレスをメモリブロックサイズに丸めあげる */
 #define roundmb(x)  (void *)( (MBSIZE + (uintptr_t)(x)) & ~MBSIZE )
@@ -31,10 +32,10 @@
  *      割り当てられたスタックのサイズ（バイト単位、stkget()に
  *      渡された値と同じ）
  */
-#define stkfree(p, len) memfree((void *)((uint64_t)(p)         \
-                                - (uint64_t)roundvalue(len)       \
-                                + (uint64_t)sizeof(uint64_t)),    \
-                                (uint64_t)roundvalue(len))
+#define stkfree(p, len) memfree((void *)((uintptr_t)(p)         \
+                                - (uintptr_t)roundvalue(len)       \
+                                + (uintptr_t)sizeof(uintptr_t)),    \
+                                (uint32_t)roundvalue(len))
 
 
 /**

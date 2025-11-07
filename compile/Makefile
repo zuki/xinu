@@ -72,7 +72,7 @@ CFLAGS  += -fno-pic
 CFLAGS  += -fwrapv
 
 # DEBUG is used internally by `make debug' to add debugging flags.
-DEBUG   :=
+DEBUG   := -g
 CFLAGS  += $(DEBUG)
 
 # Set assembler flags common to all platforms.  platformVars can add additional

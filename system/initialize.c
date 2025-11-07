@@ -21,7 +21,7 @@
 #include "platforms/arm-rpi3/mmu.h"
 #include <dma_buf.h>
 
-extern void *_end;
+extern void * _end;
 
 /* 関数プロトタイプ */
 extern thread main(void);       /* mainは最初に作成されるスレッド */
@@ -71,7 +71,7 @@ void nulluser(void)
 
     /* 一般的な初期化を行う  */
     sysinit();
-
+    
     /* セカンダリコアの待機解除 */
     unparkcore(1, (void *) core_nulluser, NULL);
     unparkcore(2, (void *) core_nulluser, NULL);
@@ -103,6 +103,7 @@ static int sysinit(void)
     int i;
     struct thrent *thrptr;      /* thread control block pointer  */
     struct memblock *pmblock;   /* memory block pointer          */
+    int ret;
 
     /* シリアルロックを初期化する */
     serial_lock = mutex_create();
@@ -130,7 +131,7 @@ static int sysinit(void)
     thrptr->state = THRCURR;
     thrptr->prio = 0;
     strlcpy(thrptr->name, "prnull", TNMLEN);
-    thrptr->stkbase = (void *)_end;
+    thrptr->stkbase = (void *)&_end;
     thrptr->stklen = 8192;  /* NULLSTK */
     thrptr->stkptr = 0;
     thrptr->memlist.next = NULL;
@@ -143,7 +144,7 @@ static int sysinit(void)
     thrptr->state = THRCURR;
     thrptr->prio = 0;
     strlcpy(thrptr->name, "prnull01", TNMLEN);
-    thrptr->stkbase = (void *)(_end + 8192);
+    thrptr->stkbase = (void *)(&_end + 8192);
     thrptr->stklen = 8192;  /* NULLSTK */
     thrptr->stkptr = 0;
     thrptr->memlist.next = NULL;
@@ -156,7 +157,7 @@ static int sysinit(void)
     thrptr->state = THRCURR;
     thrptr->prio = 0;
     strlcpy(thrptr->name, "prnull02", TNMLEN);
-    thrptr->stkbase = (void *)(_end + 16384);
+    thrptr->stkbase = (void *)(&_end + 16384);
     thrptr->stklen = 8192;  /* NULLSTK */
     thrptr->stkptr = 0;
     thrptr->memlist.next = NULL;
@@ -169,7 +170,7 @@ static int sysinit(void)
     thrptr->state = THRCURR;
     thrptr->prio = 0;
     strlcpy(thrptr->name, "prnull03", TNMLEN);
-    thrptr->stkbase = (void *)(_end + 24576);
+    thrptr->stkbase = (void *)(&_end + 24576);
     thrptr->stklen = 8192;  /* NULLSTK */
     thrptr->stkptr = 0;
     thrptr->memlist.next = NULL;
@@ -242,7 +243,7 @@ static int sysinit(void)
 
 #if NMAILBOX
     /* メールボックスを初期化する */
-    mailboxInit();
+    ret = mailboxInit();
 #endif
 
 #if NDEVS
@@ -251,12 +252,13 @@ static int sysinit(void)
     {
         devtab[i].init((device*)&devtab[i]);
     }
-    kprintf("device ok\n");
 #endif
 
 #ifdef WITH_USB
     /* USBを初期化する */
-    usbinit();
+    ret = usbinit();
+    if (ret == SYSERR)
+        kprintf("usbinit err\n");
 #endif
 
 /* 対象外 */
@@ -267,7 +269,9 @@ static int sysinit(void)
 
 #if NETHER
     /* ネットインタフェースを初期化する */
-    netInit();
+    ret = netInit();
+    if (ret == SYSERR)
+        kprintf("netInit err\n");
 #endif
 
 /* 対象外 */

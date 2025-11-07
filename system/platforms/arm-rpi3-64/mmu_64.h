@@ -73,7 +73,6 @@
 
 #include <stdint.h>
 
-extern void mmu_init(void);
 extern void start_mmu(void);
 extern void stop_mmu(void);
 extern void _inval_area(uint32_t);

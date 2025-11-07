@@ -11,7 +11,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-extern uint8_t dma_buf_space[];
+extern uint8_t *dma_buf_space;
 
 /* DMAバッファ関数プロトタイプ */
 syscall dma_buf_init(void);

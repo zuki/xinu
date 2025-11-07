@@ -45,18 +45,3 @@ unsigned int mmu_section(uint64_t vadd, uint64_t padd, uint32_t flags)
 
     return 0;
 }
-
-/**
- * @ingroup bcm2837
- *
- * MMUを初期化する. 1ページ1MBの恒等マップ。
- * 仮想アドレス == 物理アドレス、および、
- * ペリフェラル領域以外はキャッシュ可能と構成する.
- */
-void mmu_init()
-{
-    // dmaバッファ領域はキャッシュ不能とする
-    mmu_section((uint64_t) dma_buf_space, (uint64_t) dma_buf_space, PTE_KDMA);
-    // system/platform/arm-rpi3-64/mmu_util.S にあり
-    start_mmu();
-}

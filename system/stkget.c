@@ -3,7 +3,7 @@
  *
  */
 /* Embedded Xinu, Copyright (C) 2009.  All rights reserved. */
-
+#include <kernel.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <memory.h>
@@ -78,5 +78,7 @@ void *stkget(uint32_t nbytes)
     memlist.length -= nbytes;
     restore(im);
     // 取得するのはnbytes以上ある最後尾のブロックの後ろからnbytes
-    return (void *)((ulong)fits + nbytes - sizeof(int));
+    //kprintf("fits: 0x%x, nbytes: 0x%x, size: 0x%x\n",
+    //    (uint64_t)fits, nbytes, sizeof(uintptr_t));
+    return (void *)((ulong)fits + nbytes - sizeof(uintptr_t));
 }

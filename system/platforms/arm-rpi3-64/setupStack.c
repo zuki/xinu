@@ -2,21 +2,21 @@
  * @file setupStack.c
  */
 /* Embedded Xinu, Copyright (C) 2013.  All rights reserved. */
-
+#include <kernel.h>
 #include <platform.h>
 #include <arm_64.h>
 
 /**
  * @ingroup bcm2837
- * ワード単位のARMコンテキストレコード数（r0-r11, lr, pcを含む)
+ * ワード単位のARM64コンテキストレコード数（x19-x30, daif, procaddr)
  */
 #define CONTEXT_WORDS 14
 
 /**
  * @ingroup bcm2837
- * 標準的なARM呼び出し規約では最初の4引数はr0-r3で渡し、残りはスタックで渡す
+ * 標準的なARM64呼び出し規約では最初の8引数はx0-x7で渡し、残りはスタックで渡す
  */
-#define MAX_REG_ARGS 4
+#define MAX_REG_ARGS 8
 
 /**
  * @ingroup bcm2837
@@ -49,14 +49,6 @@ void *setupStack(void *stackaddr, void *procaddr,
         reg_nargs = nargs;
     }
 
-    /* 新しいスレッドがコンテキストレコードをポップオフした後、
-     * スタックが16バイト境界にアラインされるように1ワード
-     * スキップする可能性がある  */
-    if ((unsigned long)saddr & 0x10)
-    {
-        --saddr;
-    }
-
     /* 新規スレッドためのコンテキストレコードを構築する */
     saddr -= CONTEXT_WORDS;
     saddr[0] = 0;
@@ -67,13 +59,13 @@ void *setupStack(void *stackaddr, void *procaddr,
         saddr[i] = va_arg(ap, unsigned long);
     }
 
-    for (; i < CONTEXT_WORDS - 3; i++)
+    /* DAIFレジスタ : bit[9-6]=DAIF, Iのみ有効とする */
+    saddr[i++] = 0x0340UL;
+
+    for (; i < CONTEXT_WORDS - 2; i++)
     {
         saddr[i] = 0;
-    }
-
-    /* プログラムステータスレジスタのコントロールビット
-     * (SYSモード, IRQははじめから有効 */
+    } 
 
     /* リターンアドレス  */
     saddr[CONTEXT_WORDS - 2] = (unsigned long)retaddr;
@@ -86,7 +78,14 @@ void *setupStack(void *stackaddr, void *procaddr,
     {
         saddr[CONTEXT_WORDS + i] = va_arg(ap, unsigned long);
     }
-
+#if 0
+    kprintf("&stack: 0x%x, stack: 0x%x, proc: 0x%x, ret: 0x%x, nargs: %d\n", 
+        &saddr, stackaddr, procaddr, retaddr, nargs);
+    for (int j=0; j < CONTEXT_WORDS; j++) {
+        kprintf("saddr[%d] = 0x%x\n", j, saddr[j]);
+    }
+    kprintf("\n");
+#endif
     /* スタックの「トップ」（最下位のアドレス）を返す  */
     return saddr;
 }

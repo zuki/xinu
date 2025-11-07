@@ -17,7 +17,6 @@ S_FILES = ctxsw.S           \
           setupCores.S
 
 C_FILES = setupStack.c      \
-          bcm2837_power.c   \
           dispatch.c        \
           kexec.c           \
           platforminit.c    \
@@ -27,7 +26,7 @@ C_FILES = setupStack.c      \
           unparkcore.c      \
           mmu.c             \
           random.c          \
-          bcm2837_mbox.c    \
+          mbox.c            \
           des.c             \
           kpgdir.c          \
           trap.c
