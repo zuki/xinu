@@ -44,6 +44,5 @@ doxy_docs/
 *.org
 compile/nm.list
 compile/nm_64.list
-compile/xinu_32.map
-compile/xinu_64.map
+compile/*.map
 memo/work
