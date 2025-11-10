@@ -118,6 +118,44 @@ lan7800_set_reg_bits(struct usb_device *udev, uint32_t index, uint32_t set)
 /**
  * @ingroup lan7800
  *
+ * LAN7800 USB Ethernetアダプタのレジスタのビットがcompareになるのを待つ..
+ *
+ * @param udev  このアダプタ用のUSBデバイス
+ * @param index 変更するレジスタのインデックス
+ * @param mask  レジスタの古い値をクリアせず保持する位置のビットを
+ *              1としたマスク（これらのビットが @p set に現れる
+ *              場合は除く。その場合はセットされる）
+ * @param compare  レジスタ内の比較するビット。
+ * @param delay 再検査するまでの時間（マイクロ秒）
+ * @param timeout タイムアウト
+ * @return  成功した場合は ::USB_STATUS_SUCCES;
+ *          それ以外は ::usb_status_t エラーコード
+ */
+usb_status_t
+lan7800_wait_reg(struct usb_device *udev, uint32_t index, uint32_t mask,
+    uint32_t compare, uint64_t delay, uint32_t timeout)
+{
+    uint64_t start_hz = clkcount();
+    uint32_t value;
+    usb_status_t status;
+    do {
+        if (delay > 0)
+            udelay(delay);
+
+        if (clkcount() - start_hz >= timeout)
+            return USB_STATUS_TIMEOUT;
+
+        status = lan7800_read_reg(udev, index, &value);
+        if (status != USB_STATUS_SUCCESS)
+            return status;
+
+    } while ((value & mask) != compare);
+    return USB_STATUS_SUCCESS;
+}
+
+/**
+ * @ingroup lan7800
+ *
  * LAN7800 USB EthernetアダプタのMACアドレスをセットする.
  *
  * @param udev  このアダプタ用のUSBデバイス

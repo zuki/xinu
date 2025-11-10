@@ -27,6 +27,8 @@ usb_status_t lan7800_write_reg(struct usb_device *udev, uint32_t index, uint32_t
 usb_status_t lan7800_read_reg(struct usb_device *udev, uint32_t index, uint32_t *data);
 usb_status_t lan7800_modify_reg(struct usb_device *udev, uint32_t index, uint32_t mask, uint32_t set);
 usb_status_t lan7800_set_reg_bits(struct usb_device *udev, uint32_t index, uint32_t set);
+usb_status_t lan7800_wait_reg(struct usb_device *udev, uint32_t index, uint32_t mask,
+    uint32_t compare, uint64_t delay, uint32_t timeout);
 usb_status_t lan7800_wait_device_attached(unsigned short minor);
 usb_status_t lan7800_set_loopback_mode(struct usb_device *udev, unsigned int on_off);
 usb_status_t lan7800_set_mac_address(struct usb_device *udev, const uint8_t *macaddr);

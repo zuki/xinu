@@ -51,6 +51,10 @@ void usb_log(int priority, const char *func,
     {
         kprintf("[DEBUG] ");
     }
+    else if (priority <= USB_LOG_PRIORITY_INFO)
+    {
+        kprintf("[INFO ] ");
+    }
     else if (priority >= USB_LOG_PRIORITY_ERROR)
     {
         kprintf("[ERROR] ");

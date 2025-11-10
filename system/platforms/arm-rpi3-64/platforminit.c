@@ -7,6 +7,7 @@
 //#include <stddef.h>
 #include <platform.h>
 #include <string.h>
+#include <arm_64.h>
 //#include <framebuffer.h>
 //#include <usbkbd.h>
 //#include <stdio.h>
@@ -113,6 +114,9 @@ int platforminit(void)
     //id.Raw32 = rpi_getModel();
     //platform.model_id = id.model;
 #endif
+
+    /* BCM2837の電源を初期化する */
+    mbox_power_init();
 
     /* mutexテーブルを初期化する */
     for (int i = 0; i < NMUTEX; i++) {

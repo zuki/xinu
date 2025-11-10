@@ -27,7 +27,7 @@ struct usb_device;
 
 /** USBメッセージの最小優先度. これ以上の優先度を持つメッセージ
  * だけが表示される */
-#define USB_MIN_LOG_PRIORITY        4
+#define USB_MIN_LOG_PRIORITY        2
 
 /**********************************************************************/
 

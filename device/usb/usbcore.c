@@ -437,7 +437,7 @@ usb_control_msg(struct usb_device *dev,
     req->setup_data.wIndex = wIndex;
     req->setup_data.wLength = wLength;
     req->completion_cb_func = signal_control_msg_done;
-    req->private = (void*)sem;      // privateデータにセマフォを設定。
+    req->private = (void*)(uintptr_t)sem;      // privateデータにセマフォを設定。
     /* 転送実行を要求 */
     status = usb_submit_xfer_request(req);
     if (status == USB_STATUS_SUCCESS)
@@ -876,7 +876,8 @@ usb_try_to_bind_device_driver(struct usb_device *dev)
 
     if (dev->driver != NULL)
     {
-        /* ドライバがすでにバインドされているは成功で復帰  */
+        usb_debug("dev->driver already bound\n");
+        /* ドライバがすでにバインドされている場合は成功で復帰  */
         return USB_STATUS_SUCCESS;
     }
 
@@ -1083,6 +1084,7 @@ usb_register_device_driver(const struct usb_device_driver *drv)
     irqmask im;
     usb_status_t status;
 
+    usb_debug("registering driver: %s\n", drv->name);
     /* バインド用の関数が定義されている必要がある */
     if (NULL == drv->bind_device)
     {
@@ -1116,7 +1118,7 @@ usb_register_device_driver(const struct usb_device_driver *drv)
         if (!already_registered)
         {
             usb_device_drivers[usb_num_device_drivers++] = drv;
-            usb_info("Registered %s\n", drv->name);
+            usb_info("Registered %s to dev_drivers[%d]\n", drv->name, usb_num_device_drivers - 1);
             /* このドライバと互換性のあるデバイスがすでにバス上にあるか
              * チェックする（ドライバの登録前に接続されたデバイスに
              * ドライバをバインドする）  */
@@ -1186,7 +1188,7 @@ syscall usbinit(void)
     /* ドライバをバインドしたルートハブ（仮）をUSBサブシステムの
      * ルートハブとする */
     usb_root_hub = root_hub;
-    usb_debug("Successfully initialized USB subsystem\n");
+    usb_info("Successfully initialized USB subsystem\n");
     /* バスをアンロックする: TODO: どこでロックしている? */
     usb_unlock_bus();
     return OK;

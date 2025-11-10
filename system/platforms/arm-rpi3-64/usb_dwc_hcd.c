@@ -270,7 +270,7 @@ dwc_power_on(void)
 
     usb_info("Powering on Synopsys DesignWare Hi-Speed "
              "USB 2.0 On-The-Go Controller (64)\n");
-    retval = mbox_set_power_state(POWER_USB, TRUE, TRUE);
+    retval = mbox_set_power_state(POWER_USB, TRUE, FALSE);
     return (retval == OK) ? USB_STATUS_SUCCESS : USB_STATUS_HARDWARE_ERROR;
 }
 
@@ -825,7 +825,7 @@ dwc_process_root_hub_request(struct usb_xfer_request *req)
     {
         /* ステータス変化エンドポイントからのインターラプト転送リクエスト。
          * 一度に1リクエストだけしか発行できないと仮定している */
-        usb_debug("Posting status change request to root hub\n");
+        usb_debug("Posting status change request to root hub\n",);
         root_hub_status_change_request = req;
         if (host_port_status.wPortChange != 0)
         {
@@ -1863,7 +1863,7 @@ dwc_schedule_xfer_requests(void)
     {
         /* 次の転送リクエストが来るまで待って取得する  */
         req = (struct usb_xfer_request*)mailboxReceive(hcd_xfer_mailbox);
-        usb_debug("req: 0x%p\n", req);
+        usb_debug("req: 0x%lx\n", req);
         if (is_root_hub(req->dev))
         {
             /* 特殊なケース: リクエストはルートハブ向け。偽装する */
@@ -2003,6 +2003,7 @@ usb_status_t
 hcd_submit_xfer_request(struct usb_xfer_request *req)
 {
     /* USB転送リクエストをキューに入れる */
-    mailboxSend(hcd_xfer_mailbox, (long)req);
+    usb_debug("submit_xfer_req: 0x%lx\n", (uintptr_t)req);
+    mailboxSend(hcd_xfer_mailbox, (mbxmess)req);
     return USB_STATUS_SUCCESS;
 }

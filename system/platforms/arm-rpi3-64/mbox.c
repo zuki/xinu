@@ -289,3 +289,19 @@ int mbox_get_serial(uint32_t *low, uint32_t *high) {
     
     return OK;
 }
+
+/* この関数はmbox_set_power_mask()の実行後に実行しないとデータが出力されるストールする */
+int mbox_get_power_mask(void)
+{
+    return mbox_read(0);
+}
+
+static void mbox_set_power_mask(uint32_t mask)
+{
+    mbox_write(mask << 4, 0);
+}
+
+void mbox_power_init(void)
+{
+    mbox_set_power_mask(0);
+}

@@ -21,8 +21,8 @@
  *
  * @details
  *
- * LAN7800固有の注記:  USBの動的デバイスモデルを同時にXinuの静的
- * デバイスモデルと使用するための回避策として、この関数は対応するUSB
+ * LAN7800固有の注記:  USBの動的デバイスモデルをXinuの静的デバイス
+ * モデルで使用するための回避策として、この関数は対応するUSB
  * デバイスが実際にUSBに接続されるまでブロックされる。厳密にいえば、
  * デバイスが取り外せないものであっても、これが実際に発生するかは保証
  * されない。
@@ -67,8 +67,7 @@ devcall etherOpen(device *devptr)
     {
         goto out_free_out_pool;
     }
-
-    /* csrフィールドを悪用してUSBデバイス構造体へのポインタを保存する。
+    /* csrフィールドを悪用してUSBデバイス構造体へのポインタを保存している。
      * 少なくとも両者はほぼ同等である。なぜなら、実際にデバイスハード
      * ウェアと通信するために必要なものだからである。
      */
@@ -131,7 +130,6 @@ devcall etherOpen(device *devptr)
         req->private = ethptr;
         usb_submit_xfer_request(req);
     }
-
     /* 成功!  デバイスに ETH_STATE_UP をセットする */
     ethptr->state = ETH_STATE_UP;
     retval = OK;

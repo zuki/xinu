@@ -22,5 +22,7 @@ int mbox_set_gpio_state(uint32_t npgio, uint32_t state);
 int mbox_set_power_state(uint32_t devid, bool on, bool wait);
 int mbox_get_macaddr(uint8_t *address);
 int mbox_get_serial(uint32_t *low, uint32_t *high);
+int mbox_get_power_mask(void);
+void mbox_power_init(void);
 
 #endif

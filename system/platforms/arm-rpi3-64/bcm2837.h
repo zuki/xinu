@@ -94,10 +94,6 @@ enum board_power_feature {
     POWER_USB    = 3,
 };
 
-extern int set_power_mailbox(volatile uint32_t* mailbuffer, uint32_t devid, bool on, bool wait);
-#define board_setpower set_power_mailbox
-
-
 /** *********************************************************************
  * ペリフェラルアスセスに使用するメモリバリアのインタフェース.          *
  *                                                                      *

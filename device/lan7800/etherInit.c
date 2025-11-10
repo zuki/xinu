@@ -32,7 +32,7 @@ bool lan7800_isattached = 0;
 struct ether ethertab[NETHER];
 
 /**
- * 指定されたEthernetデバイスが実際にまだシステム（ここではUSB）に
+ * 指定されたEthernetデバイスがシステム（ここではUSB）に
  * 接続されているか否かを示すセマフォ。他のドライバが必要であれば
  * <code>struct ::ether</code> に移動させるかもしれない。
  */
@@ -83,6 +83,7 @@ lan7800_bind_device(struct usb_device *udev)
     STATIC_ASSERT(NETHER == 1);
     if (ethptr->csr != NULL)
     {
+        usb_error("ethptr->csr: 0x%p\n", ethptr->csr);
         return USB_STATUS_DEVICE_UNSUPPORTED;
     }
 
@@ -91,6 +92,8 @@ lan7800_bind_device(struct usb_device *udev)
     /* udevとethptrの相互参照 */
     ethptr->csr = udev;                 // ethptr から udev
     udev->driver_private = ethptr;      // udev から ethptr
+    usb_debug("ethptr->csr=0x%lx, udev->private=0x%lx\n", (uintptr_t)ethptr->csr, (uintptr_t)udev->driver_private);
+    usb_debug("signal lan7800_attached[%d]: 0x%x\n", (int)(ethptr - ethertab), lan7800_attached[ethptr - ethertab]);
     signal(lan7800_attached[ethptr - ethertab]);
     return USB_STATUS_SUCCESS;
 }
@@ -240,7 +243,7 @@ devcall etherInit(device *devptr)
     }
 
     lan7800_attached[devptr->minor] = semcreate(0);
-
+    usb_debug("lan7800_attached[%d]=0x%x\n", devptr->minor, lan7800_attached[devptr->minor]);
     if (isbadsem(lan7800_attached[devptr->minor]))
     {
         goto err_free_isema;
@@ -248,7 +251,12 @@ devcall etherInit(device *devptr)
 
     /* Get the MAC address and store it into addr[] */
     getEthAddr(ethptr->devAddress);
-
+#if 0
+    kprintf("macaddr: ");
+    for (int i=0; i<ETH_ADDR_LEN; i++)
+        kprintf("%02x", ethptr->devAddress[i]);
+    kprintf("\n");
+#endif
     /* このデバイスドライバをUSBコアに登録して復帰する */
     status = usb_register_device_driver(&lan7800_driver);
     if (status != USB_STATUS_SUCCESS)

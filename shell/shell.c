@@ -97,7 +97,7 @@ struct centry commandtab[] = {
 #if NETHER
     {"timeserver", FALSE, xsh_timeserver},
 #endif
-#if TTY1
+#if FRAMEBUF
     {"turtle", FALSE, xsh_turtle},
 #endif
 #if NUART

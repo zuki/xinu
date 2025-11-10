@@ -370,7 +370,7 @@ port_reset(struct usb_port *port)
  * 新しいUSBデバイスがUSBポートに接続された際に呼び出される。
  * この関数はポートをリセットし、USBコアドライバを呼び出して、
  * ポートに接続された新しいデバイスにアドレスを設定し、構成を
- * 行う必要がある。
+ * 行う。
  *
  * @param port ポート構造体へのポインタ
  */
@@ -379,6 +379,7 @@ port_attach_device(struct usb_port *port)
 {
     usb_status_t status;
     struct usb_device *new_device;
+    usb_debug("port_attach_device called with port: %d\n", port->hub->device->address);
 
     status = port_reset(port);
     if (status != USB_STATUS_SUCCESS)
@@ -476,7 +477,7 @@ static void
 port_status_changed(struct usb_port *port)
 {
     usb_status_t status;
-
+    usb_debug("port_status_changed called with port: wPortStatus=0x%x, wPortChange: 0x%x\n", port->status.wPortStatus, port->status.wPortChange);
     /* USBコントロールメッセージを送信してポートステータスを取得する。
      * ステータス変化はport->status に格納されており、返り値の `status`
      * ではない。返り値はポートステータスの取得に対するステータスである）
@@ -721,6 +722,7 @@ hub_onetime_init(void)
     /* ハブスレッドを作成して起動する */
     hub_thread_tid = create(hub_thread, HUB_THREAD_STACK_SIZE, HUB_THREAD_PRIORITY,
                             HUB_THREAD_NAME, 0);
+    usb_debug("hub_thread created: tid=%d\n", hub_thread_tid);
     if (SYSERR == ready(hub_thread_tid, RESCHED_NO, CORE_ZERO))
     {
         kill(hub_thread_tid);
